@@ -1,0 +1,42 @@
+# Exclude everything by default
+*
+
+# Include only what we need for the API
+!package.json
+!package-lock.json
+!apps/api/
+!packages/contracts/
+!nx.json
+!tsconfig.json
+!jest.preset.js
+!eslint-shared.js
+
+# Exclude unnecessary files from included directories
+apps/api/dist/
+apps/api/node_modules/
+apps/api/.env
+apps/api/*.log
+apps/api/coverage/
+
+packages/contracts/dist/
+packages/contracts/node_modules/
+
+# Exclude other apps
+apps/web/
+
+# Exclude other packages
+packages/eslint-config/
+
+# Exclude development files
+.git/
+.gitignore
+README.md
+Makefile
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+
+**/node_modules
+**/dist
+**/.cache
