@@ -1,0 +1,48 @@
+# Shared Caddyfile for multiple apps on same EC2
+# Copy to Caddyfile.shared and customize domains / paths / ports.
+# Place merged file at deployments/shared/Caddyfile in S3; setup-shared-proxy.sh uses /opt/shared/Caddyfile on EC2.
+#
+# If chores.example.com works but example.com doesn't:
+# - DNS: apex (example.com) must have A record to this server (same IP as subdomain).
+# - Run locally: ./infra/scripts/local/verify-dns-and-frontend.sh (parameterize domains first).
+
+# App 1 - Main domain
+example.com {
+	handle /api/* {
+		reverse_proxy localhost:3000 {
+			health_uri /health
+			health_interval 30s
+		}
+	}
+
+	handle {
+		root * /srv/app1
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+www.example.com {
+	redir https://example.com{uri} permanent
+}
+
+# App 2 - Subdomain
+app2.example.com {
+	handle /api/* {
+		reverse_proxy localhost:3001 {
+			health_uri /health
+			health_interval 30s
+		}
+	}
+
+	handle {
+		root * /srv/app2
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Fallback for IP access (HTTP only)
+:80 {
+	respond "Please use configured domain names"
+}

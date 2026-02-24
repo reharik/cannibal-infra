@@ -1,0 +1,45 @@
+# Deploy (EC2 + SSM + S3 + Caddy)
+
+Generic deploy flow used by app repos that use cannibal-infra. App-specific details (APP_NAME, S3 bucket, paths, domains) are configured per repo.
+
+## Overview
+
+1. **CI** runs on push/PR (lint, test, build).
+2. **CD** triggers on push to main (or manual dispatch):
+   - **Backend**: Build Docker image → upload to S3 → run SSM command on EC2 to download and run deploy script → run migrations → verify health.
+   - **Frontend**: Build static assets → upload to S3 → run SSM to download to EC2 → update Caddy (or shared proxy) and reload.
+3. **Shared proxy** (optional): One Caddy container can serve multiple apps on the same EC2 (different domains/paths). Scripts in `scripts/remote/` support this (e.g. `setup-shared-proxy.sh`, `deploy-shared-caddyfile.sh`).
+
+## Key scripts (under `infra/scripts/` when consumed)
+
+- **deploy/deploy-ec2.sh** – Entrypoint on EC2: load image, docker compose up, migrations, optional shared-proxy reload.
+- **deploy/ssm-run.sh** – From GitHub Actions: upload script to S3, send SSM command to EC2, poll and stream output.
+- **remote/download-backend.sh** – On EC2: pull backend image and compose file from S3.
+- **remote/deploy-backend.sh** – On EC2: run deploy-ec2.sh.
+- **remote/verify-backend.sh** – On EC2: health check (e.g. curl localhost:3000/health).
+- **remote/deploy-frontend.sh** – On EC2: pull frontend tarball and Caddyfile from S3, extract, reload proxy.
+- **remote/deploy-shared-caddyfile.sh** – On EC2: pull shared Caddyfile from S3, reload shared-proxy.
+- **remote/setup-shared-proxy.sh** – On EC2: ensure shared Caddy container is running with correct mounts.
+- **remote/cleanup-docker.sh** – Optional: prune images/containers/volumes on EC2.
+
+## Required env / secrets (app-owned)
+
+- AWS: `AWS_REGION`, `S3_BUCKET`, OIDC role or keys.
+- App: `APP_NAME` (used in S3 key prefix and compose project name).
+- SSM targeting: `SSM_TAG_HOST`, `SSM_TAG_ENV` or `SSM_TARGETS_OVERRIDE`.
+- Frontend build: e.g. `VITE_*` vars as needed.
+
+## S3 layout (convention)
+
+- `deployments/{APP_NAME}/` – backend image, compose file, deploy script, frontend tarball, app Caddyfile.
+- `deployments/shared/Caddyfile` – shared multi-app Caddy config (if used).
+
+## EC2 layout (convention)
+
+- App root: e.g. `/opt/{app}/` (app-specific).
+- Shared: `/opt/shared/Caddyfile` for shared Caddy.
+- Scripts and env files are app-owned or deployed from S3 per run.
+
+## Risks / TODOs
+
+See `manifest.json` for parameterization TODOs (e.g. APP_NAME, path filters, Nx config sharing) and risks.

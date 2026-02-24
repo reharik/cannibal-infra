@@ -1,0 +1,34 @@
+# .dockerignore example for a monorepo API build
+# Copy to repo root and adjust: include only the app and packages needed for the API image.
+
+*
+!package.json
+!package-lock.json
+!nx.json
+!tsconfig.json
+!jest.preset.cjs
+!eslint-shared.js
+
+# Include API app and its dependencies (adjust paths to your app)
+!apps/api/
+!packages/contracts/
+
+# Exclude from included dirs
+**/dist/
+**/node_modules/
+**/.env
+**/*.log
+**/coverage/
+
+# Exclude other apps if not needed for build
+# apps/web/
+
+# Exclude dev/cache
+.git/
+.gitignore
+README.md
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+**/node_modules
+**/dist

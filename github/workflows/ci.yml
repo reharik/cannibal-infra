@@ -1,3 +1,5 @@
+# Template: CI workflow. In app repo, place under .github/workflows/ or call from reusable.
+# Paths assume repo root; when using infra via subtree, script paths may need to be infra/scripts/...
 name: CI
 
 on:

@@ -3,7 +3,6 @@ name: Deploy to EC2 (SSM + S3 + OIDC)
 on:
   push:
     branches: [main]
-  # Use "Run workflow" (not Re-run) to deploy an app that was skipped on push.
   workflow_dispatch:
     inputs:
       deploy_backend:
@@ -26,14 +25,15 @@ env:
   AWS_REGION: us-east-1
   S3_BUCKET: network-deploy-709865789463-us-east-1
   APP_NAME: network
+  ENV_NAME: prod
 
-  # Tag targeting defaults (used by scripts/ssm-run.sh)
+  # SSM tag targeting defaults (used by infra/scripts/deploy/ssm-run.sh)
   SSM_TAG_HOST: prod-shared
   SSM_TAG_ENV: prod
 
-  # Keep waits bounded (2s * 120 = ~4 minutes per instance)
-  SSM_WAIT_DELAY: "2"
-  SSM_WAIT_MAX_ATTEMPTS: "120"
+  # Keep waits bounded
+  SSM_POLL_DELAY_SECONDS: "2"
+  SSM_POLL_MAX_ATTEMPTS: "120"
 
 jobs:
   detect-changes:
@@ -61,7 +61,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Get the previous workflow run (not this one) for this branch
           PREV_CONCLUSION=$(gh run list \
             --workflow="${{ github.workflow }}.yml" \
             --branch="${{ github.ref_name }}" \
@@ -83,18 +82,15 @@ jobs:
           filters: |
             backend_changed:
               - 'apps/api/**'
-              - 'docker-compose.prod.yml'
-              - 'scripts/deploy-ec2.sh'
-              - 'scripts/remote/download-backend.sh'
-              - 'scripts/remote/deploy-backend.sh'
-              - 'scripts/remote/verify-backend.sh'
-              - 'scripts/remote/setup-shared-proxy.sh'
+              - 'apps/api/Dockerfile'
+              - 'docker-compose*.yml'
+              - 'infra/**'
             frontend_changed:
               - 'apps/web/**'
               - 'Caddyfile'
               - 'Caddyfile.shared'
-              - 'scripts/remote/deploy-frontend.sh'
-              - 'scripts/remote/deploy-shared-caddyfile.sh'
+              - 'docker-compose*.yml'
+              - 'infra/**'
           base: ${{ github.event.before }}
           ref: ${{ github.sha }}
 
@@ -103,7 +99,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [detect-changes]
     if: needs.detect-changes.outputs.backend_changed == 'true'
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -119,18 +114,23 @@ jobs:
           target: production
           platforms: linux/arm64
           tags: |
-            network-api:${{ github.sha }}
-            network-api:latest
+            ${{
+              format('{0}-api:{1}', env.APP_NAME, github.sha)
+            }}
+            ${{
+              format('{0}-api:latest', env.APP_NAME)
+            }}
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
 
-      - name: Save Docker image
+      - name: Save Docker image to artifacts/backend.tar.gz
         shell: bash
         run: |
           set -euo pipefail
-          docker save network-api:${{ github.sha }} network-api:latest | gzip > network-api-image.tar.gz
+          mkdir -p artifacts
+          docker save "${APP_NAME}-api:${GITHUB_SHA}" "${APP_NAME}-api:latest" | gzip > artifacts/backend.tar.gz
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -142,59 +142,37 @@ jobs:
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
-      - name: Check if backend already deployed
-        id: check-backend
+      - name: Check if backend already uploaded for this SHA
+        id: check_backend
         shell: bash
         run: |
-          if aws s3 ls "s3://${S3_BUCKET}/deployments/${APP_NAME}/network-api-${{ github.sha }}.tar.gz" 2>/dev/null; then
-            echo "Backend image for SHA ${{ github.sha }} already exists in S3"
-            echo "skip=true" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          KEY="deployments/${APP_NAME}/${GITHUB_SHA}/backend.tar.gz"
+          if aws s3 ls "s3://${S3_BUCKET}/${KEY}" --region "${AWS_REGION}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
           else
-            echo "Backend image not found, will deploy"
-            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload backend artifacts to S3
-        if: steps.check-backend.outputs.skip != 'true'
+      - name: Deploy backend (upload + SSM remote deploy)
+        if: steps.check_backend.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
-          aws s3 cp network-api-image.tar.gz "s3://${S3_BUCKET}/deployments/${APP_NAME}/network-api-${{ github.sha }}.tar.gz"
-          aws s3 cp network-api-image.tar.gz "s3://${S3_BUCKET}/deployments/${APP_NAME}/network-api-latest.tar.gz"
-          aws s3 cp docker-compose.prod.yml     "s3://${S3_BUCKET}/deployments/${APP_NAME}/docker-compose.prod.yml"
-          aws s3 cp scripts/deploy-ec2.sh       "s3://${S3_BUCKET}/deployments/${APP_NAME}/deploy-ec2.sh"
-          aws s3 cp scripts/remote/setup-shared-proxy.sh "s3://${S3_BUCKET}/deployments/${APP_NAME}/setup-shared-proxy.sh"
-
-      - name: Download backend artifacts on EC2 (SSM)
-        if: steps.check-backend.outputs.skip != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          source scripts/ssm-run.sh
-          ssm_run "Network: download backend artifacts" scripts/remote/download-backend.sh
-
-      - name: Deploy backend on EC2 (SSM)
-        if: steps.check-backend.outputs.skip != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          source scripts/ssm-run.sh
-          ssm_run "Network: deploy backend" scripts/remote/deploy-backend.sh
-
-      - name: Verify backend on EC2 (SSM)
-        if: steps.check-backend.outputs.skip != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          source scripts/ssm-run.sh
-          ssm_run "Network: verify backend health" scripts/remote/verify-backend.sh
+          ./infra/scripts/deploy/deploy.sh \
+            --app "${APP_NAME}" \
+            --env "${ENV_NAME}" \
+            --sha "${GITHUB_SHA}" \
+            --bucket "${S3_BUCKET}" \
+            --region "${AWS_REGION}" \
+            --deploy-backend true \
+            --deploy-frontend false
 
   deploy-frontend:
     name: Deploy frontend
     runs-on: ubuntu-latest
     needs: [detect-changes]
     if: needs.detect-changes.outputs.frontend_changed == 'true'
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -226,11 +204,12 @@ jobs:
           VITE_DEFAULT_INTERVAL_DAYS: ${{ secrets.VITE_DEFAULT_INTERVAL_DAYS || '14' }}
           VITE_DEFAULT_CONTACT_MESSAGE: ${{ steps.default-message.outputs.message }}
 
-      - name: Package frontend
+      - name: Package frontend to artifacts/frontend.tar.gz
         shell: bash
         run: |
           set -euo pipefail
-          tar -czf frontend.tar.gz -C apps/web/dist .
+          mkdir -p artifacts
+          tar -czf artifacts/frontend.tar.gz -C apps/web/dist .
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -242,32 +221,51 @@ jobs:
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
-      - name: Upload frontend artifacts to S3
+      - name: Check if frontend already uploaded for this SHA
+        id: check_frontend
         shell: bash
         run: |
           set -euo pipefail
-          aws s3 cp frontend.tar.gz "s3://${S3_BUCKET}/deployments/${APP_NAME}/frontend-${{ github.sha }}.tar.gz"
-          aws s3 cp frontend.tar.gz "s3://${S3_BUCKET}/deployments/${APP_NAME}/frontend-latest.tar.gz"
-          aws s3 cp Caddyfile       "s3://${S3_BUCKET}/deployments/${APP_NAME}/Caddyfile"
-          aws s3 cp Caddyfile.shared "s3://${S3_BUCKET}/deployments/shared/Caddyfile" --acl private
+          KEY="deployments/${APP_NAME}/${GITHUB_SHA}/frontend.tar.gz"
+          if aws s3 ls "s3://${S3_BUCKET}/${KEY}" --region "${AWS_REGION}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload shared Caddyfile to S3 (optional)
+        if: steps.check_frontend.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # App-specific Caddyfile (if you still use it)
+          if [ -f Caddyfile ]; then
+            aws s3 cp Caddyfile "s3://${S3_BUCKET}/deployments/${APP_NAME}/${GITHUB_SHA}/Caddyfile" --region "${AWS_REGION}"
+          fi
+          # Shared Caddyfile used by shared proxy
+          if [ -f Caddyfile.shared ]; then
+            aws s3 cp Caddyfile.shared "s3://${S3_BUCKET}/deployments/shared/Caddyfile" --region "${AWS_REGION}"
+          fi
 
       - name: Deploy shared Caddyfile to EC2 (SSM)
+        if: steps.check_frontend.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
-          source scripts/ssm-run.sh
-          ssm_run "Deploy shared Caddyfile" scripts/remote/deploy-shared-caddyfile.sh
+          export APP_NAME ENV="${ENV_NAME}" SHA="${GITHUB_SHA}"
+          source ./infra/scripts/deploy/ssm-run.sh
+          ssm_run "Deploy shared Caddyfile" ./infra/scripts/remote/deploy-shared-caddyfile.sh
 
-      - name: Deploy frontend on EC2 (SSM)
+      - name: Deploy frontend (upload + SSM remote deploy)
+        if: steps.check_frontend.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
-          source scripts/ssm-run.sh
-          ssm_run "Network: deploy frontend" scripts/remote/deploy-frontend.sh
-
-      - name: Setup shared proxy on EC2 (SSM)
-        shell: bash
-        run: |
-          set -euo pipefail
-          source scripts/ssm-run.sh
-          ssm_run "Setup shared Caddy proxy" scripts/remote/setup-shared-proxy.sh
+          ./infra/scripts/deploy/deploy.sh \
+            --app "${APP_NAME}" \
+            --env "${ENV_NAME}" \
+            --sha "${GITHUB_SHA}" \
+            --bucket "${S3_BUCKET}" \
+            --region "${AWS_REGION}" \
+            --deploy-backend false \
+            --deploy-frontend true

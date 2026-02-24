@@ -1,4 +1,8 @@
-name: network-prod
+# docker-compose template for local/dev and production-like runs
+# Copy and rename (e.g. docker-compose.yml, docker-compose-dev.yml). Replace APP_NAME, image names, and paths.
+# Uses: .env or apps/api/.env for POSTGRES_*, PORT, etc.
+
+name: ${APP_NAME:-myapp}
 
 services:
   db:
@@ -10,7 +14,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - pgdata_prod:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 5s
@@ -24,7 +28,7 @@ services:
       target: production
       args:
         NODE_VERSION: 22
-    image: reharik/network-api:prod
+    image: myapp-api:prod
     env_file:
       - ./apps/api/.env
     depends_on:
@@ -39,7 +43,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - '3000:3000'
-    command: /app/apps/api/dist/scripts/serverStartUpProd.sh
+    command: ["node", "apps/api/dist/index.js"]
 
 volumes:
-  pgdata_prod:
+  pgdata:
