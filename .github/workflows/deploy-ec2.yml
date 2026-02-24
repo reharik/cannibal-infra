@@ -1,26 +1,22 @@
 name: Deploy to EC2 (SSM + S3 + OIDC)
-
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+  workflow_call:
     inputs:
       deploy_backend:
-        description: "Deploy backend"
+        type: boolean
         required: false
         default: true
-        type: boolean
       deploy_frontend:
-        description: "Deploy frontend"
+        type: boolean
         required: false
         default: true
-        type: boolean
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
 
 permissions:
   contents: read
-  actions: write
   id-token: write
-
 env:
   # Keep waits bounded
   SSM_POLL_DELAY_SECONDS: "2"
