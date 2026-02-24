@@ -22,15 +22,6 @@ permissions:
   id-token: write
 
 env:
-  AWS_REGION: us-east-1
-  S3_BUCKET: network-deploy-709865789463-us-east-1
-  APP_NAME: network
-  ENV_NAME: prod
-
-  # SSM tag targeting defaults (used by infra/scripts/deploy/ssm-run.sh)
-  SSM_TAG_HOST: prod-shared
-  SSM_TAG_ENV: prod
-
   # Keep waits bounded
   SSM_POLL_DELAY_SECONDS: "2"
   SSM_POLL_MAX_ATTEMPTS: "120"
@@ -47,7 +38,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
-
+      - name: Load infra app config
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -r '
+            "APP_NAME=\(.appName)\nENV_NAME=\(.env)\nAWS_REGION=\(.awsRegion)\nS3_BUCKET=\(.s3Bucket)\nSSM_TAG_HOST=\(.ssm.tagHost)\nSSM_TAG_ENV=\(.ssm.tagEnv)\n" +
+            (if .ssmPoll then "SSM_POLL_DELAY_SECONDS=\(.ssmPoll.delaySeconds)\nSSM_POLL_MAX_ATTEMPTS=\(.ssmPoll.maxAttempts)\n" else "" end)
+          ' infra.app.config.json >> "$GITHUB_ENV"
       - name: Set changes (manual run)
         if: github.event_name == 'workflow_dispatch'
         id: manual
@@ -102,7 +100,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Load infra app config
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -r '
+            "APP_NAME=\(.appName)\nENV_NAME=\(.env)\nAWS_REGION=\(.awsRegion)\nS3_BUCKET=\(.s3Bucket)\nSSM_TAG_HOST=\(.ssm.tagHost)\nSSM_TAG_ENV=\(.ssm.tagEnv)\n" +
+            (if .ssmPoll then "SSM_POLL_DELAY_SECONDS=\(.ssmPoll.delaySeconds)\nSSM_POLL_MAX_ATTEMPTS=\(.ssmPoll.maxAttempts)\n" else "" end)
+          ' infra.app.config.json >> "$GITHUB_ENV"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -131,7 +136,9 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts
           docker save "${APP_NAME}-api:${GITHUB_SHA}" "${APP_NAME}-api:latest" | gzip > artifacts/backend.tar.gz
-
+      - name: Debug role arn presence
+        run: |
+          test -n "${{ secrets.AWS_ROLE_ARN }}" && echo "AWS_ROLE_ARN is set" || (echo "AWS_ROLE_ARN missing" && exit 1)
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -142,20 +149,19 @@ jobs:
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
-      - name: Check if backend already uploaded for this SHA
-        id: check_backend
-        shell: bash
-        run: |
-          set -euo pipefail
-          KEY="deployments/${APP_NAME}/${GITHUB_SHA}/backend.tar.gz"
-          if aws s3 ls "s3://${S3_BUCKET}/${KEY}" --region "${AWS_REGION}" >/dev/null 2>&1; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
+      # - name: Check if backend already uploaded for this SHA
+      #   id: check_backend
+      #   shell: bash
+      #   run: |
+      #     set -euo pipefail
+      #     KEY="deployments/${APP_NAME}/${GITHUB_SHA}/backend.tar.gz"
+      #     if aws s3 ls "s3://${S3_BUCKET}/${KEY}" --region "${AWS_REGION}" >/dev/null 2>&1; then
+      #       echo "skip=true" >> "$GITHUB_OUTPUT"
+      #     else
+      #       echo "skip=false" >> "$GITHUB_OUTPUT"
+      #     fi
       - name: Deploy backend (upload + SSM remote deploy)
-        if: steps.check_backend.outputs.skip != 'true'
+        # if: steps.check_backend.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -176,7 +182,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Load infra app config
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -r '
+            "APP_NAME=\(.appName)\nENV_NAME=\(.env)\nAWS_REGION=\(.awsRegion)\nS3_BUCKET=\(.s3Bucket)\nSSM_TAG_HOST=\(.ssm.tagHost)\nSSM_TAG_ENV=\(.ssm.tagEnv)\n" +
+            (if .ssmPoll then "SSM_POLL_DELAY_SECONDS=\(.ssmPoll.delaySeconds)\nSSM_POLL_MAX_ATTEMPTS=\(.ssmPoll.maxAttempts)\n" else "" end)
+          ' infra.app.config.json >> "$GITHUB_ENV"
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
