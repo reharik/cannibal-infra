@@ -17,12 +17,15 @@ RUN corepack enable || true
 FROM base AS deps-dev-staging
 COPY package.json package-lock.json ./
 COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
+# Copy other workspaces (e.g. packages/*) so npm sees them; otherwise "No workspaces found!"
+COPY packages/ packages/
 RUN npm ci --workspaces --include-workspace-root --ignore-scripts
 
 FROM base AS deps-prod
 COPY package.json package-lock.json ./
 COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
-RUN npm ci --workspaces --include-workspace-root --only=production --ignore-scripts
+COPY packages/ packages/
+RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 
 # =============================================================================
 # BUILD STAGE
