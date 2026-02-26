@@ -82,7 +82,7 @@ if [[ "${DEPLOY_FRONTEND}" == "true" ]]; then
     || echo "No frontend artifact found at ${ARTIFACT_DIR}/${FRONTEND_TAR} (skipping upload)"
 fi
 
-# Optional: upload compose/env if you generate them in CI
+# Optional: upload merged compose and env (generated in CI)
 upload_if_exists "${ARTIFACT_DIR}/${REMOTE_COMPOSE_NAME}" "${REMOTE_COMPOSE_NAME}" || true
 upload_if_exists "${ARTIFACT_DIR}/${REMOTE_ENV_NAME}" "${REMOTE_ENV_NAME}" || true
 

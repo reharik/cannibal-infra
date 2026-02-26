@@ -40,7 +40,7 @@ Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`
 ## Required env / secrets (app-owned)
 
 - **From config** (via loader): `APP_NAME`, `AWS_REGION`, `S3_BUCKET`, `SSM_TAG_HOST`, `SSM_TAG_ENV` (set from `infra.app.config.json` + defaults).
-- **Secrets**: OIDC `AWS_ROLE_ARN`; frontend build e.g. `VITE_*` vars.
+- **Secrets**: OIDC `AWS_ROLE_ARN`; for backend deploy, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (written to `env.env` and installed on EC2 so compose can substitute them); frontend build e.g. `VITE_*` vars.
 - **Override**: `SSM_TARGETS_OVERRIDE` if not using tag-based targeting.
 
 ## S3 layout (convention)

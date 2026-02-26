@@ -56,8 +56,7 @@ if download_if_exists "${REMOTE_ENV_NAME}" "${WORK_DIR}/${REMOTE_ENV_NAME}"; the
   sudo install -m 0600 "${WORK_DIR}/${REMOTE_ENV_NAME}" "${ENV_FILE}"
 fi
 
-# Install optional compose file
-# If present, we install it to ${APP_ROOT}/docker-compose.yml and use it.
+# Install optional compose file (merged base+prod from CI, or single file)
 COMPOSE_FILE_DEFAULT_1="${APP_ROOT}/docker-compose.${ENV}.yml"
 COMPOSE_FILE_DEFAULT_2="${APP_ROOT}/docker-compose.prod.yml"
 COMPOSE_FILE_DEFAULT_3="${APP_ROOT}/docker-compose.yml"
