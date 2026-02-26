@@ -4,7 +4,6 @@
   "awsRegion": "us-east-1",
   "ec2InstanceId": "i-xxxx",
   "overrides": {
-    "composeFile": "docker-compose.prod.yml",
     "envFile": "env/prod.env",
     "migrationsCommand": "node apps/api/dist/knexfile.js migrate:latest",
     "artifactBackendName": "network-api.tar.gz",

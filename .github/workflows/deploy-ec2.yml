@@ -19,8 +19,8 @@ permissions:
   id-token: write
 env:
   # Keep waits bounded
-  SSM_POLL_DELAY_SECONDS: "2"
-  SSM_POLL_MAX_ATTEMPTS: "120"
+  SSM_POLL_DELAY_SECONDS: '2'
+  SSM_POLL_MAX_ATTEMPTS: '120'
 
 jobs:
   detect-changes:
@@ -82,7 +82,6 @@ jobs:
             frontend_changed:
               - 'apps/web/**'
               - 'Caddyfile'
-              - 'Caddyfile.shared'
               - 'docker-compose*.yml'
               - 'infra/**'
           base: ${{ github.event.before }}
@@ -132,6 +131,16 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts
           docker save "${APP_NAME}-api:${GITHUB_SHA}" "${APP_NAME}-api:latest" | gzip > artifacts/backend.tar.gz
+
+      - name: Generate merged prod compose for EC2
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose \
+          -f infra/docker-compose/base.yml \
+          -f infra/docker-compose/prod.yml \
+          config -o artifacts/docker-compose.yml
+
       - name: Debug role arn presence
         run: |
           test -n "${{ secrets.AWS_ROLE_ARN }}" && echo "AWS_ROLE_ARN is set" || (echo "AWS_ROLE_ARN missing" && exit 1)
@@ -242,18 +251,16 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload shared Caddyfile to S3 (optional)
+      - name: Upload shared Caddyfile to S3
         if: steps.check_frontend.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
-          # App-specific Caddyfile (if you still use it)
+          # Shared proxy config: single source of truth in infra (all known apps)
+          aws s3 cp infra/config/caddy/Caddyfile.shared "s3://${S3_BUCKET}/deployments/shared/Caddyfile" --region "${AWS_REGION}"
+          # App-specific Caddyfile (optional, for per-app proxy)
           if [ -f Caddyfile ]; then
             aws s3 cp Caddyfile "s3://${S3_BUCKET}/deployments/${APP_NAME}/${GITHUB_SHA}/Caddyfile" --region "${AWS_REGION}"
-          fi
-          # Shared Caddyfile used by shared proxy
-          if [ -f Caddyfile.shared ]; then
-            aws s3 cp Caddyfile.shared "s3://${S3_BUCKET}/deployments/shared/Caddyfile" --region "${AWS_REGION}"
           fi
 
       - name: Deploy shared Caddyfile to EC2 (SSM)
