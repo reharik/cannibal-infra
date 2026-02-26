@@ -38,8 +38,8 @@ COPY . .
 ENV NX_DAEMON=false
 RUN npx nx reset || true
 
-# Generate container types after source code is available
-RUN cd ${API_WORKSPACE_PATH} && npm run gen:container
+# Generate container types (run from repo root so npm finds package.json)
+RUN npm run gen:container --workspace=${API_WORKSPACE_NAME}
 
 # Verify the file was generated
 RUN test -f ${API_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts || \
