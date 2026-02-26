@@ -15,6 +15,7 @@ RUN corepack enable || true
 # =============================================================================
 
 FROM base AS deps-dev-staging
+ARG API_WORKSPACE_PATH=apps/api
 COPY package.json package-lock.json ./
 COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
 # Copy other workspaces (e.g. packages/*) so npm sees them; otherwise "No workspaces found!"
@@ -22,6 +23,7 @@ COPY packages/ packages/
 RUN npm ci --workspaces --include-workspace-root --ignore-scripts
 
 FROM base AS deps-prod
+ARG API_WORKSPACE_PATH=apps/api
 COPY package.json package-lock.json ./
 COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
 COPY packages/ packages/
@@ -32,6 +34,8 @@ RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 # =============================================================================
 
 FROM base AS build
+ARG API_WORKSPACE_PATH=apps/api
+ARG API_WORKSPACE_NAME=@app/api
 WORKDIR /repo
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
@@ -62,6 +66,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev", "--workspace=@app/api"]
 
 FROM node:${NODE_VERSION}-slim AS production
+ARG API_WORKSPACE_PATH=apps/api
 ENV NODE_ENV=production
 WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
