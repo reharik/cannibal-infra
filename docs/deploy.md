@@ -22,12 +22,26 @@ Generic deploy flow used by app repos that use cannibal-infra. App-specific deta
 - **remote/setup-shared-proxy.sh** – On EC2: ensure shared Caddy container is running with correct mounts.
 - **remote/cleanup-docker.sh** – Optional: prune images/containers/volumes on EC2.
 
+## App config (infra.app.config.json)
+
+Infra provides **defaults** in `infra/config/infra.app.config.defaults.json`. The consumer repo keeps a single app config at **repo root**: `infra.app.config.json`. Workflows and scripts never read the consumer file directly; they use the **loader**, which merges defaults and consumer (consumer overrides):
+
+```bash
+./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"   # in Actions
+eval "$(./infra/scripts/deploy/load-infra-app-config.sh)"         # local export
+```
+
+- **Defaults**: `infra/config/infra.app.config.defaults.json` (infra-owned; defines every key with a safe default).
+- **Consumer**: repo root `infra.app.config.json` (app-owned; copy from `infra/templates/app/infra.app.config.example.json` and set `appName`, `s3Bucket`, etc.).
+- **Merge**: `load-infra-app-config.sh` runs `jq -s '.[0] * .[1]' defaults.json consumer.json` and outputs `KEY=VALUE` lines. If the consumer file is missing, defaults alone are used (deploy will fail later if e.g. `s3Bucket` is empty).
+
+Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`, `s3Bucket`, `ssm.tagHost`, `ssm.tagEnv`, `ssmPoll.delaySeconds`, `ssmPoll.maxAttempts`, `docker.nodeVersion`, `docker.apiWorkspacePath`, `docker.nxProject`, `docker.devWorkspaceName`, `docker.nodeEntrypoint`.
+
 ## Required env / secrets (app-owned)
 
-- AWS: `AWS_REGION`, `S3_BUCKET`, OIDC role or keys.
-- App: `APP_NAME` (used in S3 key prefix and compose project name).
-- SSM targeting: `SSM_TAG_HOST`, `SSM_TAG_ENV` or `SSM_TARGETS_OVERRIDE`.
-- Frontend build: e.g. `VITE_*` vars as needed.
+- **From config** (via loader): `APP_NAME`, `AWS_REGION`, `S3_BUCKET`, `SSM_TAG_HOST`, `SSM_TAG_ENV` (set from `infra.app.config.json` + defaults).
+- **Secrets**: OIDC `AWS_ROLE_ARN`; frontend build e.g. `VITE_*` vars.
+- **Override**: `SSM_TARGETS_OVERRIDE` if not using tag-based targeting.
 
 ## S3 layout (convention)
 

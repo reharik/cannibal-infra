@@ -1,9 +1,10 @@
 {
-  "$comment": "Copy to repo root as infra.app.config.json. Only override what you need; infra defaults apply for the rest. See config/infra.app.config.defaults.json and scripts/deploy/load-infra-app-config.sh.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Infra-owned defaults. Consumer overrides via repo-root infra.app.config.json. Merged with load-infra-app-config.sh.",
   "appName": "myapp",
   "env": "prod",
   "awsRegion": "us-east-1",
-  "s3Bucket": "myapp-deploy-123456789012-us-east-1",
+  "s3Bucket": "",
   "ssm": {
     "tagHost": "prod-shared",
     "tagEnv": "prod"

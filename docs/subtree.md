@@ -40,7 +40,7 @@ In practice, infra changes are usually made in the cannibal-infra repo and then 
 
 ## Config usage (network, chore-tracker, etc.)
 
-- **App deploy/config**: Root `infra.app.config.json` is the app-specific deploy/config; template lives at `infra/templates/app/infra.app.config.example.json`. Each app keeps its own copy at repo root with `appName`, `env`, `s3Bucket`, etc.
+- **App deploy/config**: Root `infra.app.config.json` is the app-specific deploy/config; template at `infra/templates/app/infra.app.config.example.json`. Infra provides defaults in `infra/config/infra.app.config.defaults.json`; `infra/scripts/deploy/load-infra-app-config.sh` merges defaults + consumer and outputs env vars (used by workflows and can be sourced locally). Each app keeps its own copy at repo root with `appName`, `s3Bucket`, etc.; only override what you need.
 - **Prettier**: Use `.prettierrc.cjs` that `require()`s `./infra/config/prettier/.prettierrc.json`; add a root `.prettierignore` (same content as `infra/config/prettier/.prettierignore` or app-specific).
 - **ESLint**: Import `./infra/config/eslint/eslint-shared.js` and call `createBaseTypeScriptConfig({ tsconfigRootDir: import.meta.dirname, ... })` so the shared config resolves tsconfig from the app/project root.
 - **TypeScript**: Root `tsconfig.json` extends `./infra/config/tsconfig/tsconfig.monorepo.json` (which adds shared `types`/`plugins`); app adds only `files`, `include`, `references`, and `compilerOptions.baseUrl`/`paths`.
