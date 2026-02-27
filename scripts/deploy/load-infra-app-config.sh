@@ -14,13 +14,13 @@ fi
 if [[ -f "$CONSUMER" ]]; then
   MERGED=$(jq -s '
     def rmerge(a;b):
-      reduce (b | keys_unsorted[]) as $k (a;
-        .[$k] =
-          (if (a[$k] | type) == "object" and (b[$k] | type) == "object"
-           then rmerge(a[$k]; b[$k])
-           else b[$k]
-           end)
-      );
+      if (a|type) == "object" and (b|type) == "object" then
+        reduce (b|keys_unsorted[]) as $k (a;
+          .[$k] = rmerge(a[$k]; b[$k])
+        )
+      else
+        b
+      end;
     rmerge(.[0]; .[1])
   ' "$DEFAULTS" "$CONSUMER")
 else
