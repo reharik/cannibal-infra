@@ -11,18 +11,14 @@ if [[ ! -f "$DEFAULTS" ]]; then
   exit 1
 fi
 
+echo "defaults type: $(jq -r type "$DEFAULTS")"
 if [[ -f "$CONSUMER" ]]; then
-  MERGED=$(jq -s '
-    def rmerge(a;b):
-      if (a|type) == "object" and (b|type) == "object" then
-        reduce (b|keys_unsorted[]) as $k (a;
-          .[$k] = rmerge(a[$k]; b[$k])
-        )
-      else
-        b
-      end;
-    rmerge(.[0]; .[1])
-  ' "$DEFAULTS" "$CONSUMER")
+  echo "consumer type: $(jq -r type "$CONSUMER")"
+fi
+
+# Merge defaults first, then consumer overrides (recursive object merge; arrays replaced)
+if [[ -f "$CONSUMER" ]]; then
+  MERGED=$(jq -s '.[0] * .[1]' "$DEFAULTS" "$CONSUMER")
 else
   MERGED=$(jq . "$DEFAULTS")
 fi
