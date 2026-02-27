@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+log() { echo "$@" >&2; }  # stderr logger
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 DEFAULTS="${INFRA_ROOT}/config/infra.app.config.defaults.json"
@@ -11,10 +13,8 @@ if [[ ! -f "$DEFAULTS" ]]; then
   exit 1
 fi
 
-echo "defaults type: $(jq -r type "$DEFAULTS")"
-if [[ -f "$CONSUMER" ]]; then
-  echo "consumer type: $(jq -r type "$CONSUMER")"
-fi
+log "defaults type: $(jq -r type "$DEFAULTS")"
+[[ -f "$CONSUMER" ]] && log "consumer type: $(jq -r type "$CONSUMER")"
 
 # Merge defaults first, then consumer overrides (recursive object merge; arrays replaced)
 if [[ -f "$CONSUMER" ]]; then
