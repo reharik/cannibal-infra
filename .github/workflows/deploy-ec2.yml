@@ -131,30 +131,16 @@ jobs:
           mkdir -p artifacts
           docker save "${APP_NAME}-api:${GITHUB_SHA}" "${APP_NAME}-api:latest" | gzip > artifacts/backend.tar.gz
 
-      - name: Prepare env and merged compose for EC2
+      - name: Prepare merged compose for EC2
         shell: bash
-        env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          # env.env: used for merge below and installed on EC2 as ${APP_ROOT}/env/prod.env
-          touch artifacts/env.env
-          for var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB; do
-            val="${!var:-}"
-            if [[ -n "$val" ]]; then echo "${var}=${val}" >> artifacts/env.env; fi
-          done
-          if [[ ! -s artifacts/env.env ]]; then
-            echo "::error::Backend deploy requires repo secrets: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB. Add them under Settings → Secrets and variables → Actions."
-            exit 1
-          fi
-          # Combined docker-compose.yml so variable substitution succeeds (uses env.env)
+
+          # Produce a single resolved compose file (safe: should NOT require secrets at render time)
           docker compose \
             -f infra/config/docker-compose/base.yml \
             -f infra/config/docker-compose/prod.yml \
-            --env-file artifacts/env.env \
             config -o artifacts/docker-compose.yml
 
       - name: Debug role arn presence
