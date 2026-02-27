@@ -13,6 +13,13 @@ on:
     secrets:
       AWS_ROLE_ARN:
         required: true
+      # Caller must pass these for backend deploy (or use secrets: inherit)
+      POSTGRES_USER:
+        required: false
+      POSTGRES_PASSWORD:
+        required: false
+      POSTGRES_DB:
+        required: false
 
 permissions:
   contents: read
@@ -140,7 +147,8 @@ jobs:
             if [[ -n "$val" ]]; then echo "${var}=${val}" >> artifacts/env.env; fi
           done
           if [[ ! -s artifacts/env.env ]]; then
-            echo "Warning: env.env is empty (set POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB repo secrets for deploy)"
+            echo "::error::Backend deploy requires repo secrets: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB. Add them under Settings → Secrets and variables → Actions."
+            exit 1
           fi
           # Combined docker-compose.yml so variable substitution succeeds (uses env.env)
           docker compose \

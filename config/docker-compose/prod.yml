@@ -3,7 +3,7 @@ services:
     platform: linux/arm64
     restart: unless-stopped
     env_file:
-      - ${APP_ENV_FILE:-/opt/${APP_NAME:-myapp}/env/prod.env}
+      - /opt/${APP_NAME}/env/prod.env
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
 
@@ -11,7 +11,7 @@ services:
     platform: linux/arm64
     restart: unless-stopped
     env_file:
-      - ${APP_ENV_FILE:-/opt/${APP_NAME:-myapp}/env/prod.env}
+      - /opt/${APP_NAME}/env/prod.env
     environment:
       NODE_ENV: production
       POSTGRES_PORT: "5432"

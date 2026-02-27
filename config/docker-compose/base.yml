@@ -1,10 +1,9 @@
 services:
   db:
     image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:?required}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
-      POSTGRES_DB: ${POSTGRES_DB:?required}
+    environment: POSTGRES_USER
+      POSTGRES_PASSWORD
+      POSTGRES_DB
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -15,7 +14,7 @@ services:
 
   api:
     # In prod we expect this tag to already exist via `docker load`
-    image: ${API_IMAGE:-${APP_NAME:-myapp}-api:latest}
+    image: ${API_IMAGE:-${APP_NAME}-api:latest}
     depends_on:
       db:
         condition: service_healthy

@@ -23,7 +23,7 @@ services:
       - "5432:5432"
 
   api:
-    image: ${API_IMAGE:-${APP_NAME:-myapp}-api:dev}
+    image: ${API_IMAGE:-${APP_NAME}-api:dev}
     environment:
       NODE_ENV: development
       AWS_ENDPOINT: http://localstack:4566

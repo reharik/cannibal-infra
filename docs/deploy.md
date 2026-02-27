@@ -35,12 +35,12 @@ eval "$(./infra/scripts/deploy/load-infra-app-config.sh)"         # local export
 - **Consumer**: repo root `infra.app.config.json` (app-owned; copy from `infra/templates/app/infra.app.config.example.json` and set `appName`, `s3Bucket`, etc.).
 - **Merge**: `load-infra-app-config.sh` runs `jq -s '.[0] * .[1]' defaults.json consumer.json` and outputs `KEY=VALUE` lines. If the consumer file is missing, defaults alone are used (deploy will fail later if e.g. `s3Bucket` is empty).
 
-Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`, `s3Bucket`, `ssm.tagHost`, `ssm.tagEnv`, `ssmPoll.delaySeconds`, `ssmPoll.maxAttempts`, `docker.nodeVersion`, `docker.apiWorkspacePath`, `docker.nxProject`, `docker.devWorkspaceName`, `docker.nodeEntrypoint`.
+Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`, `s3Bucket`, `ssm.*`, `ssmPoll.*`, `docker.*`, and `requiredSecrets` (metadata only: lists secret **names** the app must configure—no values). See `config/infra.app.config.defaults.json`: `requiredSecrets.backendDeploy` and `requiredSecrets.frontendBuild` are the lists to add in GitHub Settings → Secrets and to pass when using `workflow_call`.
 
 ## Required env / secrets (app-owned)
 
 - **From config** (via loader): `APP_NAME`, `AWS_REGION`, `S3_BUCKET`, `SSM_TAG_HOST`, `SSM_TAG_ENV` (set from `infra.app.config.json` + defaults).
-- **Secrets**: OIDC `AWS_ROLE_ARN`; for backend deploy, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (written to `env.env` and installed on EC2 so compose can substitute them); frontend build e.g. `VITE_*` vars.
+- **Secrets**: OIDC `AWS_ROLE_ARN`; for backend deploy, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (written to `env.env` and installed on EC2). When this workflow is invoked via `workflow_call`, the **caller** must pass these (e.g. `secrets: inherit` or explicit `POSTGRES_USER: ${{ secrets.POSTGRES_USER }}` etc.); frontend build e.g. `VITE_*` vars.
 - **Override**: `SSM_TARGETS_OVERRIDE` if not using tag-based targeting.
 
 ## S3 layout (convention)

@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-# Load infra app config: merge infra-owned defaults with consumer infra.app.config.json
-# and output KEY=VALUE lines for GITHUB_ENV (or source for local use).
-#
-# Usage (from repo root):
-#   ./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"   # in Actions
-#   eval "$(./infra/scripts/deploy/load-infra-app-config.sh)"          # local export
-#
-# Consumer config: repo root infra.app.config.json (optional). Any key overrides defaults.
-# Defaults: infra/config/infra.app.config.defaults.json
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,28 +11,44 @@ if [[ ! -f "$DEFAULTS" ]]; then
   exit 1
 fi
 
-# Merge: defaults first, then consumer overrides (deep merge)
 if [[ -f "$CONSUMER" ]]; then
-  MERGED=$(jq -s '.[0] * .[1]' "$DEFAULTS" "$CONSUMER")
+  MERGED=$(jq -s '
+    def rmerge(a;b):
+      reduce (b | keys_unsorted[]) as $k (a;
+        .[$k] =
+          (if (a[$k] | type) == "object" and (b[$k] | type) == "object"
+           then rmerge(a[$k]; b[$k])
+           else b[$k]
+           end)
+      );
+    rmerge(.[0]; .[1])
+  ' "$DEFAULTS" "$CONSUMER")
 else
   MERGED=$(jq . "$DEFAULTS")
 fi
 
-# Output env vars for GITHUB_ENV (one KEY=VALUE per line; empty values allowed)
-# Normalize so missing .ssm / .ssmPoll / .docker get defaults, then output
+# Validate required keys exist after merge (fail fast; no silent fallbacks)
+echo "$MERGED" | jq -e '
+  .appName and .env and .awsRegion and
+  .ssm.tagHost and .ssm.tagEnv and
+  .ssmPoll.delaySeconds and .ssmPoll.maxAttempts and
+  .docker.nodeVersion and .docker.apiWorkspacePath and
+  .docker.nxProject and .docker.devWorkspaceName and .docker.nodeEntrypoint
+' >/dev/null
+
+# Emit env vars (no defaults here; defaults live only in defaults.json)
 echo "$MERGED" | jq -r '
-  ( . | .ssm = (.ssm // {}) | .ssmPoll = (.ssmPoll // {}) | .docker = (.docker // {}) ) as $c |
-  "APP_NAME=" + ($c.appName // "myapp"),
-  "ENV_NAME=" + ($c.env // "prod"),
-  "AWS_REGION=" + ($c.awsRegion // "us-east-1"),
-  "S3_BUCKET=" + ($c.s3Bucket // ""),
-  "SSM_TAG_HOST=" + (($c.ssm.tagHost // "prod-shared") | tostring),
-  "SSM_TAG_ENV=" + (($c.ssm.tagEnv // "prod") | tostring),
-  "SSM_POLL_DELAY_SECONDS=" + (($c.ssmPoll.delaySeconds // 2) | tostring),
-  "SSM_POLL_MAX_ATTEMPTS=" + (($c.ssmPoll.maxAttempts // 120) | tostring),
-  "DOCKER_NODE_VERSION=" + (($c.docker.nodeVersion // 22) | tostring),
-  "DOCKER_API_WORKSPACE_PATH=" + ($c.docker.apiWorkspacePath // "apps/api"),
-  "DOCKER_NX_PROJECT=" + ($c.docker.nxProject // "api"),
-  "DOCKER_DEV_WORKSPACE=" + ($c.docker.devWorkspaceName // "@app/api"),
-  "DOCKER_NODE_ENTRYPOINT=" + ($c.docker.nodeEntrypoint // "apps/api/dist/index.js")
+  "APP_NAME=\(.appName)",
+  "ENV_NAME=\(.env)",
+  "AWS_REGION=\(.awsRegion)",
+  "S3_BUCKET=\(.s3Bucket)",
+  "SSM_TAG_HOST=\(.ssm.tagHost)",
+  "SSM_TAG_ENV=\(.ssm.tagEnv)",
+  "SSM_POLL_DELAY_SECONDS=\(.ssmPoll.delaySeconds)",
+  "SSM_POLL_MAX_ATTEMPTS=\(.ssmPoll.maxAttempts)",
+  "DOCKER_NODE_VERSION=\(.docker.nodeVersion)",
+  "DOCKER_API_WORKSPACE_PATH=\(.docker.apiWorkspacePath)",
+  "DOCKER_NX_PROJECT=\(.docker.nxProject)",
+  "DOCKER_DEV_WORKSPACE=\(.docker.devWorkspaceName)",
+  "DOCKER_NODE_ENTRYPOINT=\(.docker.nodeEntrypoint)"
 '
