@@ -72,6 +72,18 @@ upload_if_exists() {
   return 1
 }
 
+upload_dir_if_exists() {
+  local local_dir="$1"
+  local remote_prefix="$2"  # e.g. "compose"
+
+  if [[ -d "$local_dir" ]]; then
+    echo "Uploading directory $local_dir -> ${S3_URI}/${remote_prefix}/"
+    aws s3 cp "$local_dir" "${S3_URI}/${remote_prefix}/" --recursive --region "$AWS_REGION"
+    return 0
+  fi
+  return 1
+}
+
 if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
   upload_if_exists "${ARTIFACT_DIR}/${BACKEND_TAR}" "${BACKEND_TAR}" \
     || echo "No backend artifact found at ${ARTIFACT_DIR}/${BACKEND_TAR} (skipping upload)"
@@ -85,6 +97,9 @@ fi
 # Optional: upload merged compose and env (generated in CI)
 upload_if_exists "${ARTIFACT_DIR}/${REMOTE_COMPOSE_NAME}" "${REMOTE_COMPOSE_NAME}" || true
 upload_if_exists "${ARTIFACT_DIR}/${REMOTE_ENV_NAME}" "${REMOTE_ENV_NAME}" || true
+
+# Option A: upload compose directory (base.yml + prod.yml)
+upload_dir_if_exists "${ARTIFACT_DIR}/compose" "compose" || true
 
 # Prepare SSM invocation
 REMOTE_SCRIPT_LOCAL="${SCRIPT_DIR}/../remote/remote-deploy.sh"

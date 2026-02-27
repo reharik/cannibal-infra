@@ -4,13 +4,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h localhost"]
       interval: 5s
       timeout: 3s
       retries: 20
 
   api:
-    # In prod we expect this tag to already exist via `docker load`
     image: ${API_IMAGE:-${APP_NAME}-api:latest}
     depends_on:
       db:

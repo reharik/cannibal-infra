@@ -77,10 +77,10 @@ jobs:
         with:
           filters: |
             backend_changed:
-              - 'apps/api/**'
-              - 'apps/api/Dockerfile'
-              - 'docker-compose*.yml'
-              - 'infra/**'
+            - 'apps/api/**'
+            - 'infra/docker/**'
+            - 'infra/config/docker-compose/**'
+            - 'infra/**'
             frontend_changed:
               - 'apps/web/**'
               - 'Caddyfile'
@@ -131,17 +131,13 @@ jobs:
           mkdir -p artifacts
           docker save "${APP_NAME}-api:${GITHUB_SHA}" "${APP_NAME}-api:latest" | gzip > artifacts/backend.tar.gz
 
-      - name: Prepare merged compose for EC2
+      - name: Package compose files for EC2
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p artifacts
-
-          # Produce a single resolved compose file (safe: should NOT require secrets at render time)
-          docker compose \
-            -f infra/config/docker-compose/base.yml \
-            -f infra/config/docker-compose/prod.yml \
-            config -o artifacts/docker-compose.yml
+          mkdir -p artifacts/compose
+          cp infra/config/docker-compose/base.yml artifacts/compose/base.yml
+          cp infra/config/docker-compose/prod.yml artifacts/compose/prod.yml
 
       - name: Debug role arn presence
         run: |
