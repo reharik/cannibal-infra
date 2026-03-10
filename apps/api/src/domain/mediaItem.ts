@@ -3,16 +3,15 @@
  * A media item can appear in multiple albums via AlbumPhoto.
  */
 
+import type { MediaItemKindEnum } from "@photo-app/contracts";
 import type { Comment } from "./comment";
 import type { Entity } from "./entity";
 import type { ShareLink } from "./shareLink";
 import type { User } from "./user";
 
-export type MediaItemKind = "photo" | "video";
-
 export interface MediaItem extends Entity {
   owner: User;
-  kind: MediaItemKind;
+  kind: MediaItemKindEnum;
   storageKey: string;
   mimeType: string;
   size: number;

@@ -2,14 +2,16 @@
  * ShareLink: token-based sharing for an Album or MediaItem with permissions and optional expiration.
  */
 
+import type {
+  ResourceTypeEnum,
+  ShareLinkPermissionEnum,
+} from "@photo-app/contracts";
 import type { Entity } from "./entity";
 
-export type ShareLinkPermission = "view" | "comment" | "contribute";
-
 export interface ShareLink extends Entity {
-  resourceType: "album" | "mediaItem";
+  resourceType: ResourceTypeEnum;
   linkToken: string;
-  permissions: ShareLinkPermission[];
+  permissions: ShareLinkPermissionEnum[];
   expiresAt?: Date;
 }
 

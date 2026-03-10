@@ -2,17 +2,11 @@
  * Notification: user-facing event record for shares, comments, added media, etc.
  */
 
+import type { NotificationKindEnum } from "@photo-app/contracts";
 import type { Entity } from "./entity";
 
-export type NotificationKind =
-  | "share_invite"
-  | "album_shared"
-  | "media_added"
-  | "comment"
-  | "comment_reply";
-
 export interface Notification extends Entity {
-  kind: NotificationKind;
+  kind: NotificationKindEnum;
   title: string;
   body: string;
   readAt?: Date;

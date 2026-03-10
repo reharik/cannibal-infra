@@ -2,11 +2,12 @@
  * Comment: user comment attached to an Album or MediaItem.
  */
 
+import type { ResourceTypeEnum } from "@photo-app/contracts";
 import type { Entity } from "./entity";
 import type { User } from "./user";
 
 export interface Comment extends Entity {
-  resourceType: "album" | "mediaItem";
+  resourceType: ResourceTypeEnum;
   author: User;
   content: string;
 }

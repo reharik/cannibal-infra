@@ -35,18 +35,18 @@ Constraints:
 ---
 
 Task:
-replace most properties that are ids with the object they represent
+create smartEnums for all value types
 
 Context:
-generally entities should not have ids, they should have references to entities. analyse all the entities and when they reference and id e.g. userId: string make it reference the user instead e.g. user: User
+smartEnums should be used whenever there is a collection of names such as resourceType
 
 Requirements:
 
-- entities should not have id values ( except for their own entity id)
-- entities should reference other entities not ids
--
+- anywhere that a type is defined as "this value" | "that value" use an existing or create a smartEnum for those values
+- smartEnums should be created in the packages/contracts/src/enums folder
 
 Scope:
 
-- domain folder only
-- If multiple implementation options exist, propose the simplest approach consistent with the current architecture.
+- domain folder and packages/contracts/src/enums folder
+
+If multiple implementation options exist, propose the simplest approach consistent with the current architecture.

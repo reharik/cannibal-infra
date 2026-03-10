@@ -4,8 +4,8 @@
  */
 
 export * from "./album";
-export * from "./albumMembership";
-export * from "./albumMediaItem";
+export * from "./albumMember";
+export * from "./albumItem";
 export * from "./comment";
 export * from "./entity";
 export * from "./invariants";

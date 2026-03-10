@@ -1,12 +1,12 @@
 // Shared auth and user types for API and web
 
-export type UserRole = "adult" | "kid";
+import type { UserRoleEnum } from "../enums";
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: UserRole;
+  role: UserRoleEnum;
   firstName?: string;
   lastName?: string;
   isActive: boolean;
@@ -24,7 +24,7 @@ export interface SignupInput {
   email: string;
   password: string;
   name: string;
-  role?: UserRole;
+  role?: UserRoleEnum;
 }
 
 export interface AuthResponse {

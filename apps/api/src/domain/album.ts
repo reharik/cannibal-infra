@@ -1,10 +1,10 @@
 /**
  * Album: collection of media items with an owner.
- * Members are expressed via AlbumMembership; sharing via ShareLink.
+ * Members are expressed via AlbumMember; sharing via ShareLink.
  */
 
-import type { AlbumMediaItem } from "./albumMediaItem";
-import type { AlbumMembership } from "./albumMembership";
+import type { AlbumItem } from "./albumItem";
+import type { AlbumMember } from "./albumMember";
 import type { Comment } from "./comment";
 import type { Entity } from "./entity";
 import type { ShareLink } from "./shareLink";
@@ -14,9 +14,9 @@ export interface Album extends Entity {
   owner: User;
   title: string;
   /** Members of this album (optional; present when relations are loaded). */
-  memberships?: AlbumMembership[];
+  members?: AlbumMember[];
   /** Media items in this album (optional; present when relations are loaded). */
-  albumMediaItems?: AlbumMediaItem[];
+  albumItems?: AlbumItem[];
   /** Comments on this album (optional; present when relations are loaded). */
   comments?: Comment[];
   /** Share links for this album (optional; present when relations are loaded). */

@@ -1,6 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@photo-app/contracts": ["../../packages/contracts/dist/src/index.d.ts"]
+    },
     "outDir": "./dist",
     "noEmit": true,
     "allowJs": true,
