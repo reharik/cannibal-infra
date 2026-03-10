@@ -14,11 +14,11 @@ on:
       base_sha:
         type: string
         required: false
-        default: ''
+        default: ""
       head_sha:
         type: string
         required: false
-        default: ''
+        default: ""
     secrets:
       AWS_ROLE_ARN:
         required: true
