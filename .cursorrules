@@ -1,0 +1,61 @@
+# Architecture Rules
+
+- Organize code by domain/feature, not by technical layer dumped into global folders
+- Use the following high-level structure:
+  - domain: domain entities, value objects, domain errors, repository interfaces
+  - application: use cases / services that orchestrate domain behavior
+  - infrastructure: persistence, storage, external integrations, http transport
+- Keep route/controller handlers thin
+- Controllers should parse input, call an application use case, and map output to DTOs
+- Business rules must not live in controllers or repositories
+- Repositories are persistence abstractions only and must not contain business logic
+
+# Dependency Injection Rules
+
+- Use Awilix for dependency injection
+- Do not introduce framework IoC or decorator-based dependency injection
+- Prefer explicit constructor injection
+- Keep dependency wiring in composition root / container setup only
+
+# Domain Modeling Rules
+
+- Domain entities must be implemented as classes
+- Use classes only for domain entities and closely related value objects where justified
+- Do not use classes ANYTHING else
+- Domain entities should encapsulate mutation through explicit methods/commands
+- Do not expose public mutable state
+- Avoid general-purpose setters
+- Prefer domain-specific methods such as addMember, rename, revokeShareLink, addItem
+- Public accessors should be minimal; avoid boilerplate getters/setters unless needed
+- Collections may be exposed through read-only access when necessary
+- Domain entities must enforce their own invariants
+- Domain entities must not depend on ORM, HTTP, or framework concerns
+
+# Application Layer Rules
+
+- Application logic should be implemented as use case functions or services
+- Use case functions orchestrate repositories, domain entities, and external services
+- Use case functions should not contain low-level persistence details
+- Cross-aggregate orchestration belongs in application services, not domain entities
+
+# Repository Rules
+
+- Repository interfaces belong in the domain or application boundary
+- Repository implementations belong in infrastructure
+- Repositories load and save entities but do not implement business rules
+
+# DTO / Mapping Rules
+
+- Use DTOs at external boundaries such as HTTP input/output
+- Do not leak domain entities directly through API responses
+- Prefer explicit mapping functions over magic or reflection-based mapping
+- Keep mapping code simple and local to the transport boundary
+- Avoid excessive DTO proliferation where a simple explicit mapper is sufficient
+
+# TypeScript Style Rules
+
+- Use TypeScript with explicit, precise types
+- Do not use decorators unless explicitly requested
+- Do not use NestJS-specific patterns such as decorators, modules, or framework IoC
+- Keep files focused and reasonably small
+- Prefer explicit naming such as CreateAlbumUseCase, AlbumRepository, KnexAlbumRepository
