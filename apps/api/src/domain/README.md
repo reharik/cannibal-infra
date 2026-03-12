@@ -40,4 +40,4 @@ Core business concepts for the photo sharing app. Use this to guide API and pers
 
 ## Invariants
 
-See `invariants.ts` for validation helpers (e.g. valid role, valid share permissions). Application services enforce business rules when creating or updating entities.
+Domain entities enforce their own invariants. Application services enforce business rules when creating or updating entities. Validation helpers can be added in the application layer or as pure functions used by domain/application as needed.

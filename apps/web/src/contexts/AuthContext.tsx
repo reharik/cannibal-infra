@@ -1,4 +1,4 @@
-import type { User } from "@photo-app/contracts";
+import type { User } from "@app/contracts";
 import React, {
   createContext,
   ReactNode,

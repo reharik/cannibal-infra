@@ -34,6 +34,7 @@ export const createBaseTypeScriptConfig = async (options = {}) => {
   const {
     globals: customGlobals = globals.node,
     ecmaVersion = "latest",
+    tsconfigRootDir = import.meta.dirname,
     ignores = [
       "**/dist/**",
       "**/build/**",
@@ -58,7 +59,7 @@ export const createBaseTypeScriptConfig = async (options = {}) => {
           ecmaVersion,
           sourceType: "module",
           projectService: true,
-          tsconfigRootDir: import.meta.dirname,
+          tsconfigRootDir,
         },
       },
       plugins: {

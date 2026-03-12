@@ -59,3 +59,35 @@
 - Do not use NestJS-specific patterns such as decorators, modules, or framework IoC
 - Keep files focused and reasonably small
 - Prefer explicit naming such as CreateAlbumUseCase, AlbumRepository, KnexAlbumRepository
+
+# Transport Boundary Rules
+
+- The architecture must remain transport-agnostic.
+- Domain entities, application services, and repositories must not depend on REST or GraphQL.
+- Transport layers (REST controllers or GraphQL resolvers) must be thin adapters that call application services.
+- Do not add GraphQL decorators or REST concerns to domain entities.
+- If GraphQL is used, define GraphQL models at the boundary rather than decorating domain classes.
+
+Avoid clever generic type patterns in the domain layer.
+Prefer explicit `create()` and `rehydrate()` factory methods over union-typed constructor arguments or discriminated-union constructor modes.
+Keep domain code boring, explicit, and easy to reason about.
+Use `#` private fields for entity state, not `protected` fields.
+
+Do not add getters for every entity field by default.
+Expose domain data only when needed through:
+
+- behavior-oriented methods
+- readonly collection access where justified
+- explicit snapshot/export methods for persistence or mapping
+
+Do not treat every shape as a DTO.
+Use distinct names by purpose:
+
+- Command for use-case Command
+  - use action based name
+- Record for persistence
+- Response for transport output
+- Snapshot for explicit entity export
+
+Do not create multiple redundant types when the shape is identical.
+Prefer one shared type when multiple boundaries use the same shape.
