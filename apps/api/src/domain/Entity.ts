@@ -1,4 +1,10 @@
 import type { ActorId, EntityId } from "../types/types";
+import { serializeEntity } from "./utilities/serializeAggregates";
+
+export type ChildEntities = Record<
+  string,
+  Entity<Record<string, unknown>> | Entity<Record<string, unknown>>[]
+>;
 
 export interface Persistable<TRecord> {
   toPersistence(): TRecord;
@@ -21,6 +27,7 @@ export abstract class Entity<
   #updatedAt: Date;
   #createdBy: ActorId;
   #updatedBy: ActorId;
+  protected abstract props: Record<string, unknown>;
 
   protected constructor(id: EntityId, actorId: ActorId) {
     const now = new Date();
@@ -57,6 +64,20 @@ export abstract class Entity<
     return this.#id;
   }
 
-  public abstract persistenceState(): Record<string, unknown>;
-  public abstract toPersistence(): TRecord;
+  protected childEntities(): ChildEntities {
+    return {};
+  }
+
+  public persistenceState(): Record<string, unknown> {
+    return {
+      id: this.id(),
+      ...this.props,
+      ...this.exportAudit(),
+      ...this.childEntities(),
+    };
+  }
+
+  toPersistence(): TRecord {
+    return serializeEntity(this);
+  }
 }

@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => {
           if (/^node:/.test(id)) {
             return true;
           }
-          // Bundle workspace packages (like @app/contracts) instead of externalizing
+          // Bundle workspace packages (like @packages/contracts) instead of externalizing
           if (id.startsWith("@app/")) {
             return false;
           }

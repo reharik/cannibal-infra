@@ -1,5 +1,5 @@
 import { Entity } from "./Entity";
 
-export abstract class AggregateRoot<TRecord> extends Entity<TRecord> {
-  public abstract toPersistence(): TRecord;
-}
+export abstract class AggregateRoot<
+  TRecord extends Record<string, unknown>,
+> extends Entity<TRecord> {}

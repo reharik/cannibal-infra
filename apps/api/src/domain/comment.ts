@@ -1,91 +1,63 @@
 /**
- * Comment: user comment attached to an Album or MediaItem.
+ * Comment: user comment attached to an Album or MediaItem (by resource type and ID).
+ * Aggregate Root with its own lifecycle; references target and author by ID only.
  */
 
-import type { ResourceTypeEnum } from "@app/contracts";
-import { Entity, generateId } from "./Entity";
-import type { User } from "./user";
+import { AggregateRoot } from "./AggregateRoot";
+import type { EntityAuditRecord } from "./Entity";
+import type { ActorId, EntityId } from "../types/types";
+import type { ResourceTypeEnum } from "@packages/contracts";
+import { ResourceTypeEnum as ResourceTypeEnumCollection } from "@packages/contracts";
 
-export interface CommentCreate {
+export type CommentProps = {
   resourceType: ResourceTypeEnum;
-  author: User;
+  authorId: EntityId;
   content: string;
-}
+};
 
-export interface CommentRehydrate {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: User;
-  updatedBy: User;
+export type CommentRecord = {
+  id: EntityId;
+  resourceType: string;
+  authorId: EntityId;
+  content: string;
+} & EntityAuditRecord;
+
+export type CreateCommentInput = {
   resourceType: ResourceTypeEnum;
-  author: User;
+  authorId: EntityId;
   content: string;
-}
+};
 
-export class Comment extends Entity<User> {
-  #resourceType: ResourceTypeEnum;
-  #author: User;
-  #content: string;
+export class Comment extends AggregateRoot<CommentRecord> {
+  protected props: CommentProps;
 
-  private constructor(
-    id: string,
-    resourceType: ResourceTypeEnum,
-    author: User,
-    content: string,
-    audit:
-      | { actor: User }
-      | { createdAt: Date; updatedAt: Date; createdBy: User; updatedBy: User },
-  ) {
-    if ("actor" in audit) {
-      super(id, audit.actor);
-    } else {
-      super(
-        id,
-        audit.createdAt,
-        audit.updatedAt,
-        audit.createdBy,
-        audit.updatedBy,
-      );
-    }
-    this.#resourceType = resourceType;
-    this.#author = author;
-    this.#content = content;
+  private constructor(id: EntityId, actorId: ActorId, props: CommentProps) {
+    super(id, actorId);
+    this.props = props;
   }
 
-  static create(input: CommentCreate, actor: User): Comment {
-    return new Comment(
-      generateId(),
-      input.resourceType,
-      input.author,
-      input.content,
-      { actor },
-    );
-  }
-
-  static rehydrate(data: CommentRehydrate): Comment {
-    return new Comment(data.id, data.resourceType, data.author, data.content, {
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-      createdBy: data.createdBy,
-      updatedBy: data.updatedBy,
+  static create(input: CreateCommentInput, actorId: ActorId): Comment {
+    return new Comment(crypto.randomUUID(), actorId, {
+      resourceType: input.resourceType,
+      authorId: input.authorId,
+      content: input.content,
     });
   }
 
-  get resourceType(): ResourceTypeEnum {
-    return this.#resourceType;
+  static rehydrate(record: CommentRecord): Comment {
+    const comment = new Comment(record.id, record.createdBy, {
+      resourceType: ResourceTypeEnumCollection.fromValue(record.resourceType),
+      authorId: record.authorId,
+      content: record.content,
+    });
+
+    comment.rehydrateAudit(record);
+
+    return comment;
   }
 
-  get author(): User {
-    return this.#author;
-  }
-
-  get content(): string {
-    return this.#content;
-  }
-
-  editContent(content: string, actor: User): void {
-    this.#content = content;
-    this.touch(actor);
+  editContent(content: string, actorId: ActorId): void {
+    this.props.content = content;
+    this.touch(actorId);
   }
 }

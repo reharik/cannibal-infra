@@ -3,7 +3,7 @@ import type {
   LoginInput,
   SignupInput,
   User,
-} from "@app/contracts";
+} from "@packages/contracts";
 import { RESOLVER } from "awilix";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";

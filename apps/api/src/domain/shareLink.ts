@@ -1,124 +1,94 @@
 /**
- * ShareLink: token-based sharing for an Album or MediaItem with permissions and optional expiration.
+ * ShareLink: token-based sharing for an Album with permission and optional expiration.
  */
 
-import type {
-  ResourceTypeEnum,
-  ShareLinkPermissionEnum,
-} from "@app/contracts";
-import { Entity, generateId, type AuditUser } from "./Entity";
+import { Entity, type EntityAuditRecord } from "./Entity";
+import type { ActorId, EntityId } from "../types/types";
+import { ShareLinkPermissionEnum } from "@packages/contracts";
+import { serializeEntity } from "./utilities/serializeAggregates";
 
-export interface ShareLinkCreate {
-  resourceType: ResourceTypeEnum;
+export type ShareLinkProps = {
+  permission: ShareLinkPermissionEnum;
   linkToken: string;
-  permissions: ShareLinkPermissionEnum[];
   expiresAt?: Date;
-}
+};
 
-export interface ShareLinkRehydrate {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: AuditUser;
-  updatedBy: AuditUser;
-  resourceType: ResourceTypeEnum;
+export type ShareLinkRecord = {
+  id: EntityId;
+  permission: string;
   linkToken: string;
-  permissions: ShareLinkPermissionEnum[];
   expiresAt?: Date;
-}
+} & EntityAuditRecord;
 
-export class ShareLink extends Entity<AuditUser> {
-  #resourceType: ResourceTypeEnum;
-  #linkToken: string;
-  #permissions: ShareLinkPermissionEnum[];
-  #expiresAt: Date | undefined;
+export type CreateShareLinkInput = {
+  permission: ShareLinkPermissionEnum;
+};
 
-  private constructor(
-    id: string,
-    resourceType: ResourceTypeEnum,
-    linkToken: string,
-    permissions: ShareLinkPermissionEnum[],
-    expiresAt: Date | undefined,
-    audit:
-      | { actor: AuditUser }
-      | {
-          createdAt: Date;
-          updatedAt: Date;
-          createdBy: AuditUser;
-          updatedBy: AuditUser;
-        },
-  ) {
-    if ("actor" in audit) {
-      super(id, audit.actor);
-    } else {
-      super(
-        id,
-        audit.createdAt,
-        audit.updatedAt,
-        audit.createdBy,
-        audit.updatedBy,
-      );
-    }
-    this.#resourceType = resourceType;
-    this.#linkToken = linkToken;
-    this.#permissions = [...permissions];
-    this.#expiresAt = expiresAt;
+export class ShareLink extends Entity<ShareLinkRecord> {
+  props: ShareLinkProps;
+
+  private constructor(id: EntityId, actorId: ActorId, props: ShareLinkProps) {
+    super(id, actorId);
+    this.props = props;
   }
 
-  static create(input: ShareLinkCreate, actor: AuditUser): ShareLink {
-    return new ShareLink(
-      generateId(),
-      input.resourceType,
-      input.linkToken,
-      [...input.permissions],
-      input.expiresAt,
-      { actor },
-    );
+  static create(input: CreateShareLinkInput, actorId: ActorId): ShareLink {
+    const linkToken = crypto.randomUUID();
+    return new ShareLink(crypto.randomUUID(), actorId, {
+      permission: input.permission,
+      linkToken,
+    });
   }
 
-  static rehydrate(data: ShareLinkRehydrate): ShareLink {
-    return new ShareLink(
-      data.id,
-      data.resourceType,
-      data.linkToken,
-      [...data.permissions],
-      data.expiresAt,
-      {
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-        createdBy: data.createdBy,
-        updatedBy: data.updatedBy,
-      },
-    );
+  static rehydrate(record: ShareLinkRecord): ShareLink {
+    const link = new ShareLink(record.id, record.createdBy, {
+      permission: ShareLinkPermissionEnum.fromValue(record.permission),
+      linkToken: record.linkToken,
+      expiresAt: record.expiresAt,
+    });
+
+    link.rehydrateAudit({
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      createdBy: record.createdBy,
+      updatedBy: record.updatedBy,
+    });
+
+    return link;
   }
 
-  get resourceType(): ResourceTypeEnum {
-    return this.#resourceType;
+  permission(): ShareLinkPermissionEnum {
+    return this.props.permission;
   }
 
-  get linkToken(): string {
-    return this.#linkToken;
+  linkToken(): string {
+    return this.props.linkToken;
   }
 
-  get permissions(): readonly ShareLinkPermissionEnum[] {
-    return [...this.#permissions];
-  }
-
-  get expiresAt(): Date | undefined {
-    return this.#expiresAt;
-  }
-
-  updatePermissions(
-    permissions: ShareLinkPermissionEnum[],
-    actor: AuditUser,
+  updatePermission(
+    permission: ShareLinkPermissionEnum,
+    actorId: ActorId,
   ): void {
-    this.#permissions.length = 0;
-    this.#permissions.push(...permissions);
-    this.touch(actor);
+    this.props.permission = permission;
+    this.touch(actorId);
   }
 
-  updateExpiresAt(expiresAt: Date | undefined, actor: AuditUser): void {
-    this.#expiresAt = expiresAt;
-    this.touch(actor);
+  setExpiresAt(expiresAt: Date | undefined, actorId: ActorId): void {
+    this.props.expiresAt = expiresAt;
+    this.touch(actorId);
+  }
+
+  persistenceState(): Record<string, unknown> {
+    return {
+      id: this.id(),
+      permission: this.props.permission,
+      linkToken: this.props.linkToken,
+      expiresAt: this.props.expiresAt,
+      ...this.exportAudit(),
+    };
+  }
+
+  toPersistence(): ShareLinkRecord {
+    return serializeEntity(this);
   }
 }

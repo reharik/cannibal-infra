@@ -1,111 +1,78 @@
 /**
  * Notification: user-facing event record for shares, comments, added media, etc.
+ * Aggregate Root with its own lifecycle; references recipient (and optional resource) by ID only.
  */
 
-import type { NotificationKindEnum } from "@app/contracts";
-import { Entity, generateId, type AuditUser } from "./Entity";
+import { AggregateRoot } from "./AggregateRoot";
+import type { EntityAuditRecord } from "./Entity";
+import type { ActorId, EntityId } from "../types/types";
+import type { NotificationKindEnum } from "@packages/contracts";
+import { NotificationKindEnum as NotificationKindEnumCollection } from "@packages/contracts";
 
-export interface NotificationCreate {
-  kind: NotificationKindEnum;
-  title: string;
-  body: string;
-}
-
-export interface NotificationRehydrate {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: AuditUser;
-  updatedBy: AuditUser;
+export type NotificationProps = {
+  recipientId: EntityId;
   kind: NotificationKindEnum;
   title: string;
   body: string;
   readAt?: Date;
-}
+};
 
-export class Notification extends Entity<AuditUser> {
-  #kind: NotificationKindEnum;
-  #title: string;
-  #body: string;
-  #readAt: Date | undefined;
+export type NotificationRecord = {
+  id: EntityId;
+  recipientId: EntityId;
+  kind: string;
+  title: string;
+  body: string;
+  readAt?: Date;
+} & EntityAuditRecord;
+
+export type CreateNotificationInput = {
+  recipientId: EntityId;
+  kind: NotificationKindEnum;
+  title: string;
+  body: string;
+};
+
+export class Notification extends AggregateRoot<NotificationRecord> {
+  protected props: NotificationProps;
 
   private constructor(
-    id: string,
-    kind: NotificationKindEnum,
-    title: string,
-    body: string,
-    readAt: Date | undefined,
-    audit:
-      | { actor: AuditUser }
-      | {
-          createdAt: Date;
-          updatedAt: Date;
-          createdBy: AuditUser;
-          updatedBy: AuditUser;
-        },
+    id: EntityId,
+    actorId: ActorId,
+    props: NotificationProps,
   ) {
-    if ("actor" in audit) {
-      super(id, audit.actor);
-    } else {
-      super(
-        id,
-        audit.createdAt,
-        audit.updatedAt,
-        audit.createdBy,
-        audit.updatedBy,
-      );
-    }
-    this.#kind = kind;
-    this.#title = title;
-    this.#body = body;
-    this.#readAt = readAt;
+    super(id, actorId);
+    this.props = props;
   }
 
-  static create(input: NotificationCreate, actor: AuditUser): Notification {
-    return new Notification(
-      generateId(),
-      input.kind,
-      input.title,
-      input.body,
-      undefined,
-      { actor },
-    );
+  static create(
+    input: CreateNotificationInput,
+    actorId: ActorId,
+  ): Notification {
+    return new Notification(crypto.randomUUID(), actorId, {
+      recipientId: input.recipientId,
+      kind: input.kind,
+      title: input.title,
+      body: input.body,
+    });
   }
 
-  static rehydrate(data: NotificationRehydrate): Notification {
-    return new Notification(
-      data.id,
-      data.kind,
-      data.title,
-      data.body,
-      data.readAt,
-      {
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-        createdBy: data.createdBy,
-        updatedBy: data.updatedBy,
-      },
-    );
+  static rehydrate(record: NotificationRecord): Notification {
+    const notification = new Notification(record.id, record.createdBy, {
+      recipientId: record.recipientId,
+      kind: NotificationKindEnumCollection.fromValue(record.kind),
+      title: record.title,
+      body: record.body,
+      readAt: record.readAt,
+    });
+
+    notification.rehydrateAudit(record);
+
+    return notification;
   }
 
-  get kind(): NotificationKindEnum {
-    return this.#kind;
-  }
-
-  get title(): string {
-    return this.#title;
-  }
-
-  get body(): string {
-    return this.#body;
-  }
-
-  get readAt(): Date | undefined {
-    return this.#readAt;
-  }
-
-  markAsRead(actor: AuditUser): void {
-    this.#readAt = new Date();
-    this.touch(actor);
+  markAsRead(actorId: ActorId): void {
+    this.props.readAt = new Date();
+    this.touch(actorId);
   }
 }

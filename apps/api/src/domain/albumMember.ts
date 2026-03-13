@@ -1,7 +1,6 @@
 import { Entity, type EntityAuditRecord } from "./Entity";
 import type { ActorId, EntityId } from "../types/types";
-import { AlbumMemberRoleEnum } from "@app/contracts";
-import { serializeEntity } from "./utilities/serializeAggregates";
+import { AlbumMemberRoleEnum } from "@packages/contracts";
 
 export type AlbumMemberProps = {
   userId: EntityId;
@@ -15,11 +14,11 @@ export type AlbumMemberRecord = {
 } & EntityAuditRecord;
 
 export class AlbumMember extends Entity<AlbumMemberRecord> {
-  #props: AlbumMemberProps;
+  protected props: AlbumMemberProps;
 
   private constructor(id: EntityId, actorId: ActorId, props: AlbumMemberProps) {
     super(id, actorId);
-    this.#props = props;
+    this.props = props;
   }
 
   public static create(props: AlbumMemberProps, actorId: ActorId): AlbumMember {
@@ -32,38 +31,21 @@ export class AlbumMember extends Entity<AlbumMemberRecord> {
       role: AlbumMemberRoleEnum.fromValue(record.role),
     });
 
-    member.rehydrateAudit({
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      createdBy: record.createdBy,
-      updatedBy: record.updatedBy,
-    });
+    member.rehydrateAudit(record);
 
     return member;
   }
 
   public userId(): string {
-    return this.#props.userId;
+    return this.props.userId;
   }
 
   public hasUser(userId: string): boolean {
-    return this.#props.userId === userId;
+    return this.props.userId === userId;
   }
 
   public changeRole(role: AlbumMemberRoleEnum, actorId: ActorId): void {
-    this.#props.role = role;
+    this.props.role = role;
     this.touch(actorId);
-  }
-
-  public persistenceState(): Record<string, unknown> {
-    return {
-      id: this.id(),
-      ...this.#props,
-      ...this.exportAudit(),
-    };
-  }
-
-  public toPersistence(): AlbumMemberRecord {
-    return serializeEntity(this);
   }
 }

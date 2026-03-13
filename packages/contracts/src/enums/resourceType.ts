@@ -1,11 +1,7 @@
 import { enumeration, type Enumeration } from "smart-enums";
+const input = ["album", "mediaItem"];
 
-const ResourceTypeEnum = enumeration("ResourceType", {
-  input: {
-    album: { value: "ALBUM" },
-    mediaItem: { value: "MEDIA_ITEM" },
-  },
-});
-
-export { ResourceTypeEnum };
 export type ResourceTypeEnum = Enumeration<typeof ResourceTypeEnum>;
+export const ResourceTypeEnum = enumeration<typeof input>("ResourceType", {
+  input,
+});

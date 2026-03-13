@@ -1,14 +1,16 @@
 import { enumeration, type Enumeration } from "smart-enums";
+const input = [
+  "shareInvite",
+  "albumShared",
+  "mediaAdded",
+  "comment",
+  "commentReply",
+];
 
-const NotificationKindEnum = enumeration("NotificationKind", {
-  input: {
-    shareInvite: { value: "SHARE_INVITE" },
-    albumShared: { value: "ALBUM_SHARED" },
-    mediaAdded: { value: "MEDIA_ADDED" },
-    comment: { value: "COMMENT" },
-    commentReply: { value: "COMMENT_REPLY" },
-  },
-});
-
-export { NotificationKindEnum };
 export type NotificationKindEnum = Enumeration<typeof NotificationKindEnum>;
+export const NotificationKindEnum = enumeration<typeof input>(
+  "NotificationKind",
+  {
+    input,
+  },
+);

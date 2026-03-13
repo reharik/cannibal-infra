@@ -1,11 +1,7 @@
 import { enumeration, type Enumeration } from "smart-enums";
+const input = ["photo", "video"];
 
-const MediaItemKindEnum = enumeration("MediaItemKind", {
-  input: {
-    photo: { value: "PHOTO" },
-    video: { value: "VIDEO" },
-  },
-});
-
-export { MediaItemKindEnum };
 export type MediaItemKindEnum = Enumeration<typeof MediaItemKindEnum>;
+export const MediaItemKindEnum = enumeration<typeof input>("MediaItemKind", {
+  input,
+});

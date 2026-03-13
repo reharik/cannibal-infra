@@ -1,13 +1,12 @@
 import { enumeration, type Enumeration } from "smart-enums";
+const input = ["view", "comment", "contribute"];
 
-const ShareLinkPermissionEnum = enumeration("ShareLinkPermission", {
-  input: {
-    view: { value: "VIEW" },
-    comment: { value: "COMMENT" },
-    contribute: { value: "CONTRIBUTE" },
+export type ShareLinkPermissionEnum = Enumeration<
+  typeof ShareLinkPermissionEnum
+>;
+export const ShareLinkPermissionEnum = enumeration<typeof input>(
+  "ShareLinkPermission",
+  {
+    input,
   },
-});
-
-export { ShareLinkPermissionEnum };
-export type ShareLinkPermissionEnum =
-  Enumeration<typeof ShareLinkPermissionEnum>;
+);

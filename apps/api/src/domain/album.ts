@@ -1,11 +1,12 @@
 import { AggregateRoot } from "./AggregateRoot";
 import type { ActorId, EntityId } from "../types/types";
-import type { AlbumMemberRoleEnum } from "@app/contracts";
-import type { EntityAuditRecord } from "./Entity";
+import type { AlbumMemberRoleEnum } from "@packages/contracts";
+import type { ShareLinkPermissionEnum } from "@packages/contracts";
+import type { ChildEntities, EntityAuditRecord } from "./Entity";
 import { AlbumItem } from "./albumItem";
+import type { AlbumItemRecord } from "./albumItem";
 import { AlbumMember, AlbumMemberRecord } from "./albumMember";
-import { ShareLink } from "./shareLink";
-import { serializeEntity } from "./utilities/serializeAggregates";
+import { ShareLink, ShareLinkRecord } from "./shareLink";
 
 export type AlbumProps = {
   title: string;
@@ -24,7 +25,7 @@ export type AlbumRecord = {
 } & EntityAuditRecord;
 
 export class Album extends AggregateRoot<AlbumRecord> {
-  #props: AlbumProps;
+  protected props: AlbumProps;
 
   #items: AlbumItem[] = [];
   #members: AlbumMember[] = [];
@@ -32,7 +33,7 @@ export class Album extends AggregateRoot<AlbumRecord> {
 
   private constructor(id: EntityId, actorId: ActorId, props: AlbumProps) {
     super(id, actorId);
-    this.#props = props;
+    this.props = props;
   }
 
   static create(input: CreateAlbumInput, actorId: ActorId): Album {
@@ -53,9 +54,9 @@ export class Album extends AggregateRoot<AlbumRecord> {
       updatedBy: record.updatedBy,
     });
 
-    album.#items = record.items.map(AlbumItem.rehydrate);
-    album.#members = record.members.map(AlbumMember.rehydrate);
-    album.#shareLinks = record.shareLinks.map(ShareLink.rehydrate);
+    album.#items = record.items.map((r) => AlbumItem.rehydrate(r));
+    album.#members = record.members.map((r) => AlbumMember.rehydrate(r));
+    album.#shareLinks = record.shareLinks.map((r) => ShareLink.rehydrate(r));
 
     return album;
   }
@@ -76,30 +77,21 @@ export class Album extends AggregateRoot<AlbumRecord> {
   ): void {
     if (this.#members.some((m) => m.userId() === userId))
       throw new Error("User already member");
-
     this.#members.push(AlbumMember.create({ userId, role }, actorId));
-
     this.touch(actorId);
   }
 
-  createShareLink(permission: SharePermission, actorId: ActorId): void {
+  createShareLink(permission: ShareLinkPermissionEnum, actorId: ActorId): void {
     this.#shareLinks.push(ShareLink.create({ permission }, actorId));
 
     this.touch(actorId);
   }
 
-  persistenceState(): Record<string, unknown> {
+  protected childEntities(): ChildEntities {
     return {
-      id: this.id(),
-      ...this.#props,
       items: this.#items,
       members: this.#members,
       shareLinks: this.#shareLinks,
-      ...this.exportAudit(),
     };
-  }
-
-  toPersistence(): AlbumRecord {
-    return serializeEntity(this);
   }
 }

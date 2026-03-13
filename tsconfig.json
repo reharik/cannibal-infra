@@ -5,8 +5,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@app/contracts": ["packages/contracts/dist/src/index.d.ts"],
-      "@app/contracts/*": ["packages/contracts/dist/src/*.d.ts"]
+      "@packages/contracts": ["packages/contracts/dist/src/index.d.ts"],
+      "@packages/contracts/*": ["packages/contracts/dist/src/*.d.ts"]
     }
   }
 }
