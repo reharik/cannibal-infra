@@ -1,0 +1,7 @@
+import type { EntityId } from "../../types/types";
+import type { Album } from "./Album";
+
+export type AlbumRepository = {
+  getById: (id: EntityId) => Promise<Album | null>;
+  save: (album: Album) => Promise<void>;
+};

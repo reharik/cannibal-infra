@@ -3,13 +3,13 @@
  * Encapsulates metadata; can appear in multiple albums via AlbumItem.
  */
 
-import { AggregateRoot } from "./AggregateRoot";
-import type { ActorId, EntityId } from "../types/types";
+import { AggregateRoot } from "../AggregateRoot";
+import type { ActorId, EntityId } from "../../types/types";
 import type { MediaItemKindEnum } from "@packages/contracts";
 import { MediaItemKindEnum as MediaItemKindEnumCollection } from "@packages/contracts";
 import type { ResourceTypeEnum } from "@packages/contracts";
-import type { ChildEntities, EntityAuditRecord } from "./Entity";
-import { Comment, CommentRecord } from "./comment";
+import type { ChildEntities, EntityAuditRecord } from "../Entity";
+import { Comment, CommentRecord } from "../Comment/Comment";
 
 export type MediaItemProps = {
   ownerId: EntityId;

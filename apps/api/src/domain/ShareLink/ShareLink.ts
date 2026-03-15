@@ -2,10 +2,10 @@
  * ShareLink: token-based sharing for an Album with permission and optional expiration.
  */
 
-import { Entity, type EntityAuditRecord } from "./Entity";
-import type { ActorId, EntityId } from "../types/types";
+import { AggregateRoot } from "../AggregateRoot";
+import type { EntityAuditRecord } from "../Entity";
+import type { ActorId, EntityId } from "../../types/types";
 import { ShareLinkPermissionEnum } from "@packages/contracts";
-import { serializeEntity } from "./utilities/serializeAggregates";
 
 export type ShareLinkProps = {
   permission: ShareLinkPermissionEnum;
@@ -24,8 +24,8 @@ export type CreateShareLinkInput = {
   permission: ShareLinkPermissionEnum;
 };
 
-export class ShareLink extends Entity<ShareLinkRecord> {
-  props: ShareLinkProps;
+export class ShareLink extends AggregateRoot<ShareLinkRecord> {
+  protected props: ShareLinkProps;
 
   private constructor(id: EntityId, actorId: ActorId, props: ShareLinkProps) {
     super(id, actorId);
@@ -47,12 +47,7 @@ export class ShareLink extends Entity<ShareLinkRecord> {
       expiresAt: record.expiresAt,
     });
 
-    link.rehydrateAudit({
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      createdBy: record.createdBy,
-      updatedBy: record.updatedBy,
-    });
+    link.rehydrateAudit(record);
 
     return link;
   }
@@ -76,19 +71,5 @@ export class ShareLink extends Entity<ShareLinkRecord> {
   setExpiresAt(expiresAt: Date | undefined, actorId: ActorId): void {
     this.props.expiresAt = expiresAt;
     this.touch(actorId);
-  }
-
-  persistenceState(): Record<string, unknown> {
-    return {
-      id: this.id(),
-      permission: this.props.permission,
-      linkToken: this.props.linkToken,
-      expiresAt: this.props.expiresAt,
-      ...this.exportAudit(),
-    };
-  }
-
-  toPersistence(): ShareLinkRecord {
-    return serializeEntity(this);
   }
 }

@@ -1,5 +1,5 @@
-import { Entity, type EntityAuditRecord } from "./Entity";
-import type { ActorId, EntityId } from "../types/types";
+import { Entity, type EntityAuditRecord } from "../Entity";
+import type { ActorId, EntityId } from "../../types/types";
 import { AlbumMemberRoleEnum } from "@packages/contracts";
 
 export type AlbumMemberProps = {

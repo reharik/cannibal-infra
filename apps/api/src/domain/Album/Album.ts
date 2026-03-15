@@ -1,12 +1,10 @@
-import { AggregateRoot } from "./AggregateRoot";
-import type { ActorId, EntityId } from "../types/types";
+import { AggregateRoot } from "../AggregateRoot";
+import type { ActorId, EntityId } from "../../types/types";
 import type { AlbumMemberRoleEnum } from "@packages/contracts";
-import type { ShareLinkPermissionEnum } from "@packages/contracts";
-import type { ChildEntities, EntityAuditRecord } from "./Entity";
-import { AlbumItem } from "./albumItem";
-import type { AlbumItemRecord } from "./albumItem";
-import { AlbumMember, AlbumMemberRecord } from "./albumMember";
-import { ShareLink, ShareLinkRecord } from "./shareLink";
+import type { ChildEntities, EntityAuditRecord } from "../Entity";
+import { AlbumItem } from "./AlbumItem";
+import type { AlbumItemRecord } from "./AlbumItem";
+import { AlbumMember, AlbumMemberRecord } from "./AlbumMember";
 
 export type AlbumProps = {
   title: string;
@@ -21,7 +19,6 @@ export type AlbumRecord = {
   title: string;
   items: AlbumItemRecord[];
   members: AlbumMemberRecord[];
-  shareLinks: ShareLinkRecord[];
 } & EntityAuditRecord;
 
 export class Album extends AggregateRoot<AlbumRecord> {
@@ -29,7 +26,6 @@ export class Album extends AggregateRoot<AlbumRecord> {
 
   #items: AlbumItem[] = [];
   #members: AlbumMember[] = [];
-  #shareLinks: ShareLink[] = [];
 
   private constructor(id: EntityId, actorId: ActorId, props: AlbumProps) {
     super(id, actorId);
@@ -47,16 +43,10 @@ export class Album extends AggregateRoot<AlbumRecord> {
       title: record.title,
     });
 
-    album.rehydrateAudit({
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      createdBy: record.createdBy,
-      updatedBy: record.updatedBy,
-    });
+    album.rehydrateAudit(record);
 
     album.#items = record.items.map((r) => AlbumItem.rehydrate(r));
     album.#members = record.members.map((r) => AlbumMember.rehydrate(r));
-    album.#shareLinks = record.shareLinks.map((r) => ShareLink.rehydrate(r));
 
     return album;
   }
@@ -81,17 +71,10 @@ export class Album extends AggregateRoot<AlbumRecord> {
     this.touch(actorId);
   }
 
-  createShareLink(permission: ShareLinkPermissionEnum, actorId: ActorId): void {
-    this.#shareLinks.push(ShareLink.create({ permission }, actorId));
-
-    this.touch(actorId);
-  }
-
   protected childEntities(): ChildEntities {
     return {
       items: this.#items,
       members: this.#members,
-      shareLinks: this.#shareLinks,
     };
   }
 }

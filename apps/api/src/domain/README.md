@@ -4,16 +4,16 @@ Core business concepts for the photo sharing app. Use this to guide API and pers
 
 ## Entities
 
-| Entity              | Responsibility                                                                                                                               |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **User**            | Application user identity.                                                                                                                   |
-| **Photo**           | Uploaded media asset owned by a user; has storage key, media metadata (mimeType, size, width, height), optional title, description, takenAt. |
-| **Album**           | Collection of photos with an owner.                                                                                                          |
-| **AlbumPhoto**      | Association between Album and Photo; who added the photo and when (createdBy, createdAt).                                                    |
-| **AlbumMember** | Association between User and Album with a role (viewer, contributor, admin).                                                                 |
-| **ShareLink**       | Token-based sharing for an Album or Photo with permissions and optional expiration.                                                          |
-| **Comment**         | User comment attached to an Album or Photo.                                                                                                  |
-| **Notification**    | User-facing event record (e.g. shares, comments, added photos).                                                                              |
+| Entity           | Responsibility                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **User**         | Application user identity.                                                                                                                   |
+| **Photo**        | Uploaded media asset owned by a user; has storage key, media metadata (mimeType, size, width, height), optional title, description, takenAt. |
+| **Album**        | Collection of photos with an owner.                                                                                                          |
+| **AlbumPhoto**   | Association between Album and Photo; who added the photo and when (createdBy, createdAt).                                                    |
+| **AlbumMember**  | Association between User and Album with a role (viewer, contributor, admin).                                                                 |
+| **ShareLink**    | Token-based sharing for an Album or Photo with permissions and optional expiration.                                                          |
+| **Comment**      | User comment attached to an Album or Photo.                                                                                                  |
+| **Notification** | User-facing event record (e.g. shares, comments, added photos).                                                                              |
 
 ## Value Types
 

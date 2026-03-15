@@ -5,7 +5,7 @@ const input = [
   "mediaAdded",
   "comment",
   "commentReply",
-];
+] as const;
 
 export type NotificationKindEnum = Enumeration<typeof NotificationKindEnum>;
 export const NotificationKindEnum = enumeration<typeof input>(

@@ -3,9 +3,9 @@
  * Aggregate Root with its own lifecycle; references target and author by ID only.
  */
 
-import { AggregateRoot } from "./AggregateRoot";
-import type { EntityAuditRecord } from "./Entity";
-import type { ActorId, EntityId } from "../types/types";
+import { AggregateRoot } from "../AggregateRoot";
+import type { EntityAuditRecord } from "../Entity";
+import type { ActorId, EntityId } from "../../types/types";
 import type { ResourceTypeEnum } from "@packages/contracts";
 import { ResourceTypeEnum as ResourceTypeEnumCollection } from "@packages/contracts";
 

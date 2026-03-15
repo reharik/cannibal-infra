@@ -1,4 +1,5 @@
 import type { Knex } from "knex";
+import knexStringcase from "knex-stringcase";
 import path from "path";
 import { fileURLToPath } from "url";
 import { config } from "./config";
@@ -6,7 +7,8 @@ import { config } from "./config";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Convert null values to undefined in query results while preserving Date objects
+// Convert null values to undefined in query results while preserving Date objects.
+// Runs after knex-stringcase (so keys are already camelCase).
 const convertNullsToUndefined = (obj: unknown): unknown => {
   if (obj === null) return undefined;
   if (obj instanceof Date) return obj; // Preserve Date objects
@@ -49,7 +51,10 @@ export const startUp = () => {
     __knexConfig = {
       client: "pg",
       connection,
-      postProcessResponse: (result: unknown) => convertNullsToUndefined(result),
+      ...knexStringcase({
+        appPostProcessResponse: (result: unknown) =>
+          convertNullsToUndefined(result),
+      }),
       migrations: {
         directory: MIGRATIONS_DIR,
         tableName: "knex_migrations",

@@ -4,9 +4,9 @@
  * References other aggregates by ID only; does not own collections of albums, media, comments, or notifications.
  */
 
-import { AggregateRoot } from "./AggregateRoot";
-import type { ActorId, EntityId } from "../types/types";
-import type { EntityAuditRecord } from "./Entity";
+import { AggregateRoot } from "../AggregateRoot";
+import type { ActorId, EntityId } from "../../types/types";
+import type { EntityAuditRecord } from "../Entity";
 
 export type UserProps = {
   email: string;

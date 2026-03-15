@@ -58,7 +58,7 @@
 - Do not use decorators unless explicitly requested
 - Do not use NestJS-specific patterns such as decorators, modules, or framework IoC
 - Keep files focused and reasonably small
-- Prefer explicit naming such as CreateAlbumUseCase, AlbumRepository, KnexAlbumRepository
+- Prefer explicit naming such as CreateAlbumUseCase, AlbumRepository
 
 # Transport Boundary Rules
 
