@@ -1,8 +1,9 @@
-import type {
-  AuthResponse,
-  LoginInput,
-  SignupInput,
-  User,
+import {
+  UserRoleEnum,
+  type AuthResponse,
+  type LoginInput,
+  type SignupInput,
+  type User,
 } from "@packages/contracts";
 import { RESOLVER } from "awilix";
 import bcrypt from "bcryptjs";
@@ -86,7 +87,7 @@ export const createAuthService = ({
     },
 
     signup: async (credentials: SignupInput) => {
-      const { email, password, name, role = "kid" } = credentials;
+      const { email, password, name, role = UserRoleEnum.KID } = credentials;
 
       // Check if user already exists
       const existingUser = await connection("users").where({ email }).first();

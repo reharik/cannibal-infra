@@ -1,0 +1,15 @@
+schema: ./src/graphql/schema/**/*.graphql
+generates:
+  ./src/graphql/generated/types.generated.ts:
+    plugins:
+      - typescript
+      - typescript-resolvers
+    config:
+      contextType: ../context/createGraphQLContext#GraphQLContext
+      useIndexSignature: true
+  ./src/graphql/generated/schema.graphql:
+    plugins:
+      - schema-ast
+    config:
+      includeDirectives: true
+      sort: true

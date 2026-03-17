@@ -7,6 +7,7 @@ import Koa, { Context } from "koa";
 import { koaBody } from "koa-body";
 import { config } from "./config";
 import type { Container } from "./container";
+import { createGraphQLServer } from "./graphql/server/createGraphQLServer";
 import { database } from "./knex";
 import { createErrorHandler } from "./middleware/errorHandler";
 import { createRequestLogger } from "./middleware/requestLogger";
@@ -54,6 +55,9 @@ export const createKoaServer = ({
   const router = new Router({ prefix: "/api" });
   routes.mountRoutes(router);
   app.use(router.routes()).use(router.allowedMethods());
+
+  // 7. GraphQL endpoint
+  app.use(createGraphQLServer);
 
   // Health check endpoint (no /api prefix, no auth required)
   app.use(async (ctx, next) => {

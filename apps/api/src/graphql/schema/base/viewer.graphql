@@ -1,0 +1,9 @@
+type Query {
+  viewer: Viewer
+  shareLink(token: String!): ShareLinkAccess
+}
+
+type Viewer {
+  id: ID!
+  displayName: String!
+}

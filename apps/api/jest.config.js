@@ -8,11 +8,7 @@ export default {
       "ts-jest",
       {
         useESM: true,
-        tsconfig: {
-          module: "esnext",
-          moduleResolution: "node",
-          target: "ES2022",
-        },
+        tsconfig: "<rootDir>/tsconfig.spec.json",
       },
     ],
   },
@@ -28,6 +24,6 @@ export default {
     "**/?(*.)+(spec|test).?([mc])[jt]s?(x)",
   ],
   transformIgnorePatterns: [
-    "node_modules/(?!(smart-enums|case-anything|@network)/)",
+    "node_modules/(?!(smart-enums|case-anything|@network|koa|@koa|only|http-errors|statuses|graphql-yoga|@graphql-tools)/)",
   ],
 };

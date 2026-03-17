@@ -33,6 +33,7 @@
         "clean",
         "contracts:build",
         "gen:container",
+        "gen:graphql",
         "build:knexfile"
       ],
       "options": {
@@ -81,14 +82,21 @@
       "options": {
         "command": "prettier --write {projectRoot}/src/**/*.{ts,tsx,js,jsx,json}"
       }
-    }
-  },
-  "gen:container": {
-    "executor": "nx:run-commands",
-    "dependsOn": ["contracts:build"],
-    "options": {
-      "command": "tsx src/codeGen/gen-awilix-container.ts",
-      "cwd": "{projectRoot}"
+    },
+    "gen:graphql": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "graphql-codegen",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "gen:container": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["contracts:build"],
+      "options": {
+        "command": "rimraf src/di/awilix.autoload.d.ts && tsx src/codeGen/gen-awilix-container.ts",
+        "cwd": "{projectRoot}"
+      }
     }
   },
   "tags": ["type:app"]

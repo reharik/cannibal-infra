@@ -14,6 +14,9 @@ dist
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
+# GraphQL codegen output
+*.generated.*
+
 # Private keys and certificates
 *.pem
 *.key
@@ -29,3 +32,5 @@ deploy/
 pgdata/
 caddy_data/
 caddy_config/
+
+schema.graphql

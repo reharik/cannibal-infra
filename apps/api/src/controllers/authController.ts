@@ -1,6 +1,7 @@
 import { RESOLVER } from "awilix";
 import type { Context } from "koa";
 import type { Container } from "../container";
+import { UserRoleEnum } from "@packages/contracts";
 
 export interface AuthController {
   login: (ctx: Context) => Promise<Context>;
@@ -81,7 +82,14 @@ export const createAuthController = ({
       return ctx;
     }
 
-    const result = await authService.signup({ email, password, name, role });
+    const userRole = UserRoleEnum.tryFromValue(role);
+
+    const result = await authService.signup({
+      email,
+      password,
+      name,
+      role: userRole,
+    });
     if (!result) {
       logger.warn("Signup attempt failed from controller", {
         email,

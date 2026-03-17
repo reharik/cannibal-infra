@@ -7,6 +7,7 @@ declare module "koa" {
     db: Knex;
     user?: {
       id: string;
+      name: string;
       email: string;
     };
     isLoggedIn: boolean;

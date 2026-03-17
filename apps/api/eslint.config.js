@@ -2,5 +2,5 @@ import { createBaseTypeScriptConfig } from "../../infra/config/eslint/eslint-sha
 
 export default await createBaseTypeScriptConfig({
   tsconfigRootDir: import.meta.dirname,
-  ignores: ["**/db/**"],
+  ignores: ["**/db/**", "**/*.generated.*"],
 });

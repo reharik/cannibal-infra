@@ -1,0 +1,19 @@
+scalar DateTime
+scalar Date
+
+"""
+Implemented by all entities that have an id.
+"""
+interface Node {
+  id: ID!
+}
+
+enum SortDir {
+  ASC
+  DESC
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}

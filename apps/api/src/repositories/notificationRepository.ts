@@ -29,9 +29,7 @@ export const createNotificationRepository = (
       .first()) as Record<string, unknown> | undefined;
 
     if (existing) {
-      await connection("notification")
-        .where({ id: record.id })
-        .update(record);
+      await connection("notification").where({ id: record.id }).update(record);
     } else {
       await connection("notification").insert(record);
     }
