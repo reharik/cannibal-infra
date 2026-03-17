@@ -38,7 +38,7 @@ export const createAuthService = ({
       const { email, password } = credentials;
 
       // Find user by email
-      const user = await connection("users").where({ email }).first();
+      const user = await connection("user").where({ email }).first();
       if (!user || !user.passwordHash) {
         logger.warn(
           "Login attempt failed: user not found or no password hash",
@@ -62,7 +62,7 @@ export const createAuthService = ({
       }
 
       // Update last login
-      await connection("users")
+      await connection("user")
         .where({ id: user.id })
         .update({ lastLoginAt: new Date().toISOString() });
 
@@ -90,7 +90,7 @@ export const createAuthService = ({
       const { email, password, name, role = UserRoleEnum.KID } = credentials;
 
       // Check if user already exists
-      const existingUser = await connection("users").where({ email }).first();
+      const existingUser = await connection("user").where({ email }).first();
       if (existingUser) {
         logger.warn("Signup attempt failed: user already exists", { email });
         return undefined;
@@ -100,7 +100,7 @@ export const createAuthService = ({
       const passwordHash = await bcrypt.hash(password, 12);
 
       // Create user
-      const [user] = await connection("users")
+      const [user] = await connection("user")
         .insert({
           id: connection.raw("gen_random_uuid()"),
           email,
@@ -139,7 +139,7 @@ export const createAuthService = ({
           role: string;
         };
 
-        const user = await connection("users")
+        const user = await connection("user")
           .where({ id: decoded.userId })
           .first();
 

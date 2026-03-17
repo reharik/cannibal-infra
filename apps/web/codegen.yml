@@ -1,0 +1,25 @@
+schema: ../api/src/graphql/generated/schema.graphql
+documents:
+  - "src/graphql/**/*.graphql"
+generates:
+  src/graphql/generated/types.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withHooks: true
+      withComponent: false
+      withHOC: false
+      withResultType: false
+      withMutationFn: false
+      withSuspenseQuery: false
+      skipTypename: false
+      enumsAsTypes: true
+      constEnums: false
+      apolloReactCommonImportFrom: "@apollo/client"
+      apolloReactHooksImportFrom: "@apollo/client/react"
+      apolloClientVersion: 4
+      namingConvention:
+        typeNames: pascal-case#pascalCase
+        enumValues: keep

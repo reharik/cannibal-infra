@@ -25,7 +25,6 @@ export const createAuthMiddleware = ({ authService, logger }: Container) => {
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     const user = await authService.verifyToken(token);
-
     if (!user) {
       logger.warn("Authentication failed: invalid or expired token", {
         method: ctx.method,
@@ -52,13 +51,11 @@ export const createOptionalAuthMiddleware = ({ authService }: Container) => {
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       const user = await authService.verifyToken(token);
-
       if (user) {
-        ctx.user = user;
-        ctx.isLoggedIn = true;
+        ctx.state.user = user;
+        ctx.state.isLoggedIn = true;
       }
     }
-
     await next();
   };
 };

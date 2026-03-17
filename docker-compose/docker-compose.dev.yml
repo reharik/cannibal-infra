@@ -1,7 +1,4 @@
 services:
-  localstack:
-    deploy:
-      replicas: 0
   api:
     build:
       context: .

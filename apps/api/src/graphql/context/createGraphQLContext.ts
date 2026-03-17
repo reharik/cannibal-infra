@@ -1,3 +1,4 @@
+import { User } from "@packages/contracts";
 import type { YogaInitialContext } from "graphql-yoga";
 import type Koa from "koa";
 
@@ -10,12 +11,11 @@ export interface GraphQLContext {
 }
 
 export const createGraphQLContext = async (
-  initialContext: YogaInitialContext & { ctx: Koa.Context },
+  initialContext: YogaInitialContext &
+    Koa.Context & { state: { isLoggedIn: boolean; user: User } },
   // eslint-disable-next-line @typescript-eslint/require-await
 ): Promise<GraphQLContext> => {
-  const koaCtx = initialContext.ctx;
-
-  if (!koaCtx.isLoggedIn || !koaCtx.user) {
+  if (!initialContext.state.isLoggedIn || !initialContext.state.user) {
     return {
       viewer: null,
     };
@@ -23,8 +23,8 @@ export const createGraphQLContext = async (
 
   return {
     viewer: {
-      id: koaCtx.user.id,
-      displayName: koaCtx.user.name,
+      id: initialContext.state.user?.id,
+      displayName: `${initialContext.state.user?.firstName} ${initialContext.state.user?.lastName}`,
       isAuthenticated: true,
     },
   };

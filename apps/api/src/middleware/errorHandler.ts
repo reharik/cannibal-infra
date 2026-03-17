@@ -13,6 +13,7 @@ export const createErrorHandler =
           error: err.expose ? err.message : "Internal Server Error",
         };
       } else if (err instanceof Error) {
+        ctx.status = 500;
         ctx.body = {
           error: err.message ? err.message : "Internal Server Error",
         };

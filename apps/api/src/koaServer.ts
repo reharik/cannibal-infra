@@ -73,25 +73,49 @@ export const createKoaServer = ({
     await next();
   });
 
-  app.on("error", (err: Error, ctx: Context) => {
-    logger.error(`Unhandled error on ${ctx.method} ${ctx.path}`, err, {
-      status: ctx.status,
-      requestId: ctx.get("x-request-id") || undefined,
-      method: ctx.method,
-      path: ctx.path,
-    });
-  });
+  app.on("error", (err: unknown, ctx?: Context) => {
+    const error = err instanceof Error ? err : new Error(String(err));
 
+    const requestId =
+      ctx && "req" in ctx
+        ? (ctx.req?.headers["x-request-id"] as string | undefined)
+        : undefined;
+
+    logger.error(
+      `Unhandled error${ctx ? ` on ${ctx.method ?? "unknown"} ${ctx.path ?? ""}` : ""}`,
+      error,
+      {
+        status: ctx?.status,
+        requestId,
+        method: ctx?.method,
+        path: ctx?.path,
+      },
+    );
+  });
   process.on("unhandledRejection", (reason) => {
-    logger.error("Unhandled promise rejection", {
-      reason,
+    const error = reason instanceof Error ? reason : new Error(String(reason));
+
+    logger.error("Unhandled promise rejection", error, {
+      reason:
+        reason instanceof Error
+          ? {
+              name: reason.name,
+              message: reason.message,
+              stack: reason.stack,
+            }
+          : reason,
     });
   });
 
-  process.on("uncaughtException", (err) => {
-    logger.error("Uncaught exception", err, {
-      name: err.name,
+  process.on("uncaughtException", (error) => {
+    logger.error("Uncaught exception", error, {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
     });
+
+    // optional but recommended in prod:
+    // process.exit(1);
   });
 
   return http.createServer(app.callback());

@@ -1,34 +1,20 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ThemeProvider } from "styled-components";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { BrowserRouter } from "react-router-dom";
+import { AppProviders } from "./app/providers/AppProviders";
+import { ViewerBootstrap } from "./app/ViewerBootstrap";
+import { AppRouter } from "./app/router/AppRouter";
+import { LoggedOutScreen } from "./screens/LoggedOutScreen";
 import { AuthProvider } from "./contexts/AuthContext";
-import { Home } from "./pages/Home";
-import { GlobalStyle } from "./styles/globalStyle";
-import { theme } from "./styles/theme";
-
-const queryClient = new QueryClient();
 
 export const App = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyle />
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <AppProviders>
+      <AuthProvider>
+        <BrowserRouter>
+          <ViewerBootstrap>
+            {(viewer) => (viewer ? <AppRouter viewer={viewer} /> : <LoggedOutScreen />)}
+          </ViewerBootstrap>
+        </BrowserRouter>
+      </AuthProvider>
+    </AppProviders>
   );
 };

@@ -10,9 +10,7 @@ const DEV_ADMIN_EMAIL = "harik.raif@gmail.com";
 const cleanDevAdmin = async (): Promise<void> => {
   const db = knex(knexConfig);
   try {
-    const deleted = await db("users")
-      .where({ email: DEV_ADMIN_EMAIL })
-      .delete();
+    const deleted = await db("user").where({ email: DEV_ADMIN_EMAIL }).delete();
     if (deleted > 0) {
       console.log(
         "Removed dev admin user (email: %s). Run seed:dev-admin to recreate.",

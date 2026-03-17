@@ -14,8 +14,15 @@ COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) \
 docker compose --project-directory $(CURDIR) $(BASE_FILES) $(DEV_FILES)
 endef
 
-docker/up/dev:
+docker/dev/up:
 	$(compose_dev) up --build;
 
-docker/down/dev:
+docker/dev/down:
 	$(compose_dev) down --rmi local --remove-orphans --volumes
+
+docker/dev/migrate:
+	$(compose_dev) exec -T api npm run db:migrate:local --workspace=@app/api
+
+
+docker/dev/seed:
+	$(compose_dev) exec -T api npm run db:seed:local --workspace=@app/api

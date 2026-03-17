@@ -3,7 +3,7 @@ import { knexConfig } from "../knexfile";
 
 const detectIfSeedsHaveBeenRun = async () => {
   const db = knex(knexConfig);
-  const result = await db("users").count("* as count").first();
+  const result = await db("user").count("* as count").first();
   return Number(result?.count || 0) > 0;
 };
 

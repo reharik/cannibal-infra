@@ -106,7 +106,7 @@ const ButtonBase = styled.button<{
           color: ${theme.colors.text};
           border-color: ${theme.colors.border};
           &:hover {
-            background: #0c0f15;
+            background: ${theme.colors.bg};
           }
         `;
       case "ghost":
@@ -115,21 +115,21 @@ const ButtonBase = styled.button<{
           color: ${theme.colors.subtext};
           &:hover {
             color: ${theme.colors.text};
-            background: #0c0f15;
+            background: ${theme.colors.bg};
           }
         `;
       case "danger":
         return css`
           background: ${theme.colors.danger};
-          color: #0b0b0b;
+          color: ${theme.colors.bg};
           &:hover {
-            filter: brightness(0.95);
+            filter: brightness(1.1);
           }
         `;
       default:
         return css`
           background: ${theme.colors.accent};
-          color: #0b0b0b;
+          color: ${theme.colors.bg};
           &:hover {
             background: ${theme.colors.accentHover};
           }
@@ -162,7 +162,7 @@ export const Badge = styled.span`
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #0c1220;
+  background: ${({ theme }) => theme.colors.bg};
   border: 1px solid ${({ theme }) => theme.colors.border};
   color: ${({ theme }) => theme.colors.subtext};
   font-size: 12px;

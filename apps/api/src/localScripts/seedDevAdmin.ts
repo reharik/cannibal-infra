@@ -15,7 +15,7 @@ const DEV_ADMIN_ROLE = "adult";
 const seedDevAdmin = async (): Promise<void> => {
   const db = knex(knexConfig);
   try {
-    const existing = await db("users")
+    const existing = await db("user")
       .where({ email: DEV_ADMIN_EMAIL })
       .first<{ id: string }>();
     if (existing) {
@@ -28,7 +28,7 @@ const seedDevAdmin = async (): Promise<void> => {
       return;
     }
     const passwordHash = await bcrypt.hash(DEV_ADMIN_PASSWORD, 12);
-    await db("users").insert({
+    await db("user").insert({
       email: DEV_ADMIN_EMAIL,
       passwordHash,
       name: DEV_ADMIN_NAME,

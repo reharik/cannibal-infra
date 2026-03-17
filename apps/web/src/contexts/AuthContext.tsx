@@ -7,10 +7,10 @@ import React, {
   useState,
 } from "react";
 import { useApiFetchBase } from "../hooks/apiFetch/useApiFetch";
+import { useViewerQuery } from "../graphql/generated/types";
 
 interface AuthContextType {
   user: User | undefined;
-  token: string | undefined;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (
     email: string,
@@ -31,47 +31,40 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | undefined>(undefined);
-  const [token, setToken] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasToken, setHasToken] = useState(!!localStorage.getItem("authToken"));
   const { apiFetch } = useApiFetchBase();
 
-  // Check for existing token on mount
+  const {
+    data: viewerData,
+    loading: viewerLoading,
+    error: viewerError,
+    refetch: refetchViewer,
+  } = useViewerQuery({
+    skip: !hasToken,
+    errorPolicy: "all",
+  });
+
   useEffect(() => {
-    const storedToken = localStorage.getItem("authToken");
-    if (storedToken) {
-      setToken(storedToken);
-      verifyToken(storedToken);
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const verifyToken = async (tokenToVerify: string) => {
-    try {
-      const result = await apiFetch<{ user: User }>(`/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${tokenToVerify}`,
-        },
-      });
-
-      if (result.success) {
-        setUser(result.data.user);
-        setToken(tokenToVerify);
-      } else {
-        // Token is invalid, remove it
-        localStorage.removeItem("authToken");
-        setToken(undefined);
-        setUser(undefined);
-      }
-    } catch (error) {
-      console.error("Token verification failed:", error);
-      localStorage.removeItem("authToken");
-      setToken(undefined);
+    if (viewerData?.viewer) {
+      setUser({
+        id: viewerData.viewer.id,
+        displayName: viewerData.viewer.displayName,
+      } as User);
+    } else if (!viewerLoading && !viewerData?.viewer && hasToken) {
       setUser(undefined);
-    } finally {
-      setIsLoading(false);
+      localStorage.removeItem("authToken");
+      setHasToken(false);
     }
-  };
+  }, [viewerData, viewerLoading, hasToken]);
+
+  useEffect(() => {
+    if (viewerError) {
+      console.error("Viewer query failed:", viewerError);
+      localStorage.removeItem("authToken");
+      setHasToken(false);
+      setUser(undefined);
+    }
+  }, [viewerError]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -84,9 +77,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
 
       if (data.success) {
-        setUser(data.data.user);
-        setToken(data.data.token);
         localStorage.setItem("authToken", data.data.token);
+        setHasToken(true);
+        await refetchViewer();
         return true;
       }
       return false;
@@ -112,9 +105,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       );
 
       if (data.success) {
-        setUser(data.data.user);
-        setToken(data.data.token);
         localStorage.setItem("authToken", data.data.token);
+        setHasToken(true);
+        await refetchViewer();
         return true;
       } else {
         console.error("Signup failed:", data.error);
@@ -128,18 +121,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(undefined);
-    setToken(undefined);
+    setHasToken(false);
     localStorage.removeItem("authToken");
   };
 
   const value: AuthContextType = {
     user,
-    token,
     login,
     signup,
     logout,
-    isLoading,
-    isAuthenticated: !!user && !!token,
+    isLoading: viewerLoading,
+    isAuthenticated: !!viewerData?.viewer,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

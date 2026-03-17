@@ -26,7 +26,7 @@ export const createGraphQLServer = async (ctx: Koa.ParameterizedContext) => {
 
   // Set headers
   for (const [key, value] of response.headers.entries()) {
-    ctx.append(key, value);
+    ctx.set(key, value);
   }
 
   ctx.body = response.body;
