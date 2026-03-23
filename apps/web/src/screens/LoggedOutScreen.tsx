@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { FormInput } from "../ui/FormInput";
-import { UserRoleEnum } from "@packages/contracts";
 
 export const LoggedOutScreen = () => {
   const [isSignup, setIsSignup] = useState(false);
@@ -11,7 +10,7 @@ export const LoggedOutScreen = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<"adult" | "kid">("adult");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
   const { login, signup } = useAuth();
@@ -19,7 +18,7 @@ export const LoggedOutScreen = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setError(undefined);
     setIsLoading(true);
 
     try {
@@ -31,7 +30,9 @@ export const LoggedOutScreen = () => {
       }
 
       if (!success) {
-        setError("Authentication failed. Please check your credentials and try again.");
+        setError(
+          "Authentication failed. Please check your credentials and try again.",
+        );
         return;
       }
 
@@ -76,7 +77,9 @@ export const LoggedOutScreen = () => {
         <RightPanel>
           <AuthCard>
             <AuthHeader>
-              <AuthTitle>{isSignup ? "Create Account" : "Welcome Back"}</AuthTitle>
+              <AuthTitle>
+                {isSignup ? "Create Account" : "Welcome Back"}
+              </AuthTitle>
               <AuthSubtitle>
                 {isSignup
                   ? "Start preserving your family memories"
@@ -86,55 +89,67 @@ export const LoggedOutScreen = () => {
 
             <Form onSubmit={handleSubmit}>
               {isSignup && (
+                <FormInput
+                  label="Name"
+                  type="text"
+                  value={name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setName(e.target.value)
+                  }
+                  required
+                  autoComplete="name"
+                />
+              )}
               <FormInput
-                label="Name"
-                type="text"
-                value={name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-            )}
-            <FormInput
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-            <FormInput
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-              required
-              autoComplete={isSignup ? "new-password" : "current-password"}
-            />
-            {isSignup && (
-              <FormInput
-                label="Role"
-                as="select"
-                value={role}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setRole(e.target.value as "adult" | "kid")
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
                 }
-              >
-                <option value="adult">Adult</option>
-                <option value="kid">Kid</option>
-              </FormInput>
-            )}
+                required
+                autoComplete="email"
+              />
+              <FormInput
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPassword(e.target.value)
+                }
+                required
+                autoComplete={isSignup ? "new-password" : "current-password"}
+              />
+              {isSignup && (
+                <FormInput
+                  label="Role"
+                  as="select"
+                  value={role}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    setRole(e.target.value as "adult" | "kid")
+                  }
+                >
+                  <option value="adult">Adult</option>
+                  <option value="kid">Kid</option>
+                </FormInput>
+              )}
 
               {error && <ErrorMessage>{error}</ErrorMessage>}
 
               <SubmitButton type="submit" disabled={isLoading}>
-                {isLoading ? "Loading..." : isSignup ? "Create Account" : "Sign In"}
+                {isLoading
+                  ? "Loading..."
+                  : isSignup
+                    ? "Create Account"
+                    : "Sign In"}
               </SubmitButton>
             </Form>
 
             <AuthFooter>
               <ToggleText>
-                {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+                {isSignup
+                  ? "Already have an account?"
+                  : "Don't have an account?"}{" "}
                 <ToggleLink onClick={() => setIsSignup(!isSignup)}>
                   {isSignup ? "Sign In" : "Create Account"}
                 </ToggleLink>

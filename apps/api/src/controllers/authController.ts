@@ -19,7 +19,7 @@ const sanitizeUser = (user: {
   return sanitized;
 };
 
-export const createAuthController = ({
+export const buildAuthController = ({
   authService,
   logger,
 }: Container): AuthController => ({
@@ -139,4 +139,4 @@ export const createAuthController = ({
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createAuthController as any)[RESOLVER] = {};
+(buildAuthController as any)[RESOLVER] = {};

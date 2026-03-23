@@ -1,19 +1,25 @@
-import type { Knex } from "knex";
-import type { EntityId } from "../types/types";
-import { Album, type AlbumRecord } from "../domain/Album/Album";
-import type { AlbumItemRecord } from "../domain/Album/AlbumItem";
-import type { AlbumMemberRecord } from "../domain/Album/AlbumMember";
-import type { AlbumRepository } from "../domain/Album/AlbumRepository";
+import { RESOLVER } from "awilix";
+import type { EntityId } from "../../types/types";
+import { Album, type AlbumRecord } from "../../domain/Album/Album";
+import type { AlbumItemRecord } from "../../domain/Album/AlbumItem";
+import type { AlbumMemberRecord } from "../../domain/Album/AlbumMember";
 import { rowToRecord } from "./rowToRecord";
+import { Container } from "../../container";
+import type { AlbumRepository as DomainAlbumRepository } from "../../domain/Album/AlbumRepository";
 
-export const createAlbumRepository = (connection: Knex): AlbumRepository => {
-  const getById = async (id: EntityId): Promise<Album | null> => {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface AlbumRepository extends DomainAlbumRepository {}
+
+export const buildAlbumRepository = ({
+  connection,
+}: Container): AlbumRepository => {
+  const getById = async (id: EntityId): Promise<Album | undefined> => {
     const albumRow = (await connection("album").where({ id }).first()) as
       | Record<string, unknown>
       | undefined;
 
     if (!albumRow) {
-      return null;
+      return;
     }
 
     const itemRows = (await connection("albumItem")
@@ -84,3 +90,6 @@ export const createAlbumRepository = (connection: Knex): AlbumRepository => {
     save,
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(buildAlbumRepository as any)[RESOLVER] = {};

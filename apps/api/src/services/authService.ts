@@ -28,7 +28,7 @@ const sanitizeUser = (
   return sanitized as SanitizedUser;
 };
 
-export const createAuthService = ({
+export const buildAuthService = ({
   connection,
   logger,
   config,
@@ -174,4 +174,4 @@ export const createAuthService = ({
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createAuthService as any)[RESOLVER] = {};
+(buildAuthService as any)[RESOLVER] = {};

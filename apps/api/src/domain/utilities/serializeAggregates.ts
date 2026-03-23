@@ -3,7 +3,7 @@ import { Entity } from "../Entity";
 import { isEntity } from "./entityGuard";
 
 export const serializeValue = (value: unknown): unknown => {
-  if (value === null || value === undefined) return value;
+  if (value == null) return value;
 
   if (Array.isArray(value)) return value.map(serializeValue);
 
@@ -38,7 +38,7 @@ export const serializeEntity = <
   for (const [key, value] of Object.entries(state)) {
     const recordKey = key as keyof TRecord;
 
-    if (value === null || value === undefined) {
+    if (value == null) {
       result[recordKey] = value as TRecord[keyof TRecord];
       continue;
     }

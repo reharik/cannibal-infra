@@ -6,7 +6,7 @@ export interface Routes {
   mountRoutes: (router: Router) => void;
 }
 
-export const createRoutes = ({ authRoutes }: Container): Routes => ({
+export const buildRoutes = ({ authRoutes }: Container): Routes => ({
   mountRoutes: (router: Router) => {
     // Auth routes are a Router instance, use them directly
     router.use(authRoutes.routes());
@@ -15,4 +15,4 @@ export const createRoutes = ({ authRoutes }: Container): Routes => ({
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createRoutes as any)[RESOLVER] = {};
+(buildRoutes as any)[RESOLVER] = {};

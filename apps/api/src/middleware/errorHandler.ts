@@ -1,9 +1,12 @@
 import { RESOLVER } from "awilix";
 import { Context, HttpError, Next } from "koa";
-import type { LoggerInterface } from "../logger";
+import { Container } from "../container";
 
-export const createErrorHandler =
-  (logger: LoggerInterface) => async (ctx: Context, next: Next) => {
+export type ErrorHandler = (ctx: Context, next: Next) => Promise<void>;
+
+export const buildErrorHandler =
+  ({ logger }: Container) =>
+  async (ctx: Context, next: Next) => {
     try {
       await next();
     } catch (err) {
@@ -33,4 +36,4 @@ export const createErrorHandler =
   };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createErrorHandler as any)[RESOLVER] = {};
+(buildErrorHandler as any)[RESOLVER] = {};

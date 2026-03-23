@@ -1,7 +1,10 @@
 export type { Enumeration } from "smart-enums";
 export * from "./albumMemberRole";
 export * from "./mediaItemKind";
+export * from "./mediaItemStatus";
 export * from "./notificationKind";
 export * from "./resourceType";
 export * from "./shareLinkPermission";
 export * from "./userRole";
+export * from "./errorEnums";
+export * from "./appErrorCollection";

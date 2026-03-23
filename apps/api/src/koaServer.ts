@@ -7,37 +7,39 @@ import Koa, { Context } from "koa";
 import { koaBody } from "koa-body";
 import { config } from "./config";
 import type { Container } from "./container";
-import { createGraphQLServer } from "./graphql/server/createGraphQLServer";
 import { database } from "./knex";
-import { createErrorHandler } from "./middleware/errorHandler";
-import { createRequestLogger } from "./middleware/requestLogger";
 
 dotenv.config();
 
 export type KoaServer = http.Server;
 
-export const createKoaServer = ({
+export const buildKoaServer = ({
   routes,
   optionalAuthMiddleware,
   logger,
+  graphQLServer,
+  errorHandler,
+  requestLogger,
 }: Container) => {
   const app = new Koa();
   app.context.db = database;
   // 1. Error handling (should be first)
-  app.use(createErrorHandler(logger));
+  app.use(errorHandler);
 
   // 2. Request logging (early in pipeline)
-  app.use(createRequestLogger(logger));
+  app.use(requestLogger);
 
   // 3. CORS (before body parsing)
   app.use(
     cors({
-      origin: (ctx) => {
+      origin: (ctx): string => {
         const requestOrigin = ctx.get("Origin");
-        if (!requestOrigin) return config.corsOrigins[0] ?? "*";
-        if (config.corsOrigins.includes(requestOrigin)) return requestOrigin;
-        if (config.corsOrigins.includes("*")) return "*";
-        return false;
+
+        if (!requestOrigin) {
+          return "";
+        }
+
+        return config.corsOrigins.includes(requestOrigin) ? requestOrigin : "";
       },
       credentials: true,
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -57,7 +59,7 @@ export const createKoaServer = ({
   app.use(router.routes()).use(router.allowedMethods());
 
   // 7. GraphQL endpoint
-  app.use(createGraphQLServer);
+  app.use(graphQLServer);
 
   // Health check endpoint (no /api prefix, no auth required)
   app.use(async (ctx, next) => {
@@ -122,4 +124,4 @@ export const createKoaServer = ({
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createKoaServer as any)[RESOLVER] = {};
+(buildKoaServer as any)[RESOLVER] = {};

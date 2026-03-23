@@ -1,7 +1,10 @@
 import { asValue, AwilixContainer, createContainer } from "awilix";
 import type { Knex } from "knex";
-import type { AutoLoadedContainer } from "./di/awilix.autoload";
-import { registerModulesFromGlob } from "./di/loadModules";
+import type { AutoLoadedContainer } from "./di/generated/awilix.autoload";
+import {
+  registerResolverGroups,
+  registerTaggedModules,
+} from "./di/loadModules";
 import { database } from "./knex";
 import type { LoggerInterface } from "./logger";
 import type { Config } from "./config";
@@ -11,6 +14,7 @@ interface BaseContainer {
   connection: Knex;
   logger: LoggerInterface;
   config: Config;
+  writeServices: Record<string, unknown>;
 }
 
 export type Container = BaseContainer & AutoLoadedContainer;
@@ -29,14 +33,19 @@ const initializeContainer = async (
     injectionMode: "PROXY",
   });
 
+  await registerTaggedModules(_container, logger);
+
   _container.register({
     // Register the database connection manually
     connection: asValue(database),
     logger: asValue(logger), // Register the logger for DI
     config: asValue(config), // Register the config for DI
+    // Register empty writeServices placeholder (will be populated by grouped registrations later)
+    writeServices: asValue({}),
   });
 
-  await registerModulesFromGlob(_container, logger);
+  await registerResolverGroups(_container, logger);
+
   container = _container;
   return container;
 };

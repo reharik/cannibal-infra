@@ -4,19 +4,21 @@
  */
 
 import { AggregateRoot } from "../AggregateRoot";
-import type { ActorId, EntityId } from "../../types/types";
-import type { MediaItemKindEnum } from "@packages/contracts";
-import { MediaItemKindEnum as MediaItemKindEnumCollection } from "@packages/contracts";
+import type { ActorId, EntityId, WriteResult } from "../../types/types";
+import { MediaItemKindEnum, MediaItemStatusEnum } from "@packages/contracts";
 import type { ResourceTypeEnum } from "@packages/contracts";
 import type { ChildEntities, EntityAuditRecord } from "../Entity";
 import { Comment, CommentRecord } from "../Comment/Comment";
+import { fail, ok } from "../utilities/writeResponse";
+import { AppErrorCollection } from "@packages/contracts";
 
 export type MediaItemProps = {
   ownerId: EntityId;
   kind: MediaItemKindEnum;
+  status: MediaItemStatusEnum;
   storageKey: string;
   mimeType: string;
-  size: number;
+  sizeBytes: number;
   width?: number;
   height?: number;
   durationSeconds?: number;
@@ -29,9 +31,10 @@ export type MediaItemRecord = {
   id: EntityId;
   ownerId: EntityId;
   kind: string;
+  status: string;
   storageKey: string;
   mimeType: string;
-  size: number;
+  sizeBytes: number;
   width?: number;
   height?: number;
   durationSeconds?: number;
@@ -44,9 +47,10 @@ export type MediaItemRecord = {
 export type CreateMediaItemInput = {
   ownerId: EntityId;
   kind: MediaItemKindEnum;
+  status?: MediaItemStatusEnum;
   storageKey: string;
   mimeType: string;
-  size: number;
+  sizeBytes: number;
   width?: number;
   height?: number;
   durationSeconds?: number;
@@ -65,12 +69,15 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   }
 
   static create(input: CreateMediaItemInput, actorId: ActorId): MediaItem {
-    return new MediaItem(crypto.randomUUID(), actorId, {
+    const mediaItemId = crypto.randomUUID();
+    const storageKey = `media/${input.ownerId}/${input.kind.key}/${mediaItemId}`;
+    return new MediaItem(mediaItemId, actorId, {
       ownerId: input.ownerId,
       kind: input.kind,
-      storageKey: input.storageKey,
+      status: input.status ?? MediaItemStatusEnum.pending,
+      storageKey: storageKey,
       mimeType: input.mimeType,
-      size: input.size,
+      sizeBytes: input.sizeBytes,
       width: input.width,
       height: input.height,
       durationSeconds: input.durationSeconds,
@@ -83,10 +90,11 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   static rehydrate(record: MediaItemRecord): MediaItem {
     const mediaItem = new MediaItem(record.id, record.createdBy, {
       ownerId: record.ownerId,
-      kind: MediaItemKindEnumCollection.fromValue(record.kind),
+      kind: MediaItemKindEnum.fromValue(record.kind),
+      status: MediaItemStatusEnum.fromValue(record.status),
       storageKey: record.storageKey,
       mimeType: record.mimeType,
-      size: record.size,
+      sizeBytes: record.sizeBytes,
       width: record.width,
       height: record.height,
       durationSeconds: record.durationSeconds,
@@ -122,6 +130,15 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   updateDescription(description: string | undefined, actorId: ActorId): void {
     this.props.description = description;
     this.touch(actorId);
+  }
+
+  finalizeStatus(status: MediaItemStatusEnum, actorId: ActorId): WriteResult {
+    if (this.props.status !== MediaItemStatusEnum.pending) {
+      return fail(AppErrorCollection.mediaItem.StatusNotPending);
+    }
+    this.props.status = status;
+    this.touch(actorId);
+    return ok();
   }
 
   protected childEntities(): ChildEntities {

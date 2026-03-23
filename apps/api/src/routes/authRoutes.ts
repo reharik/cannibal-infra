@@ -3,7 +3,9 @@ import { RESOLVER } from "awilix";
 import type { Container } from "../container";
 import { requireAuth } from "../middleware/routeGuards";
 
-export const createAuthRoutes = ({ authController }: Container): Router => {
+export type AuthRoutes = Router;
+
+export const buildAuthRoutes = ({ authController }: Container): AuthRoutes => {
   const router = new Router({ prefix: "/auth" });
 
   // Public routes
@@ -18,4 +20,4 @@ export const createAuthRoutes = ({ authController }: Container): Router => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createAuthRoutes as any)[RESOLVER] = {};
+(buildAuthRoutes as any)[RESOLVER] = {};

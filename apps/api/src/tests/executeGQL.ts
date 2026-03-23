@@ -1,4 +1,4 @@
-import { yoga } from "../graphql/server/createGraphQLServer";
+import type { YogaApp } from "../graphql/server/createGraphQLServer";
 import { createMockGraphQLContext } from "./createMockGraphQLContext";
 
 interface GraphQLError {
@@ -13,32 +13,38 @@ export interface GraphQLResponse<T = any> {
   errors?: GraphQLError[];
 }
 
+interface ExecuteGraphQLDeps {
+  yogaApp: YogaApp;
+}
+
 // Using any for test helper flexibility - tests will add their own type assertions
-export const executeGraphQL = async <T = any>({
-  query,
-  variables,
-  context,
-}: {
-  query: string;
-  variables?: Record<string, unknown>;
-  context?: Record<string, unknown>;
-}): Promise<{ response: Response; json: GraphQLResponse<T> }> => {
-  const response = await yoga.fetch(
-    "http://localhost/graphql",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+export const createExecuteGraphQL = ({ yogaApp }: ExecuteGraphQLDeps) => {
+  return async <T = any>({
+    query,
+    variables,
+    context,
+  }: {
+    query: string;
+    variables?: Record<string, unknown>;
+    context?: Record<string, unknown>;
+  }): Promise<{ response: Response; json: GraphQLResponse<T> }> => {
+    const response = await yogaApp.fetch(
+      "http://localhost/graphql",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
       },
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-    },
-    createMockGraphQLContext(context),
-  );
+      createMockGraphQLContext(context),
+    );
 
-  const json = (await response.json()) as GraphQLResponse<T>;
+    const json = (await response.json()) as GraphQLResponse<T>;
 
-  return { response, json };
+    return { response, json };
+  };
 };

@@ -94,7 +94,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["contracts:build"],
       "options": {
-        "command": "rimraf src/di/awilix.autoload.d.ts && tsx src/codeGen/gen-awilix-container.ts",
+        "command": "rimraf src/di/generated/awilix.autoload.d.ts && tsx src/di/gen-awilix-container.ts",
         "cwd": "{projectRoot}"
       }
     }

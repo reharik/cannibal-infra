@@ -6,8 +6,9 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { useQuery } from "@apollo/client/react";
+import { ViewerDocument } from "../graphql/generated/types";
 import { useApiFetchBase } from "../hooks/apiFetch/useApiFetch";
-import { useViewerQuery } from "../graphql/generated/types";
 
 interface AuthContextType {
   user: User | undefined;
@@ -39,7 +40,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading: viewerLoading,
     error: viewerError,
     refetch: refetchViewer,
-  } = useViewerQuery({
+  } = useQuery(ViewerDocument, {
     skip: !hasToken,
     errorPolicy: "all",
   });
@@ -48,7 +49,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (viewerData?.viewer) {
       setUser({
         id: viewerData.viewer.id,
-        displayName: viewerData.viewer.displayName,
+        firstName: viewerData.viewer.firstName,
+        lastName: viewerData.viewer.lastName,
       } as User);
     } else if (!viewerLoading && !viewerData?.viewer && hasToken) {
       setUser(undefined);

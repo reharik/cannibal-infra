@@ -1,20 +1,24 @@
-import type { Knex } from "knex";
-import type { EntityId } from "../types/types";
-import { ShareLink } from "../domain/ShareLink/ShareLink";
-import type { ShareLinkRecord } from "../domain/ShareLink/ShareLink";
-import type { ShareLinkRepository } from "../domain/ShareLink/ShareLinkRepository";
+import { RESOLVER } from "awilix";
+import type { EntityId } from "../../types/types";
+import { ShareLink } from "../../domain/ShareLink/ShareLink";
+import type { ShareLinkRecord } from "../../domain/ShareLink/ShareLink";
 import { rowToRecord } from "./rowToRecord";
+import { Container } from "../../container";
+import type { ShareLinkRepository as DomainShareLinkRepository } from "../../domain/ShareLink/ShareLinkRepository";
 
-export const createShareLinkRepository = (
-  connection: Knex,
-): ShareLinkRepository => {
-  const getById = async (id: EntityId): Promise<ShareLink | null> => {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ShareLinkRepository extends DomainShareLinkRepository {}
+
+export const buildShareLinkRepository = ({
+  connection,
+}: Container): ShareLinkRepository => {
+  const getById = async (id: EntityId): Promise<ShareLink | undefined> => {
     const shareLinkRow = (await connection("shareLink")
       .where({ id })
       .first()) as Record<string, unknown> | undefined;
 
     if (!shareLinkRow) {
-      return null;
+      return;
     }
 
     const record = rowToRecord<ShareLinkRecord>(shareLinkRow, ["albumId"]);
@@ -46,3 +50,6 @@ export const createShareLinkRepository = (
     save,
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(buildShareLinkRepository as any)[RESOLVER] = {};

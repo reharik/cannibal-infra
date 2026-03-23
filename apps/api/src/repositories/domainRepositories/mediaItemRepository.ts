@@ -1,20 +1,27 @@
-import type { Knex } from "knex";
-import type { EntityId } from "../types/types";
-import { MediaItem, type MediaItemRecord } from "../domain/MediaItem/MediaItem";
-import type { CommentRecord } from "../domain/Comment/Comment";
-import type { MediaItemRepository } from "../domain/MediaItem/MediaItemRepository";
+import { Container } from "../../container";
+import { RESOLVER } from "awilix";
+import type { EntityId } from "../../types/types";
+import {
+  MediaItem,
+  type MediaItemRecord,
+} from "../../domain/MediaItem/MediaItem";
+import type { CommentRecord } from "../../domain/Comment/Comment";
 import { rowToRecord } from "./rowToRecord";
+import type { MediaItemRepository as DomainMediaItemRepository } from "../../domain/MediaItem/MediaItemRepository";
 
-export const createMediaItemRepository = (
-  connection: Knex,
-): MediaItemRepository => {
-  const getById = async (id: EntityId): Promise<MediaItem | null> => {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface MediaItemRepository extends DomainMediaItemRepository {}
+
+export const buildMediaItemRepository = ({
+  connection,
+}: Container): MediaItemRepository => {
+  const getById = async (id: EntityId): Promise<MediaItem | undefined> => {
     const mediaItemRow = (await connection("mediaItem")
       .where({ id })
       .first()) as Record<string, unknown> | undefined;
 
     if (!mediaItemRow) {
-      return null;
+      return;
     }
 
     const commentRows = (await connection("comment")
@@ -69,3 +76,6 @@ export const createMediaItemRepository = (
     save,
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(buildMediaItemRepository as any)[RESOLVER] = {};

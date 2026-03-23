@@ -1,5 +1,9 @@
 schema: ./src/graphql/schema/**/*.graphql
+
 generates:
+  ./src/graphql/generated/schema.graphql:
+    plugins:
+      - schema-ast
   ./src/graphql/generated/types.generated.ts:
     plugins:
       - typescript
@@ -7,9 +11,9 @@ generates:
     config:
       contextType: ../context/createGraphQLContext#GraphQLContext
       useIndexSignature: true
-  ./src/graphql/generated/schema.graphql:
-    plugins:
-      - schema-ast
-    config:
-      includeDirectives: true
-      sort: true
+      maybeValue: "T | undefined"
+      inputMaybeValue: "T | undefined"
+      mappers:
+        Viewer: ../resolvers/parentModels#ViewerParent
+        Album: ../resolvers/parentModels#AlbumParent
+        MediaItem: ../resolvers/parentModels#MediaItemParent

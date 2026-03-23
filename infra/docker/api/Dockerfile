@@ -46,7 +46,7 @@ RUN npx nx reset || true
 RUN npm run gen:container --workspace=${API_WORKSPACE_NAME}
 
 # Verify the file was generated
-RUN test -f ${API_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts || \
+RUN test -f ${API_WORKSPACE_PATH}/src/di/generated/awilix.autoload.d.ts || \
   (echo "ERROR: awilix.autoload.d.ts was not generated" && exit 1)
 
 RUN npx nx build api --configuration=production
@@ -75,8 +75,8 @@ COPY --from=build /repo/${API_WORKSPACE_PATH}/dist ./${API_WORKSPACE_PATH}/dist
 
 # Copy generated Awilix container types to dist
 RUN mkdir -p ${API_WORKSPACE_PATH}/dist/di
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts ./${API_WORKSPACE_PATH}/dist/di/awilix.autoload.d.ts
-RUN test -f ${API_WORKSPACE_PATH}/dist/di/awilix.autoload.d.ts || \
+COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/generated/awilix.autoload.d.ts ./${API_WORKSPACE_PATH}/dist/di/generated/awilix.autoload.d.ts
+RUN test -f ${API_WORKSPACE_PATH}/dist/di/generated/awilix.autoload.d.ts || \
   (echo "ERROR: awilix.autoload.d.ts was not copied to dist" && exit 1)
 
 # Copy server startup script (copy from build stage where source files are)

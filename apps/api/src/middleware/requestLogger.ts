@@ -1,9 +1,12 @@
 import { RESOLVER } from "awilix";
 import { Context, Next } from "koa";
-import type { LoggerInterface } from "../logger";
+import { Container } from "../container";
 
-export const createRequestLogger =
-  (logger: LoggerInterface) => async (ctx: Context, next: Next) => {
+export type RequestLogger = (ctx: Context, next: Next) => Promise<void>;
+
+export const buildRequestLogger =
+  ({ logger }: Container): RequestLogger =>
+  async (ctx: Context, next: Next) => {
     const startTime = Date.now();
 
     logger.http("Incoming request", {
@@ -26,4 +29,4 @@ export const createRequestLogger =
   };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createRequestLogger as any)[RESOLVER] = {};
+(buildRequestLogger as any)[RESOLVER] = {};

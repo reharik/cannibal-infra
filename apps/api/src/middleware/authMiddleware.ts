@@ -5,7 +5,7 @@ import type { Container } from "../container";
 export type AuthMiddleware = (ctx: Context, next: Next) => Promise<void>;
 export type OptionalAuthMiddleware = AuthMiddleware;
 
-export const createAuthMiddleware = ({ authService, logger }: Container) => {
+export const buildAuthMiddleware = ({ authService, logger }: Container) => {
   return async (ctx: Context, next: Next) => {
     const authHeader = ctx.get("Authorization");
 
@@ -43,7 +43,7 @@ export const createAuthMiddleware = ({ authService, logger }: Container) => {
   };
 };
 
-export const createOptionalAuthMiddleware = ({ authService }: Container) => {
+export const buildOptionalAuthMiddleware = ({ authService }: Container) => {
   return async (ctx: Context, next: Next) => {
     const authHeader = ctx.get("Authorization");
     ctx.isLoggedIn = false;
@@ -61,7 +61,7 @@ export const createOptionalAuthMiddleware = ({ authService }: Container) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createAuthMiddleware as any)[RESOLVER] = {};
+(buildAuthMiddleware as any)[RESOLVER] = {};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(createOptionalAuthMiddleware as any)[RESOLVER] = {};
+(buildOptionalAuthMiddleware as any)[RESOLVER] = {};

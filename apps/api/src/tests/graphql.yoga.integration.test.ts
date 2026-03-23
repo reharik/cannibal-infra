@@ -1,6 +1,18 @@
-import { executeGraphQL } from "./executeGQL";
+import { container, initializeContainer } from "../container";
+import { initLogger } from "../logger";
+import { config } from "../config";
+import { createExecuteGraphQL } from "./executeGQL";
 
 describe("GraphQL", () => {
+  let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
+
+  beforeAll(async () => {
+    const logger = initLogger();
+    await initializeContainer(logger, config);
+    const yogaApp = container.resolve("yogaApp");
+    executeGraphQL = createExecuteGraphQL({ yogaApp });
+  });
+
   describe("viewer", () => {
     describe("when executing the viewer query while logged out", () => {
       it("should return null for viewer", async () => {

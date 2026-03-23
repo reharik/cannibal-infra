@@ -6,20 +6,13 @@ generates:
     plugins:
       - typescript
       - typescript-operations
-      - typescript-react-apollo
+      - typed-document-node
     config:
-      withHooks: true
-      withComponent: false
-      withHOC: false
-      withResultType: false
-      withMutationFn: false
-      withSuspenseQuery: false
       skipTypename: false
       enumsAsTypes: true
       constEnums: false
-      apolloReactCommonImportFrom: "@apollo/client"
-      apolloReactHooksImportFrom: "@apollo/client/react"
-      apolloClientVersion: 4
+      maybeValue: "T | undefined"
+      inputMaybeValue: "T | undefined"
       namingConvention:
         typeNames: pascal-case#pascalCase
         enumValues: keep

@@ -1,33 +1,54 @@
 import {
   createYoga,
+  type YogaServerInstance,
   // type YogaInitialContext,
 } from "graphql-yoga";
+import { RESOLVER } from "awilix";
 import { schema } from "../schema";
-import {
-  createGraphQLContext,
-  // type GraphQLContext,
-} from "../context/createGraphQLContext";
 import Koa from "koa";
+import type { Container } from "../../container";
 
-export const yoga = createYoga<Koa.ParameterizedContext>({
-  schema,
-  context: createGraphQLContext,
-});
+export type YogaApp = YogaServerInstance<Koa.ParameterizedContext, object>;
+export type GraphQLServer = Koa.Middleware;
+interface GraphQLServerDeps {
+  yogaApp: YogaApp;
+}
 
-export const createGraphQLServer = async (ctx: Koa.ParameterizedContext) => {
-  const response = await yoga.handleNodeRequestAndResponse(
-    ctx.request,
-    ctx.res,
-    ctx,
-  );
+export const buildYogaApp = ({ graphQLContext }: Container): YogaApp => {
+  return createYoga<Koa.ParameterizedContext>({
+    schema,
+    context: graphQLContext,
+  });
+};
 
-  // Set status code
-  ctx.status = response.status;
+export const buildGraphQLServer = ({
+  yogaApp,
+}: GraphQLServerDeps): GraphQLServer => {
+  return async (ctx: Koa.ParameterizedContext) => {
+    const response = await yogaApp.handleNodeRequestAndResponse(
+      ctx.request,
+      ctx.res,
+      ctx,
+    );
 
-  // Set headers
-  for (const [key, value] of response.headers.entries()) {
-    ctx.set(key, value);
-  }
+    // Set status code
+    ctx.status = response.status;
 
-  ctx.body = response.body;
+    // Set headers
+    for (const [key, value] of response.headers.entries()) {
+      ctx.set(key, value);
+    }
+
+    ctx.body = response.body;
+  };
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(buildGraphQLServer as any)[RESOLVER] = {};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(buildYogaApp as any)[RESOLVER] = {
+  injector: () => ({
+    container: "container",
+  }),
 };

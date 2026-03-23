@@ -1,20 +1,24 @@
-import type { Knex } from "knex";
-import type { EntityId } from "../types/types";
-import { Comment } from "../domain/Comment/Comment";
-import type { CommentRecord } from "../domain/Comment/Comment";
-import type { CommentRepository } from "../domain/Comment/CommentRepository";
+import { Container } from "../../container";
+import type { EntityId } from "../../types/types";
+import { Comment } from "../../domain/Comment/Comment";
+import type { CommentRecord } from "../../domain/Comment/Comment";
 import { rowToRecord } from "./rowToRecord";
+import { RESOLVER } from "awilix";
+import type { CommentRepository as DomainCommentRepository } from "../../domain/Comment/CommentRepository";
 
-export const createCommentRepository = (
-  connection: Knex,
-): CommentRepository => {
-  const getById = async (id: EntityId): Promise<Comment | null> => {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CommentRepository extends DomainCommentRepository {}
+
+export const buildCommentRepository = ({
+  connection,
+}: Container): CommentRepository => {
+  const getById = async (id: EntityId): Promise<Comment | undefined> => {
     const commentRow = (await connection("comment").where({ id }).first()) as
       | Record<string, unknown>
       | undefined;
 
     if (!commentRow) {
-      return null;
+      return;
     }
 
     const record = rowToRecord<CommentRecord>(commentRow, ["resourceId"]);
@@ -46,3 +50,6 @@ export const createCommentRepository = (
     save,
   };
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+(buildCommentRepository as any)[RESOLVER] = {};

@@ -5,5 +5,8 @@ type Query {
 
 type Viewer {
   id: ID!
+  firstName: String
+  lastName: String
   displayName: String!
+  albums: [Album!]!
 }
