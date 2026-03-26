@@ -55,10 +55,22 @@ const formatName = (name: string): string => {
   return name.charAt(0).toLowerCase() + name.slice(1);
 };
 
+const capitalize = (value: string): string =>
+  value.charAt(0).toUpperCase() + value.slice(1);
+
 const expectedInterfaceFromExport = (
   exportName: string,
+  resolverMeta: ResolverMetadata,
 ): string | undefined => {
-  return exportName.startsWith("build") ? exportName.slice(5) : undefined;
+  if (resolverMeta.name) {
+    return capitalize(resolverMeta.name);
+  }
+
+  if (exportName.startsWith("build") && exportName.length > 5) {
+    return exportName.slice(5);
+  }
+
+  return undefined;
 };
 
 const hasExportedInterfaceOrType = (
@@ -326,10 +338,17 @@ const discoverEntriesFromFile = async (absPath: string): Promise<Entry[]> => {
         ? resolverMeta.name
         : formatName(exportName);
 
-    const ifaceName = expectedInterfaceFromExport(exportName);
+    const ifaceName = expectedInterfaceFromExport(exportName, resolverMeta);
     const ifaceFound = ifaceName
       ? hasExportedInterfaceOrType(source, ifaceName)
       : false;
+
+    if (ifaceName && !ifaceFound) {
+      console.warn(
+        `Skipping ${path.relative(process.cwd(), absPath)} export "${exportName}" -> expected interface "${ifaceName}"`,
+      );
+      continue;
+    }
 
     entries.push({
       key,

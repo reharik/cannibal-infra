@@ -18,7 +18,7 @@ export type MediaItemProps = {
   status: MediaItemStatusEnum;
   storageKey: string;
   mimeType: string;
-  sizeBytes: number;
+  sizeBytes?: number;
   width?: number;
   height?: number;
   durationSeconds?: number;
@@ -34,7 +34,7 @@ export type MediaItemRecord = {
   status: string;
   storageKey: string;
   mimeType: string;
-  sizeBytes: number;
+  sizeBytes?: number;
   width?: number;
   height?: number;
   durationSeconds?: number;
@@ -48,9 +48,8 @@ export type CreateMediaItemInput = {
   ownerId: EntityId;
   kind: MediaItemKindEnum;
   status?: MediaItemStatusEnum;
-  storageKey: string;
   mimeType: string;
-  sizeBytes: number;
+  sizeBytes?: number;
   width?: number;
   height?: number;
   durationSeconds?: number;
@@ -70,12 +69,11 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
 
   static create(input: CreateMediaItemInput, actorId: ActorId): MediaItem {
     const mediaItemId = crypto.randomUUID();
-    const storageKey = `media/${input.ownerId}/${input.kind.key}/${mediaItemId}`;
     return new MediaItem(mediaItemId, actorId, {
       ownerId: input.ownerId,
       kind: input.kind,
-      status: input.status ?? MediaItemStatusEnum.pending,
-      storageKey: storageKey,
+      status: MediaItemStatusEnum.pending,
+      storageKey: `media/${input.ownerId}/${input.kind.key}/${mediaItemId}`,
       mimeType: input.mimeType,
       sizeBytes: input.sizeBytes,
       width: input.width,
@@ -130,6 +128,14 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   updateDescription(description: string | undefined, actorId: ActorId): void {
     this.props.description = description;
     this.touch(actorId);
+  }
+
+  storageKey(): string {
+    return this.props.storageKey;
+  }
+
+  status(): MediaItemStatusEnum {
+    return this.props.status;
   }
 
   finalizeStatus(status: MediaItemStatusEnum, actorId: ActorId): WriteResult {

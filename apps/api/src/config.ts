@@ -27,6 +27,7 @@ export type Config = {
   // CORS configuration (comma-separated origins in env, stored as array)
   corsOrigins: string[];
   // Server configuration
+  serverUrl: string;
   serverPort: number;
   // Logging configuration
   logLevel: "error" | "warn" | "info" | "http" | "verbose" | "debug";
@@ -89,6 +90,9 @@ export const setupConfig = (): Config => {
       .filter(Boolean),
     // Server configuration
     serverPort: Number(process.env.API_PORT || 3001),
+    serverUrl:
+      process.env.SERVER_URL ||
+      `http://localhost:${process.env.API_PORT || 3001}`,
     // Logging configuration
     logLevel:
       (process.env.LOG_LEVEL as
