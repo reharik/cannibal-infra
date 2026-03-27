@@ -1,8 +1,7 @@
 import { User } from "@packages/contracts";
 import type { YogaInitialContext } from "graphql-yoga";
 import type Koa from "koa";
-import { RESOLVER } from "awilix";
-import type { Container } from "../../container";
+import type { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 import type { WriteServices } from "../../application/writeServices";
 import type { ViewerReadServices } from "../../application/readServices/readService";
 
@@ -18,10 +17,15 @@ export interface GraphQLContext {
   readServices?: ViewerReadServices;
 }
 
+export type GraphQLContextFactory = (
+  initialContext: YogaInitialContext &
+    Koa.Context & { state: { isLoggedIn: boolean; user: User } },
+) => Promise<GraphQLContext>;
+
 export const buildGraphQLContext = ({
   writeServices,
   bindViewerReadServices,
-}: Container) => {
+}: IocGeneratedCradle): GraphQLContextFactory => {
   return async (
     initialContext: YogaInitialContext &
       Koa.Context & { state: { isLoggedIn: boolean; user: User } },
@@ -45,6 +49,3 @@ export const buildGraphQLContext = ({
     };
   };
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildGraphQLContext as any)[RESOLVER] = {};

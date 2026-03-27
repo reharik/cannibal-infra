@@ -21,3 +21,19 @@ export type AlbumErrorEnum = Enumeration<typeof AlbumErrorEnum>;
 export const AlbumErrorEnum = enumeration<typeof input>("AlbumErrorEnum", {
   input,
 });
+
+const mediaItemInput = {
+  StatusNotPending: {
+    code: "MEDIA_ITEM_STATUS_NOT_PENDING",
+    message: "Media item status is not pending",
+    root: "mediaItem",
+  },
+};
+
+export type MediaItemErrorEnum = Enumeration<typeof MediaItemErrorEnum>;
+export const MediaItemErrorEnum = enumeration<typeof mediaItemInput>(
+  "MediaItemErrorEnum",
+  {
+    input: mediaItemInput,
+  },
+);

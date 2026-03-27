@@ -9,4 +9,5 @@ package-lock.json
 
 /.github
 # Auto-generated files
-**/awilix.autoload.d.ts
+**/di/generated/ioc-manifest.ts
+**/di/generated/ioc-registry.types.ts

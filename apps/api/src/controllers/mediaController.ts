@@ -57,7 +57,7 @@ const sanitizePathSegment = (segment: string): string => {
   return segment.replace(/[^a-zA-Z0-9_-]/g, "_");
 };
 
-export const buildMediaController = (): MediaController => ({
+export const createMediaController = (): MediaController => ({
   upload: async (ctx: Context): Promise<Context> => {
     const { userId, mediaType, mediaId } = ctx.params as {
       userId?: string;

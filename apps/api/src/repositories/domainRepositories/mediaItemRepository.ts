@@ -1,5 +1,5 @@
-import { Container } from "../../container";
-import { RESOLVER } from "awilix";
+import type { Knex } from "knex";
+import { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 import type { EntityId } from "../../types/types";
 import {
   MediaItem,
@@ -13,18 +13,18 @@ import type { MediaItemRepository as DomainMediaItemRepository } from "../../dom
 export interface MediaItemRepository extends DomainMediaItemRepository {}
 
 export const buildMediaItemRepository = ({
-  connection,
-}: Container): MediaItemRepository => {
+  database,
+}: IocGeneratedCradle): MediaItemRepository => {
   const getById = async (id: EntityId): Promise<MediaItem | undefined> => {
-    const mediaItemRow = (await connection("mediaItem")
-      .where({ id })
-      .first()) as Record<string, unknown> | undefined;
+    const mediaItemRow = (await database("mediaItem").where({ id }).first()) as
+      | Record<string, unknown>
+      | undefined;
 
     if (!mediaItemRow) {
       return;
     }
 
-    const commentRows = (await connection("comment")
+    const commentRows = (await database("comment")
       .where({ resourceType: "mediaItem", resourceId: id })
       .orderBy("createdAt", "asc")) as Record<string, unknown>[];
 
@@ -44,7 +44,7 @@ export const buildMediaItemRepository = ({
     const record = mediaItem.toPersistence();
     const { comments, ...mediaItemRow } = record;
 
-    await connection.transaction(async (trx) => {
+    await database.transaction(async (trx: Knex.Transaction) => {
       const existing = (await trx("mediaItem")
         .where({ id: record.id })
         .first()) as Record<string, unknown> | undefined;
@@ -76,6 +76,3 @@ export const buildMediaItemRepository = ({
     save,
   };
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(buildMediaItemRepository as any)[RESOLVER] = {};

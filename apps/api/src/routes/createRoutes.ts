@@ -1,15 +1,14 @@
 import Router from "@koa/router";
-import { RESOLVER } from "awilix";
-import type { Container } from "../container";
-import { buildMediaRoutes } from "./mediaRoutes";
+import type { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
+import { createMediaRoutes } from "./mediaRoutes";
 
 export interface Routes {
   mountRoutes: (router: Router) => void;
 }
 
-export const buildRoutes = ({ authRoutes }: Container): Routes => ({
+export const buildRoutes = ({ authRoutes }: IocGeneratedCradle): Routes => ({
   mountRoutes: (router: Router) => {
-    const mediaRoutes = buildMediaRoutes();
+    const mediaRoutes = createMediaRoutes();
 
     // Auth routes are a Router instance, use them directly
     router.use(authRoutes.routes());
@@ -18,6 +17,3 @@ export const buildRoutes = ({ authRoutes }: Container): Routes => ({
     router.use(mediaRoutes.allowedMethods());
   },
 });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildRoutes as any)[RESOLVER] = {};

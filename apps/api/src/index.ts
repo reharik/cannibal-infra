@@ -1,30 +1,69 @@
-import { Config, config } from "./config";
-import { container, initializeContainer } from "./container";
-import { initLogger } from "./logger";
+import type { Knex } from "knex";
+import dotenv from "dotenv";
+import { initializeContainer } from "./container";
+import type { Server } from "./server";
+import { Logger } from "./logger";
 
-const startServer = async () => {
-  // Initialize logger first with config log level
-  const logger = initLogger(config.logLevel);
+const attachGlobalHandlers = (database: Knex, logger: Logger) => {
+  let shuttingDown = false;
 
-  // Log any warnings from config setup, because we can't call logger in config directly
-  const configWithWarnings = config as Config & { _warnings?: string[] };
-  if (configWithWarnings._warnings) {
-    for (const warning of configWithWarnings._warnings) {
-      logger.warn(warning);
+  const shutdown = async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+
+    try {
+      await database.destroy();
+    } finally {
+      process.exit(0);
     }
-  }
+  };
 
-  // Initialize container with logger and config (loads modules from glob or runtime scan)
-  await initializeContainer(logger, config);
+  process.on("SIGINT", () => {
+    void shutdown();
+  });
 
-  const server = container.resolve("koaServer");
+  process.on("SIGTERM", () => {
+    void shutdown();
+  });
 
-  server.listen(config.serverPort, () => {
-    logger.info(`🚀 Server running on http://localhost:${config.serverPort}`, {
-      port: config.serverPort,
-      nodeEnv: config.nodeEnv,
+  process.on("unhandledRejection", (reason) => {
+    const error = reason instanceof Error ? reason : new Error(String(reason));
+
+    logger.error("Unhandled promise rejection", error, {
+      reason:
+        reason instanceof Error
+          ? {
+              name: reason.name,
+              message: reason.message,
+              stack: reason.stack,
+            }
+          : reason,
     });
+  });
+
+  process.on("uncaughtException", (error) => {
+    logger.error("Uncaught exception", error, {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
+
+    // optional but recommended in prod:
+    // process.exit(1);
   });
 };
 
-void startServer();
+const bootstrap = async () => {
+  dotenv.config();
+
+  const container = initializeContainer();
+
+  const database = container.resolve<Knex>("database");
+  const logger = container.resolve<Logger>("logger");
+  attachGlobalHandlers(database, logger);
+
+  const server = container.resolve<Server>("server");
+  await server.start();
+};
+
+void bootstrap();

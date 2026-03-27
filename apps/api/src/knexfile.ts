@@ -2,7 +2,9 @@ import type { Knex } from "knex";
 import knexStringcase from "knex-stringcase";
 import path from "path";
 import { fileURLToPath } from "url";
-import { config } from "./config";
+import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
+
+export type KnexConfig = Knex.Config;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,59 +26,35 @@ const convertNullsToUndefined = (obj: unknown): unknown => {
   return obj;
 };
 
-let __knexConfig: Knex.Config;
+export const buildKnexConfig = ({ config }: IocGeneratedCradle): KnexConfig => {
+  const isCompiled = path.basename(__dirname) === "dist";
+  const ROOT = isCompiled ? __dirname : path.resolve(__dirname, "..");
+  const MIGRATIONS_DIR = path.join(ROOT, "db/migrations");
+  const SEEDS_DIR = path.join(ROOT, "db/seeds");
 
-export const startUp = () => {
-  if (__knexConfig) {
-    return __knexConfig;
-  }
-  try {
-    // Detect if we're running from dist/ (compiled) or src/ (development)
-    // In dist: __dirname = /path/to/api/dist (compiled)
-    // In src: __dirname = /path/to/api/src (development with tsx)
-    // Check if the directory name is 'dist' to determine if we're compiled
-    const isCompiled = path.basename(__dirname) === "dist";
-    const ROOT = isCompiled ? __dirname : path.resolve(__dirname, "..");
-    const MIGRATIONS_DIR = path.join(ROOT, "db/migrations");
-    const SEEDS_DIR = path.join(ROOT, "db/seeds");
+  const connection: Knex.StaticConnectionConfig = {
+    host: config.postgresHost,
+    port: config.postgresPort,
+    user: config.postgresUser,
+    password: config.postgresPassword,
+    database: config.postgresDatabase,
+  };
 
-    const connection: Knex.StaticConnectionConfig = {
-      host: config.postgresHost,
-      port: config.postgresPort,
-      user: config.postgresUser,
-      password: config.postgresPassword,
-      database: config.postgresDatabase,
-    };
-
-    __knexConfig = {
-      client: "pg",
-      connection,
-      ...knexStringcase({
-        appPostProcessResponse: (result: unknown) =>
-          convertNullsToUndefined(result),
-      }),
-      migrations: {
-        directory: MIGRATIONS_DIR,
-        tableName: "knex_migrations",
-        extension: isCompiled ? "js" : "ts",
-      },
-      seeds: {
-        directory: SEEDS_DIR,
-        extension: isCompiled ? "js" : "ts",
-      },
-    } satisfies Knex.Config;
-
-    return __knexConfig;
-  } catch (error) {
-    console.log(`************error************`);
-    console.log(error);
-    console.log(`********END error************`);
-
-    process.exit(1);
-  }
+  return {
+    client: "pg",
+    connection,
+    ...knexStringcase({
+      appPostProcessResponse: (result: unknown) =>
+        convertNullsToUndefined(result),
+    }),
+    migrations: {
+      directory: MIGRATIONS_DIR,
+      tableName: "knex_migrations",
+      extension: isCompiled ? "js" : "ts",
+    },
+    seeds: {
+      directory: SEEDS_DIR,
+      extension: isCompiled ? "js" : "ts",
+    },
+  };
 };
-
-export const knexConfig = startUp();
-
-// Default export for Knex CLI
-export default knexConfig;

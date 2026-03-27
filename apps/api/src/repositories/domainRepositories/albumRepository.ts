@@ -1,20 +1,20 @@
-import { RESOLVER } from "awilix";
+import type { Knex } from "knex";
 import type { EntityId } from "../../types/types";
 import { Album, type AlbumRecord } from "../../domain/Album/Album";
 import type { AlbumItemRecord } from "../../domain/Album/AlbumItem";
 import type { AlbumMemberRecord } from "../../domain/Album/AlbumMember";
 import { rowToRecord } from "./rowToRecord";
-import { Container } from "../../container";
+import { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 import type { AlbumRepository as DomainAlbumRepository } from "../../domain/Album/AlbumRepository";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AlbumRepository extends DomainAlbumRepository {}
 
 export const buildAlbumRepository = ({
-  connection,
-}: Container): AlbumRepository => {
+  database,
+}: IocGeneratedCradle): AlbumRepository => {
   const getById = async (id: EntityId): Promise<Album | undefined> => {
-    const albumRow = (await connection("album").where({ id }).first()) as
+    const albumRow = (await database("album").where({ id }).first()) as
       | Record<string, unknown>
       | undefined;
 
@@ -22,11 +22,11 @@ export const buildAlbumRepository = ({
       return;
     }
 
-    const itemRows = (await connection("albumItem")
+    const itemRows = (await database("albumItem")
       .where({ albumId: id })
       .orderBy("createdAt", "asc")) as Record<string, unknown>[];
 
-    const memberRows = (await connection("albumMember")
+    const memberRows = (await database("albumMember")
       .where({ albumId: id })
       .orderBy("createdAt", "asc")) as Record<string, unknown>[];
 
@@ -52,7 +52,7 @@ export const buildAlbumRepository = ({
     const record = album.toPersistence();
     const { items, members, ...albumRow } = record;
 
-    await connection.transaction(async (trx) => {
+    await database.transaction(async (trx: Knex.Transaction) => {
       const existing = (await trx("album").where({ id: record.id }).first()) as
         | Record<string, unknown>
         | undefined;
@@ -90,6 +90,3 @@ export const buildAlbumRepository = ({
     save,
   };
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(buildAlbumRepository as any)[RESOLVER] = {};

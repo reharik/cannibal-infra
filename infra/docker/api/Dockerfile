@@ -45,9 +45,11 @@ RUN npx nx reset || true
 # Generate container types (run from repo root so npm finds package.json)
 RUN npm run gen:container --workspace=${API_WORKSPACE_NAME}
 
-# Verify the file was generated
-RUN test -f ${API_WORKSPACE_PATH}/src/di/generated/awilix.autoload.d.ts || \
-  (echo "ERROR: awilix.autoload.d.ts was not generated" && exit 1)
+# Verify IoC generated artifacts exist
+RUN test -f ${API_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
+  (echo "ERROR: ioc-manifest.ts was not generated" && exit 1)
+RUN test -f ${API_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts || \
+  (echo "ERROR: ioc-registry.types.ts was not generated" && exit 1)
 
 RUN npx nx build api --configuration=production
 
@@ -73,11 +75,12 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /repo/${API_WORKSPACE_PATH}/dist ./${API_WORKSPACE_PATH}/dist
 
-# Copy generated Awilix container types to dist
-RUN mkdir -p ${API_WORKSPACE_PATH}/dist/di
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/generated/awilix.autoload.d.ts ./${API_WORKSPACE_PATH}/dist/di/generated/awilix.autoload.d.ts
-RUN test -f ${API_WORKSPACE_PATH}/dist/di/generated/awilix.autoload.d.ts || \
-  (echo "ERROR: awilix.autoload.d.ts was not copied to dist" && exit 1)
+# Copy generated IoC types to dist (for source maps / tooling parity)
+RUN mkdir -p ${API_WORKSPACE_PATH}/dist/di/generated
+COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts ./${API_WORKSPACE_PATH}/dist/di/generated/ioc-manifest.ts
+COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts ./${API_WORKSPACE_PATH}/dist/di/generated/ioc-registry.types.ts
+RUN test -f ${API_WORKSPACE_PATH}/dist/di/generated/ioc-registry.types.ts || \
+  (echo "ERROR: ioc-registry.types.ts was not copied to dist" && exit 1)
 
 # Copy server startup script (copy from build stage where source files are)
 RUN mkdir -p ${API_WORKSPACE_PATH}/dist/scripts

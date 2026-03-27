@@ -1,5 +1,4 @@
-import { RESOLVER } from "awilix";
-import { Container } from "../../container";
+import { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 import type { EntityId } from "../../types/types";
 import { Notification } from "../../domain/Notification/Notification";
 import type { NotificationRecord } from "../../domain/Notification/Notification";
@@ -10,10 +9,10 @@ import type { NotificationRepository as DomainNotificationRepository } from "../
 export interface NotificationRepository extends DomainNotificationRepository {}
 
 export const buildNotificationRepository = ({
-  connection,
-}: Container): NotificationRepository => {
+  database,
+}: IocGeneratedCradle): NotificationRepository => {
   const getById = async (id: EntityId): Promise<Notification | undefined> => {
-    const notificationRow = (await connection("notification")
+    const notificationRow = (await database("notification")
       .where({ id })
       .first()) as Record<string, unknown> | undefined;
 
@@ -28,14 +27,14 @@ export const buildNotificationRepository = ({
   const save = async (notification: Notification): Promise<void> => {
     const record = notification.toPersistence();
 
-    const existing = (await connection("notification")
+    const existing = (await database("notification")
       .where({ id: record.id })
       .first()) as Record<string, unknown> | undefined;
 
     if (existing) {
-      await connection("notification").where({ id: record.id }).update(record);
+      await database("notification").where({ id: record.id }).update(record);
     } else {
-      await connection("notification").insert(record);
+      await database("notification").insert(record);
     }
   };
 
@@ -44,6 +43,3 @@ export const buildNotificationRepository = ({
     save,
   };
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(buildNotificationRepository as any)[RESOLVER] = {};

@@ -1,4 +1,10 @@
-import { createLogger, format, transports, type Logger } from "winston";
+import {
+  createLogger,
+  format,
+  transports,
+  type Logger as WinstonLogger,
+} from "winston";
+import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 
 type Level = "error" | "warn" | "info" | "http" | "verbose" | "debug";
 
@@ -31,7 +37,7 @@ type ErrorLogger = {
   (message: string, errorMessage: string, data: Record<string, unknown>): void;
 };
 
-export type LoggerInterface = {
+export type Logger = {
   error: ErrorLogger;
   warn: (val: string, data?: unknown) => void;
   info: (val: string, data?: unknown) => void;
@@ -111,10 +117,10 @@ const buildErrorLogPayload = (
   return { val: message, data: meta, err: errorData };
 };
 
-let appLogger: Logger;
-export const initLogger = (loggingLevel: Level = "info"): LoggerInterface => {
+let appLogger: WinstonLogger;
+export const buildLogger = ({ config }: IocGeneratedCradle): Logger => {
   appLogger = createLogger({
-    level: loggingLevel,
+    level: config.logLevel,
     format: loggingFormat,
     transports: [
       new transports.Console({
@@ -170,5 +176,3 @@ export const initLogger = (loggingLevel: Level = "info"): LoggerInterface => {
   };
   return { error, warn, info, http, verbose, debug };
 };
-
-export const logger: LoggerInterface = initLogger();

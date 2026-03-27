@@ -1,6 +1,4 @@
-import { RESOLVER, Lifetime } from "awilix";
-import type { AlbumReadRepository } from "../../../repositories/readRepositories/albumReadRepository";
-import type { MediaItemReadRepository } from "../../../repositories/readRepositories/mediaItemReadRepository";
+import { IocGeneratedCradle } from "apps/api/src/di/generated/ioc-registry.types";
 
 type AlbumRow = {
   id: string;
@@ -31,10 +29,7 @@ export type AlbumService = ({ viewerId }: { viewerId: string }) => {
 export const buildAlbumService = ({
   albumReadRepository,
   mediaItemReadRepository,
-}: {
-  albumReadRepository: AlbumReadRepository;
-  mediaItemReadRepository: MediaItemReadRepository;
-}): AlbumService => {
+}: IocGeneratedCradle): AlbumService => {
   return ({ viewerId }: { viewerId: string }) => ({
     listAlbums: async (): Promise<AlbumRow[]> => {
       return albumReadRepository.listByViewerId({ viewerId });
@@ -57,11 +52,4 @@ export const buildAlbumService = ({
       return mediaItemReadRepository.getCoverMediaByAlbumId({ albumId });
     },
   });
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildAlbumService as any)[RESOLVER] = {
-  name: "albumService",
-  group: "readViewerServices",
-  lifetime: Lifetime.SCOPED,
 };

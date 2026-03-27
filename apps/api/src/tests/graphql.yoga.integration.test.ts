@@ -8,7 +8,7 @@ describe("GraphQL", () => {
 
   beforeAll(async () => {
     const logger = initLogger();
-    await initializeContainer(logger, config);
+    initializeContainer(logger, config);
     const yogaApp = container.resolve("yogaApp");
     executeGraphQL = createExecuteGraphQL({ yogaApp });
   });

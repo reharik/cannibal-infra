@@ -1,15 +1,9 @@
 import cors from "@koa/cors";
 import Router from "@koa/router";
-import { RESOLVER } from "awilix";
-import dotenv from "dotenv";
 import http from "http";
 import Koa, { Context } from "koa";
 import { koaBody } from "koa-body";
-import { config } from "./config";
-import type { Container } from "./container";
-import { database } from "./knex";
-
-dotenv.config();
+import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 
 export type KoaServer = http.Server;
 
@@ -20,7 +14,9 @@ export const buildKoaServer = ({
   graphQLServer,
   errorHandler,
   requestLogger,
-}: Container) => {
+  database,
+  config,
+}: IocGeneratedCradle): KoaServer => {
   const app = new Koa();
   app.context.db = database;
   // 1. Error handling (should be first)
@@ -94,34 +90,6 @@ export const buildKoaServer = ({
       },
     );
   });
-  process.on("unhandledRejection", (reason) => {
-    const error = reason instanceof Error ? reason : new Error(String(reason));
-
-    logger.error("Unhandled promise rejection", error, {
-      reason:
-        reason instanceof Error
-          ? {
-              name: reason.name,
-              message: reason.message,
-              stack: reason.stack,
-            }
-          : reason,
-    });
-  });
-
-  process.on("uncaughtException", (error) => {
-    logger.error("Uncaught exception", error, {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    });
-
-    // optional but recommended in prod:
-    // process.exit(1);
-  });
 
   return http.createServer(app.callback());
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildKoaServer as any)[RESOLVER] = {};

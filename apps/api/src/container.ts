@@ -1,53 +1,37 @@
-import { asValue, AwilixContainer, createContainer } from "awilix";
-import type { Knex } from "knex";
-import type { AutoLoadedContainer } from "./di/generated/awilix.autoload";
+import { AwilixContainer, createContainer } from "awilix";
+import { registerIocFromManifest } from "ioc-manifest";
 import {
-  registerResolverGroups,
-  registerTaggedModules,
-} from "./di/loadModules";
-import { database } from "./knex";
-import type { LoggerInterface } from "./logger";
-import type { Config } from "./config";
+  iocManifestByContract,
+  iocModuleImports,
+} from "./di/generated/ioc-manifest";
+import type { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 
-// Base container for manually registered services (not discovered by gen-awilix-container)
-interface BaseContainer {
-  connection: Knex;
-  logger: LoggerInterface;
-  config: Config;
-  writeServices: Record<string, unknown>;
-}
+let container: AwilixContainer<IocGeneratedCradle> | undefined;
 
-export type Container = BaseContainer & AutoLoadedContainer;
-
-// Initialize container asynchronously (needed for dev mode file scanning)
-let container: AwilixContainer<Container>;
-const initializeContainer = async (
-  logger: LoggerInterface,
-  config: Config,
-): Promise<AwilixContainer<Container>> => {
+const initializeContainer = (): AwilixContainer<IocGeneratedCradle> => {
   if (container) {
     return container;
   }
-  // Create the container with type inference
-  const _container = createContainer<Container>({
+
+  const _container = createContainer<IocGeneratedCradle>({
     injectionMode: "PROXY",
   });
 
-  await registerTaggedModules(_container, logger);
-
-  _container.register({
-    // Register the database connection manually
-    connection: asValue(database),
-    logger: asValue(logger), // Register the logger for DI
-    config: asValue(config), // Register the config for DI
-    // Register empty writeServices placeholder (will be populated by grouped registrations later)
-    writeServices: asValue({}),
-  });
-
-  await registerResolverGroups(_container, logger);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- ioc-manifest runtime registration
+  registerIocFromManifest(_container, iocManifestByContract, iocModuleImports);
 
   container = _container;
   return container;
 };
 
-export { container, initializeContainer };
+const getContainer = (): AwilixContainer<IocGeneratedCradle> => {
+  if (!container) {
+    throw new Error(
+      "[ioc] container has not been initialized yet. Call initializeContainer() first.",
+    );
+  }
+
+  return container;
+};
+
+export { initializeContainer, getContainer };

@@ -1,6 +1,5 @@
-import { RESOLVER } from "awilix";
 import type { Context } from "koa";
-import type { Container } from "../container";
+import type { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
 import { UserRoleEnum } from "@packages/contracts";
 
 export interface AuthController {
@@ -22,7 +21,7 @@ const sanitizeUser = (user: {
 export const buildAuthController = ({
   authService,
   logger,
-}: Container): AuthController => ({
+}: IocGeneratedCradle): AuthController => ({
   login: async (ctx: Context): Promise<Context> => {
     const { email, password } = ctx.request.body as {
       email: string;
@@ -137,6 +136,3 @@ export const buildAuthController = ({
     return ctx;
   },
 });
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildAuthController as any)[RESOLVER] = {};

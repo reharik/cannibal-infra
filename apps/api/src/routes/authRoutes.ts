@@ -1,11 +1,12 @@
 import Router from "@koa/router";
-import { RESOLVER } from "awilix";
-import type { Container } from "../container";
+import type { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
 import { requireAuth } from "../middleware/routeGuards";
 
 export type AuthRoutes = Router;
 
-export const buildAuthRoutes = ({ authController }: Container): AuthRoutes => {
+export const buildAuthRoutes = ({
+  authController,
+}: IocGeneratedCradle): AuthRoutes => {
   const router = new Router({ prefix: "/auth" });
 
   // Public routes
@@ -18,6 +19,3 @@ export const buildAuthRoutes = ({ authController }: Container): AuthRoutes => {
 
   return router;
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildAuthRoutes as any)[RESOLVER] = {};

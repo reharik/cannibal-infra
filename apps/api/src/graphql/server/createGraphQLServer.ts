@@ -1,54 +1,58 @@
-import {
-  createYoga,
-  type YogaServerInstance,
-  // type YogaInitialContext,
-} from "graphql-yoga";
-import { RESOLVER } from "awilix";
+import { createYoga } from "graphql-yoga";
 import { schema } from "../schema";
 import Koa from "koa";
-import type { Container } from "../../container";
+import type { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 
-export type YogaApp = YogaServerInstance<Koa.ParameterizedContext, object>;
-export type GraphQLServer = Koa.Middleware;
+/**
+ * App-local contract for graphql-yoga so ioc-manifest can resolve a named contract symbol.
+ */
+export interface YogaApp {
+  handleNodeRequestAndResponse(
+    request: unknown,
+    response: unknown,
+    context: Koa.ParameterizedContext,
+  ): Promise<Response>;
+  fetch(
+    input: string | URL,
+    init?: RequestInit,
+    context?: unknown,
+  ): Promise<Response>;
+}
+
+export interface GraphQLServer {
+  (ctx: Koa.ParameterizedContext, next: Koa.Next): Promise<void>;
+}
+
 interface GraphQLServerDeps {
   yogaApp: YogaApp;
 }
 
-export const buildYogaApp = ({ graphQLContext }: Container): YogaApp => {
+export const buildYogaApp = ({ graphQLContext }: IocGeneratedCradle): YogaApp => {
   return createYoga<Koa.ParameterizedContext>({
     schema,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- cradle resolves graphQLContext after IoC registration
     context: graphQLContext,
-  });
+  }) as YogaApp;
 };
 
-export const buildGraphQLServer = ({
-  yogaApp,
-}: GraphQLServerDeps): GraphQLServer => {
-  return async (ctx: Koa.ParameterizedContext) => {
-    const response = await yogaApp.handleNodeRequestAndResponse(
-      ctx.request,
-      ctx.res,
-      ctx,
-    );
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- yoga app adapter
+export const buildGraphQLServer = (
+  { yogaApp }: GraphQLServerDeps,
+): GraphQLServer => {
+    return async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
+      void next;
+      const response = await yogaApp.handleNodeRequestAndResponse(
+        ctx.request,
+        ctx.res,
+        ctx,
+      );
 
-    // Set status code
-    ctx.status = response.status;
+      ctx.status = response.status;
 
-    // Set headers
-    for (const [key, value] of response.headers.entries()) {
-      ctx.set(key, value);
-    }
+      for (const [key, value] of response.headers.entries()) {
+        ctx.set(key, value);
+      }
 
-    ctx.body = response.body;
+      ctx.body = response.body;
+    };
   };
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(buildGraphQLServer as any)[RESOLVER] = {};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(buildYogaApp as any)[RESOLVER] = {
-  injector: () => ({
-    container: "container",
-  }),
-};

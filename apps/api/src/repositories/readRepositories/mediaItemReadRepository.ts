@@ -1,5 +1,4 @@
-import { RESOLVER, Lifetime } from "awilix";
-import type { Container } from "../../container";
+import type { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 
 export type MediaItemReadRepository = {
   getCoverMediaByAlbumId: ({
@@ -55,37 +54,30 @@ const mediaItemRowFields = [
 ];
 
 export const buildMediaItemReadRepository = ({
-  connection,
-}: Container): MediaItemReadRepository => {
-  return {
-    getCoverMediaByAlbumId: async ({
-      albumId,
-    }: {
-      albumId: string;
-    }): Promise<MediaItemRow | undefined> => {
-      const row = await connection("media_item")
-        .innerJoin("album", "album.coverMediaId", "media_item.id")
-        .where("album.id", albumId)
-        .first<MediaItemRow>(...mediaItemRowFields);
+  database,
+}: IocGeneratedCradle): MediaItemReadRepository => ({
+  getCoverMediaByAlbumId: async ({
+    albumId,
+  }: {
+    albumId: string;
+  }): Promise<MediaItemRow | undefined> => {
+    const row = await database("media_item")
+      .innerJoin("album", "album.coverMediaId", "media_item.id")
+      .where("album.id", albumId)
+      .first<MediaItemRow>(...mediaItemRowFields);
 
-      return row;
-    },
+    return row;
+  },
 
-    getById: async ({
-      mediaItemId,
-    }: {
-      mediaItemId: string;
-    }): Promise<MediaItemRow | undefined> => {
-      const row = await connection("media_item")
-        .where("media_item.id", mediaItemId)
-        .first<MediaItemRow>(...mediaItemRowFields);
+  getById: async ({
+    mediaItemId,
+  }: {
+    mediaItemId: string;
+  }): Promise<MediaItemRow | undefined> => {
+    const row = await database("media_item")
+      .where("media_item.id", mediaItemId)
+      .first<MediaItemRow>(...mediaItemRowFields);
 
-      return row;
-    },
-  };
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-(buildMediaItemReadRepository as any)[RESOLVER] = {
-  lifetime: Lifetime.SCOPED,
-};
+    return row;
+  },
+});

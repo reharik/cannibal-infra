@@ -1,7 +1,7 @@
 import { MediaItemKindEnum, MediaItemStatusEnum } from "@packages/contracts";
 import { EntityId } from "../../../types/types";
 import { MediaItem } from "../../../domain/MediaItem/MediaItem";
-import { Container } from "apps/api/src/container";
+import { IocGeneratedCradle } from "../../../di/generated/ioc-registry.types";
 
 
 type CreateMediaUploadInput = {
@@ -16,7 +16,7 @@ type CreateMediaUploadResult = {
   uploadTarget: UploadTarget;
 };
 
-export const buildMediaItemUpload = ({mediaItemRepository,mediaStorage}:Container) => {
+export const createMediaItemUpload = ({mediaItemRepository,mediaStorage}: IocGeneratedCradle) => {
     return async (input: CreateMediaUploadInput): Promise<CreateMediaUploadResult> => {
         const { viewerId, kind, mimeType } = input;
         const mediaItem = MediaItem.create({

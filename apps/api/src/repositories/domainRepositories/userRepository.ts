@@ -1,5 +1,4 @@
-import { RESOLVER } from "awilix";
-import { Container } from "../../container";
+import { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
 import type { EntityId } from "../../types/types";
 import { User } from "../../domain/User/User";
 import type { UserRecord } from "../../domain/User/User";
@@ -10,10 +9,10 @@ import type { UserRepository as DomainUserRepository } from "../../domain/User/U
 export interface UserRepository extends DomainUserRepository {}
 
 export const buildUserRepository = ({
-  connection,
-}: Container): UserRepository => {
+  database,
+}: IocGeneratedCradle): UserRepository => {
   const getById = async (id: EntityId): Promise<User | undefined> => {
-    const userRow = (await connection("user").where({ id }).first()) as
+    const userRow = (await database("user").where({ id }).first()) as
       | Record<string, unknown>
       | undefined;
 
@@ -28,14 +27,14 @@ export const buildUserRepository = ({
   const save = async (user: User): Promise<void> => {
     const record = user.toPersistence();
 
-    const existing = (await connection("user")
+    const existing = (await database("user")
       .where({ id: record.id })
       .first()) as Record<string, unknown> | undefined;
 
     if (existing) {
-      await connection("user").where({ id: record.id }).update(record);
+      await database("user").where({ id: record.id }).update(record);
     } else {
-      await connection("user").insert(record);
+      await database("user").insert(record);
     }
   };
 
@@ -44,6 +43,3 @@ export const buildUserRepository = ({
     save,
   };
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(buildUserRepository as any)[RESOLVER] = {};
