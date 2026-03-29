@@ -11,6 +11,7 @@ Successfully redesigned and restructured the frontend from a generic blue SaaS t
 **Created:** `apps/web/src/styles/theme.ts` (was missing)
 
 **New Color Palette:**
+
 - Background: `#111315` (warm near-black)
 - Surface: `#181b1f` (raised panels)
 - Border: `#2a2f36` (subtle)
@@ -21,6 +22,7 @@ Successfully redesigned and restructured the frontend from a generic blue SaaS t
 - Success: `#8b9d88` (muted sage)
 
 **Updated:**
+
 - Global styles with premium typography, spacing, and scrollbar styling
 - Primitives components to use theme tokens consistently
 - Removed hardcoded blue colors
@@ -28,6 +30,7 @@ Successfully redesigned and restructured the frontend from a generic blue SaaS t
 ### 2. Architecture Restructure ✅
 
 **New Folder Structure:**
+
 ```
 apps/web/src/
 ├── app/
@@ -52,23 +55,27 @@ apps/web/src/
 ```
 
 **Removed:**
+
 - `pages/` folder (old generic pages)
 - `components/ProtectedRoute.tsx` (replaced with ViewerBootstrap pattern)
 
 ### 3. GraphQL Integration ✅
 
 **Installed:**
+
 - `@apollo/client` v4.1.6
 - `graphql` v16.13.1
 - GraphQL code generation tools
 
 **Created:**
+
 - Apollo Client configuration with auth header injection
 - Viewer query for auth bootstrap
 - Code generation setup (pulls from backend schema)
 - Generated TypeScript types and React hooks
 
-**Pattern:** 
+**Pattern:**
+
 - App bootstraps by querying `viewer`
 - If `viewer` exists → show authenticated app with AppShell
 - If `viewer` is null → show LoggedOutScreen
@@ -76,6 +83,7 @@ apps/web/src/
 ### 4. New Screens ✅
 
 **LoggedOutScreen:**
+
 - Premium two-column layout
 - Brand section with features
 - Auth card with login/signup toggle
@@ -84,18 +92,21 @@ apps/web/src/
 - Form validation
 
 **HomeScreen:**
+
 - Photo grid layout (responsive, masonry-style)
 - Header with upload button
 - Placeholder items (ready for real data)
 - Empty state UI
 
 **AppShell:**
+
 - Clean navigation bar
 - App title and nav links
 - User info and sign out button
 - Outlet for nested routes
 
 **AlbumScreen & MediaItemScreen:**
+
 - Placeholder implementations
 - Proper routing structure
 - Ready for real GraphQL queries
@@ -103,6 +114,7 @@ apps/web/src/
 ### 5. App Bootstrap Flow ✅
 
 **New Architecture:**
+
 1. `App.tsx` → wraps everything in `AppProviders`
 2. `AppProviders` → sets up Theme, QueryClient, ApolloProvider
 3. `ViewerBootstrap` → runs viewer query
@@ -112,6 +124,7 @@ apps/web/src/
    - Has viewer → `AppRouter` with `AppShell`
 
 **Route Structure:**
+
 ```
 / → AppShell → HomeScreen
 /albums → AppShell → HomeScreen (albums view)
@@ -203,6 +216,7 @@ The following are ready for implementation:
 ## Code Generation
 
 To regenerate GraphQL types after schema changes:
+
 ```bash
 npm run codegen --workspace=@app/web
 ```

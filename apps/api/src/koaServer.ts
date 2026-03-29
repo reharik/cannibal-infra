@@ -1,5 +1,4 @@
 import cors from "@koa/cors";
-import Router from "@koa/router";
 import http from "http";
 import Koa, { Context } from "koa";
 import { koaBody } from "koa-body";
@@ -8,7 +7,7 @@ import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 export type KoaServer = http.Server;
 
 export const buildKoaServer = ({
-  routes,
+  apiRoutes,
   optionalAuthMiddleware,
   logger,
   graphQLServer,
@@ -50,9 +49,8 @@ export const buildKoaServer = ({
   app.use(optionalAuthMiddleware);
 
   // 6. Routes (the actual request handling)
-  const router = new Router({ prefix: "/api" });
-  routes.mountRoutes(router);
-  app.use(router.routes()).use(router.allowedMethods());
+
+  app.use(apiRoutes.routes()).use(apiRoutes.allowedMethods());
 
   // 7. GraphQL endpoint
   app.use(graphQLServer);

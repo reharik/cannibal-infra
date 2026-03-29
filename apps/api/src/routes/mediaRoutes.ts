@@ -1,12 +1,13 @@
 import Router from "@koa/router";
 import { koaBody } from "koa-body";
-import { createMediaController } from "../controllers/mediaController";
+import { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
 
 export type MediaRoutes = Router;
 
-export const createMediaRoutes = (): MediaRoutes => {
+export const buildMediaRoutes = ({
+  mediaController,
+}: IocGeneratedCradle): MediaRoutes => {
   const router = new Router({ prefix: "/media" });
-  const mediaController = createMediaController();
 
   router.put(
     "/:userId/:mediaType/:mediaId",

@@ -9,125 +9,132 @@ import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 type Level = "error" | "warn" | "info" | "http" | "verbose" | "debug";
 
 interface ErrorWithResponse extends Error {
-  response: {
+  response?: {
     data?: unknown;
     status?: number;
     headers?: unknown;
   };
 }
 
-interface ErrorWithResponsePayload {
-  data?: unknown;
-  status?: number;
-  headers?: unknown;
-}
+type LogMeta = Record<string, unknown>;
 
-interface ErrorPayload {
-  error?: Error;
-  errorResponse?: ErrorWithResponsePayload;
-}
-
-// Type definition for error function overloads
 type ErrorLogger = {
   (message: string): void;
   (message: string, err: Error): void;
-  (message: string, errorMessage: string): void;
-  (message: string, data: Record<string, unknown>): void;
-  (message: string, err: Error, data: Record<string, unknown>): void;
-  (message: string, errorMessage: string, data: Record<string, unknown>): void;
+  (message: string, meta: LogMeta): void;
+  (message: string, err: Error, meta: LogMeta): void;
 };
 
 export type Logger = {
   error: ErrorLogger;
-  warn: (val: string, data?: unknown) => void;
-  info: (val: string, data?: unknown) => void;
-  http: (val: string, data?: unknown) => void;
-  verbose: (val: string, data?: unknown) => void;
-  debug: (val: string, data?: unknown) => void;
+  warn: (message: string, meta?: unknown) => void;
+  info: (message: string, meta?: unknown) => void;
+  http: (message: string, meta?: unknown) => void;
+  verbose: (message: string, meta?: unknown) => void;
+  debug: (message: string, meta?: unknown) => void;
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  return value != null && typeof value === "object" && !Array.isArray(value);
 };
 
 const isErrorWithResponse = (err: unknown): err is ErrorWithResponse => {
   return (
-    err != null &&
-    typeof err === "object" &&
+    err instanceof Error &&
     "response" in err &&
-    typeof (err as ErrorWithResponse).response === "object"
+    err.response != null &&
+    typeof err.response === "object"
   );
 };
 
-const getErrorWithResponse = (err: unknown): ErrorWithResponsePayload => {
+const extractErrorMeta = (err: Error): LogMeta => {
+  const meta: LogMeta = {
+    name: err.name,
+    message: err.message,
+  };
+
   if (isErrorWithResponse(err)) {
-    return {
-      data: err.response.data,
-      status: err.response.status,
-      headers: err.response.headers,
+    meta.response = {
+      status: err.response?.status,
+      data: err.response?.data,
+      headers: err.response?.headers,
     };
   }
-  return {};
+
+  return meta;
 };
 
-const loggingFormat = format.combine(
-  format.timestamp({
-    format: "YYYY-MM-DD HH:mm:ss.SSSS ZZ",
-  }),
-  format.errors({ stack: true }),
-  format.splat(),
-  format.json(),
-);
+const humanReadableFormat = format.printf((info) => {
+  const { timestamp, level, message, err, ...rest } = info as {
+    timestamp?: string;
+    level: string;
+    message: string;
+    err?: Error;
+    [key: string]: unknown;
+  };
 
-const buildErrorLogPayload = (
-  message: string,
-  errorOrData?: Error | string | Record<string, unknown>,
-  data?: Record<string, unknown>,
-): { val: string; data?: unknown; err?: ErrorPayload } => {
-  let err: Error | undefined;
-  let meta: Record<string, unknown> | undefined;
+  const header = `${timestamp ?? ""} ${level}: ${message}`.trim();
 
-  if (errorOrData === undefined) {
-    // Case 1: Just message - create Error from message
-    err = new Error(message);
-  } else if (errorOrData instanceof Error) {
-    // Case 2 or 5: Error object provided
-    err = errorOrData;
-    if (data !== undefined) {
-      // Case 5: Error + additional data
-      meta = data;
-    }
-  } else if (typeof errorOrData === "string") {
-    // Case 3 or 6: String provided - create Error from string
-    err = new Error(errorOrData);
-    if (data !== undefined) {
-      // Case 6: Error string + additional data
-      meta = data;
-    }
-  } else {
-    // Case 4: Object provided (not Error) - treat as metadata, create Error from message
-    err = new Error(message);
-    meta = errorOrData;
+  const errorBlock =
+    err instanceof Error
+      ? `\n${err.stack ?? `${err.name}: ${err.message}`}`
+      : "";
+
+  const meta =
+    Object.keys(rest).length > 0 ? `\n${JSON.stringify(rest, null, 2)}` : "";
+
+  return `${header}${errorBlock}${meta}`;
+});
+
+const buildConsoleFormat = () =>
+  format.combine(
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSSS ZZ" }),
+    humanReadableFormat,
+  );
+
+const jsonErrorFormatter = format((info) => {
+  const typed = info as typeof info & { err?: unknown };
+
+  if (typed.err instanceof Error) {
+    typed.err = extractErrorMeta(typed.err);
+    (typed as Record<string, unknown>).stack =
+      typed.stack ?? typed.err.stack ?? undefined;
   }
-  let errorData;
-  if (err) {
-    const error = err instanceof Error ? { error: err } : undefined;
-    const errorResponse = getErrorWithResponse(err);
-    errorData = {
-      ...error,
-      ...errorResponse,
-    };
-  }
-  return { val: message, data: meta, err: errorData };
-};
+
+  return typed;
+});
+
+const buildJsonFormat = () =>
+  format.combine(
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSSS ZZ" }),
+    jsonErrorFormatter(),
+    format.json(),
+  );
 
 let appLogger: WinstonLogger;
+
 export const buildLogger = ({ config }: IocGeneratedCradle): Logger => {
+  const loggerTransports: WinstonLogger["transports"] = [
+    new transports.Console({
+      stderrLevels: ["error"],
+      handleExceptions: true,
+      format: buildConsoleFormat(),
+    }),
+  ];
+
+  if (config.logJsonFilePath) {
+    loggerTransports.push(
+      new transports.File({
+        filename: config.logJsonFilePath,
+        level: config.logLevel,
+        handleExceptions: true,
+        format: buildJsonFormat(),
+      }),
+    );
+  }
+
   appLogger = createLogger({
     level: config.logLevel,
-    format: loggingFormat,
-    transports: [
-      new transports.Console({
-        format: loggingFormat,
-        handleExceptions: true,
-      }),
-    ],
     levels: {
       error: 0,
       warn: 1,
@@ -136,43 +143,63 @@ export const buildLogger = ({ config }: IocGeneratedCradle): Logger => {
       verbose: 4,
       debug: 5,
     },
+    transports: loggerTransports,
+    exitOnError: false,
   });
+
   const logMessage = (
     level: Level,
-    val: string,
-    data?: unknown,
-    err?: ErrorPayload,
+    message: string,
+    meta?: unknown,
+    err?: Error,
   ) => {
-    appLogger.log(level, val, {
-      ...(data && typeof data === "object" && !Array.isArray(data)
-        ? data
-        : { data }),
-      ...err,
-    });
+    const payload: Record<string, unknown> = {};
+
+    if (isPlainObject(meta)) {
+      Object.assign(payload, meta);
+    } else if (meta !== undefined) {
+      payload.data = meta;
+    }
+
+    if (err) {
+      payload.err = err;
+    }
+
+    appLogger.log(level, message, payload);
   };
 
   const error: ErrorLogger = (
     message: string,
-    errorOrData?: Error | string | Record<string, unknown>,
-    data?: Record<string, unknown>,
-  ): void => {
-    const payload = buildErrorLogPayload(message, errorOrData, data);
-    logMessage("error", payload.val, payload.data, payload.err);
+    errorOrMeta?: Error | LogMeta,
+    meta?: LogMeta,
+  ) => {
+    if (errorOrMeta instanceof Error) {
+      logMessage("error", message, meta, errorOrMeta);
+      return;
+    }
+
+    logMessage("error", message, errorOrMeta);
   };
-  const warn = (val: string, data?: unknown) => {
-    logMessage("warn", val, data);
+
+  const warn = (message: string, meta?: unknown) => {
+    logMessage("warn", message, meta);
   };
-  const info = (val: string, data?: unknown) => {
-    logMessage("info", val, data);
+
+  const info = (message: string, meta?: unknown) => {
+    logMessage("info", message, meta);
   };
-  const http = (val: string, data?: unknown) => {
-    logMessage("http", val, data);
+
+  const http = (message: string, meta?: unknown) => {
+    logMessage("http", message, meta);
   };
-  const verbose = (val: string, data?: unknown) => {
-    logMessage("verbose", val, data);
+
+  const verbose = (message: string, meta?: unknown) => {
+    logMessage("verbose", message, meta);
   };
-  const debug = (val: string, data?: unknown) => {
-    logMessage("debug", val, data);
+
+  const debug = (message: string, meta?: unknown) => {
+    logMessage("debug", message, meta);
   };
+
   return { error, warn, info, http, verbose, debug };
 };

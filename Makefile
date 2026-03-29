@@ -14,6 +14,9 @@ COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) \
 docker compose --project-directory $(CURDIR) $(BASE_FILES) $(DEV_FILES)
 endef
 
+docker/dev/build:
+	$(compose_dev) build --no-cache;
+
 docker/dev/up:
 	$(compose_dev) up --build;
 

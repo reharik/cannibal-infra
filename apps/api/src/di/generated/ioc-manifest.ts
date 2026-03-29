@@ -1,12 +1,16 @@
 /* AUTO-GENERATED. DO NOT EDIT.
+Primary container manifest (human-oriented). Registration bindings and bundle insight: ioc-manifest.support.ts
 Re-run `npm run gen:manifest` after adding/removing injectable factories.
 */
+import type {
+  IocGeneratedContainerManifest,
+  IocModuleNamespace,
+} from "ioc-manifest";
 
-import type { IocContractManifest } from "../../core/manifest.js";
-import * as ioc_application_readServices_readService from "../../application/readServices/readService.js";
 import * as ioc_application_readServices_viewerReadServices_albumService from "../../application/readServices/viewerReadServices/albumService.js";
 import * as ioc_config from "../../config.js";
 import * as ioc_controllers_authController from "../../controllers/authController.js";
+import * as ioc_controllers_mediaController from "../../controllers/mediaController.js";
 import * as ioc_graphql_context_createGraphQLContext from "../../graphql/context/createGraphQLContext.js";
 import * as ioc_graphql_server_createGraphQLServer from "../../graphql/server/createGraphQLServer.js";
 import * as ioc_infrastructure_media_localMediaStorage from "../../infrastructure/media/localMediaStorage.js";
@@ -25,403 +29,445 @@ import * as ioc_repositories_domainRepositories_shareLinkRepository from "../../
 import * as ioc_repositories_domainRepositories_userRepository from "../../repositories/domainRepositories/userRepository.js";
 import * as ioc_repositories_readRepositories_albumReadRepository from "../../repositories/readRepositories/albumReadRepository.js";
 import * as ioc_repositories_readRepositories_mediaItemReadRepository from "../../repositories/readRepositories/mediaItemReadRepository.js";
+import * as ioc_routes_apiRoutes from "../../routes/apiRoutes.js";
 import * as ioc_routes_authRoutes from "../../routes/authRoutes.js";
-import * as ioc_routes_createRoutes from "../../routes/createRoutes.js";
+import * as ioc_routes_mediaRoutes from "../../routes/mediaRoutes.js";
 import * as ioc_server from "../../server.js";
 import * as ioc_services_authService from "../../services/authService.js";
 
-export const iocModuleImports = [
-  ioc_application_readServices_readService,
-  ioc_application_readServices_viewerReadServices_albumService,
-  ioc_config,
-  ioc_controllers_authController,
-  ioc_graphql_context_createGraphQLContext,
-  ioc_graphql_server_createGraphQLServer,
-  ioc_infrastructure_media_localMediaStorage,
-  ioc_knex,
-  ioc_knexfile,
-  ioc_koaServer,
-  ioc_logger,
-  ioc_middleware_authMiddleware,
-  ioc_middleware_errorHandler,
-  ioc_middleware_requestLogger,
-  ioc_repositories_domainRepositories_albumRepository,
-  ioc_repositories_domainRepositories_commentRepository,
-  ioc_repositories_domainRepositories_mediaItemRepository,
-  ioc_repositories_domainRepositories_notificationRepository,
-  ioc_repositories_domainRepositories_shareLinkRepository,
-  ioc_repositories_domainRepositories_userRepository,
-  ioc_repositories_readRepositories_albumReadRepository,
-  ioc_repositories_readRepositories_mediaItemReadRepository,
-  ioc_routes_authRoutes,
-  ioc_routes_createRoutes,
-  ioc_server,
-  ioc_services_authService,
-] as const;
+export const iocManifest = {
+  moduleImports: [
+    ioc_application_readServices_viewerReadServices_albumService,
+    ioc_config,
+    ioc_controllers_authController,
+    ioc_controllers_mediaController,
+    ioc_graphql_context_createGraphQLContext,
+    ioc_graphql_server_createGraphQLServer,
+    ioc_infrastructure_media_localMediaStorage,
+    ioc_knex,
+    ioc_knexfile,
+    ioc_koaServer,
+    ioc_logger,
+    ioc_middleware_authMiddleware,
+    ioc_middleware_errorHandler,
+    ioc_middleware_requestLogger,
+    ioc_repositories_domainRepositories_albumRepository,
+    ioc_repositories_domainRepositories_commentRepository,
+    ioc_repositories_domainRepositories_mediaItemRepository,
+    ioc_repositories_domainRepositories_notificationRepository,
+    ioc_repositories_domainRepositories_shareLinkRepository,
+    ioc_repositories_domainRepositories_userRepository,
+    ioc_repositories_readRepositories_albumReadRepository,
+    ioc_repositories_readRepositories_mediaItemReadRepository,
+    ioc_routes_apiRoutes,
+    ioc_routes_authRoutes,
+    ioc_routes_mediaRoutes,
+    ioc_server,
+    ioc_services_authService,
+  ] as const satisfies readonly IocModuleNamespace[],
 
-export const iocManifestByContract: IocContractManifest = {
-  AlbumReadRepository: {
-    albumReadRepository: {
-      exportName: "buildAlbumReadRepository",
-      registrationKey: "albumReadRepository",
-      modulePath: "repositories/readRepositories/albumReadRepository.ts",
-      relImport: "../../repositories/readRepositories/albumReadRepository.js",
-      contractName: "AlbumReadRepository",
-      implementationName: "albumReadRepository",
-      lifetime: "scoped",
-      moduleIndex: 20,
-      default: true,
+  contracts: {
+    // AlbumReadRepository
+    AlbumReadRepository: {
+      albumReadRepository: {
+        exportName: "buildAlbumReadRepository",
+        registrationKey: "albumReadRepository",
+        sourceFile: "repositories/readRepositories/albumReadRepository.ts",
+        lifetime: "scoped",
+        default: true,
+        discoveredBy: "naming",
+        configOverridesApplied: ["lifetime"],
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // AlbumRepository
+    AlbumRepository: {
+      albumRepository: {
+        exportName: "buildAlbumRepository",
+        registrationKey: "albumRepository",
+        sourceFile: "repositories/domainRepositories/albumRepository.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // AlbumService
+    AlbumService: {
+      albumService: {
+        exportName: "buildAlbumService",
+        registrationKey: "albumService",
+        sourceFile:
+          "application/readServices/viewerReadServices/albumService.ts",
+        lifetime: "scoped",
+        default: true,
+        discoveredBy: "naming",
+        configOverridesApplied: ["name", "lifetime"],
+        dependencyContractNames: [
+          "AlbumReadRepository",
+          "MediaItemReadRepository",
+        ],
+      },
+    },
+
+    // AuthController
+    AuthController: {
+      authController: {
+        exportName: "buildAuthController",
+        registrationKey: "authController",
+        sourceFile: "controllers/authController.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["AuthService", "Logger"],
+      },
+    },
+
+    // AuthMiddleware
+    AuthMiddleware: {
+      authMiddleware: {
+        exportName: "buildAuthMiddleware",
+        registrationKey: "authMiddleware",
+        sourceFile: "middleware/authMiddleware.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        configOverridesApplied: ["default"],
+        dependencyContractNames: ["AuthService", "Logger"],
+      },
+      optionalAuthMiddleware: {
+        exportName: "buildOptionalAuthMiddleware",
+        registrationKey: "optionalAuthMiddleware",
+        sourceFile: "middleware/authMiddleware.ts",
+        lifetime: "singleton",
+        discoveredBy: "naming",
+        dependencyContractNames: ["AuthService"],
+      },
+    },
+
+    // AuthRoutes
+    AuthRoutes: {
+      authRoutes: {
+        exportName: "buildAuthRoutes",
+        registrationKey: "authRoutes",
+        sourceFile: "routes/authRoutes.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["AuthController"],
+      },
+    },
+
+    // AuthService
+    AuthService: {
+      authService: {
+        exportName: "buildAuthService",
+        registrationKey: "authService",
+        sourceFile: "services/authService.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Config", "Knex", "Logger"],
+      },
+    },
+
+    // CommentRepository
+    CommentRepository: {
+      commentRepository: {
+        exportName: "buildCommentRepository",
+        registrationKey: "commentRepository",
+        sourceFile: "repositories/domainRepositories/commentRepository.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // Config
+    Config: {
+      config: {
+        exportName: "buildConfig",
+        registrationKey: "config",
+        sourceFile: "config.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+      },
+    },
+
+    // ErrorHandler
+    ErrorHandler: {
+      errorHandler: {
+        exportName: "buildErrorHandler",
+        registrationKey: "errorHandler",
+        sourceFile: "middleware/errorHandler.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Logger"],
+      },
+    },
+
+    // GraphQLContextFactory
+    GraphQLContextFactory: {
+      graphQLContext: {
+        exportName: "buildGraphQLContext",
+        registrationKey: "graphQLContext",
+        sourceFile: "graphql/context/createGraphQLContext.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+      },
+    },
+
+    // GraphQLServer
+    GraphQLServer: {
+      graphQLServer: {
+        exportName: "buildGraphQLServer",
+        registrationKey: "graphQLServer",
+        sourceFile: "graphql/server/createGraphQLServer.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["YogaApp"],
+      },
+    },
+
+    // Knex
+    Knex: {
+      database: {
+        exportName: "buildDatabase",
+        registrationKey: "database",
+        sourceFile: "knex.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Config"],
+      },
+    },
+
+    // KnexConfig
+    KnexConfig: {
+      knexConfig: {
+        exportName: "buildKnexConfig",
+        registrationKey: "knexConfig",
+        sourceFile: "knexfile.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Config"],
+      },
+    },
+
+    // KoaServer
+    KoaServer: {
+      koaServer: {
+        exportName: "buildKoaServer",
+        registrationKey: "koaServer",
+        sourceFile: "koaServer.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: [
+          "AuthMiddleware",
+          "Config",
+          "ErrorHandler",
+          "GraphQLServer",
+          "Knex",
+          "Logger",
+          "RequestLogger",
+        ],
+      },
+    },
+
+    // Logger
+    Logger: {
+      logger: {
+        exportName: "buildLogger",
+        registrationKey: "logger",
+        sourceFile: "logger.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Config"],
+      },
+    },
+
+    // MediaController
+    MediaController: {
+      mediaController: {
+        exportName: "buildMediaController",
+        registrationKey: "mediaController",
+        sourceFile: "controllers/mediaController.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+      },
+    },
+
+    // MediaItemReadRepository
+    MediaItemReadRepository: {
+      mediaItemReadRepository: {
+        exportName: "buildMediaItemReadRepository",
+        registrationKey: "mediaItemReadRepository",
+        sourceFile: "repositories/readRepositories/mediaItemReadRepository.ts",
+        lifetime: "scoped",
+        default: true,
+        discoveredBy: "naming",
+        configOverridesApplied: ["lifetime"],
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // MediaItemRepository
+    MediaItemRepository: {
+      mediaItemRepository: {
+        exportName: "buildMediaItemRepository",
+        registrationKey: "mediaItemRepository",
+        sourceFile: "repositories/domainRepositories/mediaItemRepository.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // MediaRoutes
+    MediaRoutes: {
+      mediaRoutes: {
+        exportName: "buildMediaRoutes",
+        registrationKey: "mediaRoutes",
+        sourceFile: "routes/mediaRoutes.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["MediaController"],
+      },
+    },
+
+    // MediaStorage
+    MediaStorage: {
+      localMediaStorage: {
+        exportName: "buildLocalMediaStorage",
+        registrationKey: "mediaStorage",
+        sourceFile: "infrastructure/media/localMediaStorage.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        configOverridesApplied: ["name"],
+        dependencyContractNames: ["Config"],
+      },
+    },
+
+    // NotificationRepository
+    NotificationRepository: {
+      notificationRepository: {
+        exportName: "buildNotificationRepository",
+        registrationKey: "notificationRepository",
+        sourceFile: "repositories/domainRepositories/notificationRepository.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // RequestLogger
+    RequestLogger: {
+      requestLogger: {
+        exportName: "buildRequestLogger",
+        registrationKey: "requestLogger",
+        sourceFile: "middleware/requestLogger.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Logger"],
+      },
+    },
+
+    // Router
+    Router: {
+      apiRoutes: {
+        exportName: "buildApiRoutes",
+        registrationKey: "apiRoutes",
+        sourceFile: "routes/apiRoutes.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+      },
+    },
+
+    // Server
+    Server: {
+      server: {
+        exportName: "buildServer",
+        registrationKey: "server",
+        sourceFile: "server.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Config", "KoaServer", "Logger"],
+      },
+    },
+
+    // ShareLinkRepository
+    ShareLinkRepository: {
+      shareLinkRepository: {
+        exportName: "buildShareLinkRepository",
+        registrationKey: "shareLinkRepository",
+        sourceFile: "repositories/domainRepositories/shareLinkRepository.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // UserRepository
+    UserRepository: {
+      userRepository: {
+        exportName: "buildUserRepository",
+        registrationKey: "userRepository",
+        sourceFile: "repositories/domainRepositories/userRepository.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["Knex"],
+      },
+    },
+
+    // YogaApp
+    YogaApp: {
+      yogaApp: {
+        exportName: "buildYogaApp",
+        registrationKey: "yogaApp",
+        sourceFile: "graphql/server/createGraphQLServer.ts",
+        lifetime: "singleton",
+        default: true,
+        discoveredBy: "naming",
+        dependencyContractNames: ["GraphQLContextFactory"],
+      },
     },
   },
-  AlbumRepository: {
-    albumRepository: {
-      exportName: "buildAlbumRepository",
-      registrationKey: "albumRepository",
-      modulePath: "repositories/domainRepositories/albumRepository.ts",
-      relImport: "../../repositories/domainRepositories/albumRepository.js",
-      contractName: "AlbumRepository",
-      implementationName: "albumRepository",
-      lifetime: "singleton",
-      moduleIndex: 14,
-      default: true,
-    },
+  bundles: {
+    routes: [
+      {
+        contractName: "AuthRoutes",
+        registrationKey: "authRoutes",
+      },
+      {
+        contractName: "MediaRoutes",
+        registrationKey: "mediaRoutes",
+      },
+    ],
+    readServices: [
+      {
+        contractName: "AlbumService",
+        registrationKey: "albumService",
+      },
+    ],
   },
-  AlbumService: {
-    albumService: {
-      exportName: "buildAlbumService",
-      registrationKey: "albumService",
-      modulePath: "application/readServices/viewerReadServices/albumService.ts",
-      relImport:
-        "../../application/readServices/viewerReadServices/albumService.js",
-      contractName: "AlbumService",
-      implementationName: "albumService",
-      lifetime: "scoped",
-      moduleIndex: 1,
-      default: true,
-    },
-  },
-  AuthController: {
-    authController: {
-      exportName: "buildAuthController",
-      registrationKey: "authController",
-      modulePath: "controllers/authController.ts",
-      relImport: "../../controllers/authController.js",
-      contractName: "AuthController",
-      implementationName: "authController",
-      lifetime: "singleton",
-      moduleIndex: 3,
-      default: true,
-    },
-  },
-  AuthMiddleware: {
-    authMiddleware: {
-      exportName: "buildAuthMiddleware",
-      registrationKey: "authMiddleware",
-      modulePath: "middleware/authMiddleware.ts",
-      relImport: "../../middleware/authMiddleware.js",
-      contractName: "AuthMiddleware",
-      implementationName: "authMiddleware",
-      lifetime: "singleton",
-      moduleIndex: 11,
-      default: true,
-    },
-    optionalAuthMiddleware: {
-      exportName: "buildOptionalAuthMiddleware",
-      registrationKey: "optionalAuthMiddleware",
-      modulePath: "middleware/authMiddleware.ts",
-      relImport: "../../middleware/authMiddleware.js",
-      contractName: "AuthMiddleware",
-      implementationName: "optionalAuthMiddleware",
-      lifetime: "singleton",
-      moduleIndex: 11,
-    },
-  },
-  AuthRoutes: {
-    authRoutes: {
-      exportName: "buildAuthRoutes",
-      registrationKey: "authRoutes",
-      modulePath: "routes/authRoutes.ts",
-      relImport: "../../routes/authRoutes.js",
-      contractName: "AuthRoutes",
-      implementationName: "authRoutes",
-      lifetime: "singleton",
-      moduleIndex: 22,
-      default: true,
-    },
-  },
-  AuthService: {
-    authService: {
-      exportName: "buildAuthService",
-      registrationKey: "authService",
-      modulePath: "services/authService.ts",
-      relImport: "../../services/authService.js",
-      contractName: "AuthService",
-      implementationName: "authService",
-      lifetime: "singleton",
-      moduleIndex: 25,
-      default: true,
-    },
-  },
-  BindViewerReadServices: {
-    bindViewerReadServices: {
-      exportName: "buildBindViewerReadServices",
-      registrationKey: "bindViewerReadServices",
-      modulePath: "application/readServices/readService.ts",
-      relImport: "../../application/readServices/readService.js",
-      contractName: "BindViewerReadServices",
-      implementationName: "bindViewerReadServices",
-      lifetime: "scoped",
-      moduleIndex: 0,
-      default: true,
-    },
-  },
-  CommentRepository: {
-    commentRepository: {
-      exportName: "buildCommentRepository",
-      registrationKey: "commentRepository",
-      modulePath: "repositories/domainRepositories/commentRepository.ts",
-      relImport: "../../repositories/domainRepositories/commentRepository.js",
-      contractName: "CommentRepository",
-      implementationName: "commentRepository",
-      lifetime: "singleton",
-      moduleIndex: 15,
-      default: true,
-    },
-  },
-  Config: {
-    config: {
-      exportName: "buildConfig",
-      registrationKey: "config",
-      modulePath: "config.ts",
-      relImport: "../../config.js",
-      contractName: "Config",
-      implementationName: "config",
-      lifetime: "singleton",
-      moduleIndex: 2,
-      default: true,
-    },
-  },
-  ErrorHandler: {
-    errorHandler: {
-      exportName: "buildErrorHandler",
-      registrationKey: "errorHandler",
-      modulePath: "middleware/errorHandler.ts",
-      relImport: "../../middleware/errorHandler.js",
-      contractName: "ErrorHandler",
-      implementationName: "errorHandler",
-      lifetime: "singleton",
-      moduleIndex: 12,
-      default: true,
-    },
-  },
-  GraphQLContextFactory: {
-    graphQLContext: {
-      exportName: "buildGraphQLContext",
-      registrationKey: "graphQLContext",
-      modulePath: "graphql/context/createGraphQLContext.ts",
-      relImport: "../../graphql/context/createGraphQLContext.js",
-      contractName: "GraphQLContextFactory",
-      implementationName: "graphQLContext",
-      lifetime: "singleton",
-      moduleIndex: 4,
-      default: true,
-    },
-  },
-  GraphQLServer: {
-    graphQLServer: {
-      exportName: "buildGraphQLServer",
-      registrationKey: "graphQLServer",
-      modulePath: "graphql/server/createGraphQLServer.ts",
-      relImport: "../../graphql/server/createGraphQLServer.js",
-      contractName: "GraphQLServer",
-      implementationName: "graphQLServer",
-      lifetime: "singleton",
-      moduleIndex: 5,
-      default: true,
-    },
-  },
-  Knex: {
-    database: {
-      exportName: "buildDatabase",
-      registrationKey: "database",
-      modulePath: "knex.ts",
-      relImport: "../../knex.js",
-      contractName: "Knex",
-      implementationName: "database",
-      lifetime: "singleton",
-      moduleIndex: 7,
-      default: true,
-    },
-  },
-  KnexConfig: {
-    knexConfig: {
-      exportName: "buildKnexConfig",
-      registrationKey: "knexConfig",
-      modulePath: "knexfile.ts",
-      relImport: "../../knexfile.js",
-      contractName: "KnexConfig",
-      implementationName: "knexConfig",
-      lifetime: "singleton",
-      moduleIndex: 8,
-      default: true,
-    },
-  },
-  KoaServer: {
-    koaServer: {
-      exportName: "buildKoaServer",
-      registrationKey: "koaServer",
-      modulePath: "koaServer.ts",
-      relImport: "../../koaServer.js",
-      contractName: "KoaServer",
-      implementationName: "koaServer",
-      lifetime: "singleton",
-      moduleIndex: 9,
-      default: true,
-    },
-  },
-  Logger: {
-    logger: {
-      exportName: "buildLogger",
-      registrationKey: "logger",
-      modulePath: "logger.ts",
-      relImport: "../../logger.js",
-      contractName: "Logger",
-      implementationName: "logger",
-      lifetime: "singleton",
-      moduleIndex: 10,
-      default: true,
-    },
-  },
-  MediaItemReadRepository: {
-    mediaItemReadRepository: {
-      exportName: "buildMediaItemReadRepository",
-      registrationKey: "mediaItemReadRepository",
-      modulePath: "repositories/readRepositories/mediaItemReadRepository.ts",
-      relImport:
-        "../../repositories/readRepositories/mediaItemReadRepository.js",
-      contractName: "MediaItemReadRepository",
-      implementationName: "mediaItemReadRepository",
-      lifetime: "scoped",
-      moduleIndex: 21,
-      default: true,
-    },
-  },
-  MediaItemRepository: {
-    mediaItemRepository: {
-      exportName: "buildMediaItemRepository",
-      registrationKey: "mediaItemRepository",
-      modulePath: "repositories/domainRepositories/mediaItemRepository.ts",
-      relImport: "../../repositories/domainRepositories/mediaItemRepository.js",
-      contractName: "MediaItemRepository",
-      implementationName: "mediaItemRepository",
-      lifetime: "singleton",
-      moduleIndex: 16,
-      default: true,
-    },
-  },
-  MediaStorage: {
-    localMediaStorage: {
-      exportName: "buildLocalMediaStorage",
-      registrationKey: "mediaStorage",
-      modulePath: "infrastructure/media/localMediaStorage.ts",
-      relImport: "../../infrastructure/media/localMediaStorage.js",
-      contractName: "MediaStorage",
-      implementationName: "localMediaStorage",
-      lifetime: "singleton",
-      moduleIndex: 6,
-      default: true,
-    },
-  },
-  NotificationRepository: {
-    notificationRepository: {
-      exportName: "buildNotificationRepository",
-      registrationKey: "notificationRepository",
-      modulePath: "repositories/domainRepositories/notificationRepository.ts",
-      relImport:
-        "../../repositories/domainRepositories/notificationRepository.js",
-      contractName: "NotificationRepository",
-      implementationName: "notificationRepository",
-      lifetime: "singleton",
-      moduleIndex: 17,
-      default: true,
-    },
-  },
-  RequestLogger: {
-    requestLogger: {
-      exportName: "buildRequestLogger",
-      registrationKey: "requestLogger",
-      modulePath: "middleware/requestLogger.ts",
-      relImport: "../../middleware/requestLogger.js",
-      contractName: "RequestLogger",
-      implementationName: "requestLogger",
-      lifetime: "singleton",
-      moduleIndex: 13,
-      default: true,
-    },
-  },
-  Routes: {
-    routes: {
-      exportName: "buildRoutes",
-      registrationKey: "routes",
-      modulePath: "routes/createRoutes.ts",
-      relImport: "../../routes/createRoutes.js",
-      contractName: "Routes",
-      implementationName: "routes",
-      lifetime: "singleton",
-      moduleIndex: 23,
-      default: true,
-    },
-  },
-  Server: {
-    server: {
-      exportName: "buildServer",
-      registrationKey: "server",
-      modulePath: "server.ts",
-      relImport: "../../server.js",
-      contractName: "Server",
-      implementationName: "server",
-      lifetime: "singleton",
-      moduleIndex: 24,
-      default: true,
-    },
-  },
-  ShareLinkRepository: {
-    shareLinkRepository: {
-      exportName: "buildShareLinkRepository",
-      registrationKey: "shareLinkRepository",
-      modulePath: "repositories/domainRepositories/shareLinkRepository.ts",
-      relImport: "../../repositories/domainRepositories/shareLinkRepository.js",
-      contractName: "ShareLinkRepository",
-      implementationName: "shareLinkRepository",
-      lifetime: "singleton",
-      moduleIndex: 18,
-      default: true,
-    },
-  },
-  UserRepository: {
-    userRepository: {
-      exportName: "buildUserRepository",
-      registrationKey: "userRepository",
-      modulePath: "repositories/domainRepositories/userRepository.ts",
-      relImport: "../../repositories/domainRepositories/userRepository.js",
-      contractName: "UserRepository",
-      implementationName: "userRepository",
-      lifetime: "singleton",
-      moduleIndex: 19,
-      default: true,
-    },
-  },
-  YogaApp: {
-    yogaApp: {
-      exportName: "buildYogaApp",
-      registrationKey: "yogaApp",
-      modulePath: "graphql/server/createGraphQLServer.ts",
-      relImport: "../../graphql/server/createGraphQLServer.js",
-      contractName: "YogaApp",
-      implementationName: "yogaApp",
-      lifetime: "singleton",
-      moduleIndex: 5,
-      default: true,
-    },
-  },
-};
+} as const satisfies IocGeneratedContainerManifest;

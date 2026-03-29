@@ -8,12 +8,7 @@ const albumResolvers: Pick<Resolvers, "Album"> = {
       _a,
       ctx,
     ): Promise<MediaItemParent | undefined> => {
-      if (parent.coverMedia !== undefined) {
-        return parent.coverMedia;
-      }
-      return ctx.readServices?.getAlbumCoverMedia({
-        albumId: parent.id,
-      });
+      return null;
     },
   },
 };

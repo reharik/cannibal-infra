@@ -27,26 +27,16 @@ const attachGlobalHandlers = (database: Knex, logger: Logger) => {
   });
 
   process.on("unhandledRejection", (reason) => {
-    const error = reason instanceof Error ? reason : new Error(String(reason));
+    if (reason instanceof Error) {
+      logger.error("Unhandled promise rejection", reason);
+      return;
+    }
 
-    logger.error("Unhandled promise rejection", error, {
-      reason:
-        reason instanceof Error
-          ? {
-              name: reason.name,
-              message: reason.message,
-              stack: reason.stack,
-            }
-          : reason,
-    });
+    logger.error("Unhandled promise rejection", { reason });
   });
 
   process.on("uncaughtException", (error) => {
-    logger.error("Uncaught exception", error, {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    });
+    logger.error("Uncaught exception", error);
 
     // optional but recommended in prod:
     // process.exit(1);

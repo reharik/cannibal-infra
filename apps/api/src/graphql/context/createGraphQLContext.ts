@@ -2,8 +2,8 @@ import { User } from "@packages/contracts";
 import type { YogaInitialContext } from "graphql-yoga";
 import type Koa from "koa";
 import type { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
-import type { WriteServices } from "../../application/writeServices";
-import type { ViewerReadServices } from "../../application/readServices/readService";
+// import type { WriteServices } from "../../application/writeServices";
+// import type { ViewerReadServices } from "../../application/readServices/readService";
 
 export interface GraphQLContext {
   viewer?: {
@@ -13,8 +13,8 @@ export interface GraphQLContext {
     displayName: string;
     isAuthenticated: boolean;
   };
-  writeServices?: WriteServices;
-  readServices?: ViewerReadServices;
+  // writeServices?: WriteServices;
+  // readServices?: ViewerReadServices;
 }
 
 export type GraphQLContextFactory = (
@@ -22,10 +22,12 @@ export type GraphQLContextFactory = (
     Koa.Context & { state: { isLoggedIn: boolean; user: User } },
 ) => Promise<GraphQLContext>;
 
-export const buildGraphQLContext = ({
-  writeServices,
-  bindViewerReadServices,
-}: IocGeneratedCradle): GraphQLContextFactory => {
+export const buildGraphQLContext = (
+  {
+    // writeServices,
+    // bindViewerReadServices,
+  }: IocGeneratedCradle,
+): GraphQLContextFactory => {
   return async (
     initialContext: YogaInitialContext &
       Koa.Context & { state: { isLoggedIn: boolean; user: User } },
@@ -44,8 +46,8 @@ export const buildGraphQLContext = ({
 
     return {
       viewer,
-      writeServices,
-      readServices: bindViewerReadServices({ viewerId: viewer.id }),
+      // writeServices,
+      // readServices: bindViewerReadServices({ viewerId: viewer.id }),
     };
   };
 };

@@ -1,4 +1,5 @@
 import { IocGeneratedCradle } from "apps/api/src/di/generated/ioc-registry.types";
+import { ReadServiceBaseType } from "../readServiceBaseType";
 
 type AlbumRow = {
   id: string;
@@ -17,14 +18,14 @@ type MediaItemRow = {
   height?: number;
 };
 
-export type AlbumService = ({ viewerId }: { viewerId: string }) => {
-  listAlbums: () => Promise<AlbumRow[]>;
-  getAlbumCoverMedia: ({
-    albumId,
-  }: {
-    albumId: string;
-  }) => Promise<MediaItemRow | undefined>;
-};
+export interface AlbumService extends ReadServiceBaseType {
+  (args: { viewerId: string }): {
+    listAlbums: () => Promise<AlbumRow[]>;
+    getAlbumCoverMedia: (args: {
+      albumId: string;
+    }) => Promise<MediaItemRow | undefined>;
+  };
+}
 
 export const buildAlbumService = ({
   albumReadRepository,

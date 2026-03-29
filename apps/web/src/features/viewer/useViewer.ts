@@ -1,5 +1,8 @@
 import { useQuery } from "@apollo/client/react";
-import { ViewerDocument, type ViewerQuery } from "../../graphql/generated/types";
+import {
+  ViewerDocument,
+  type ViewerQuery,
+} from "../../graphql/generated/types";
 
 export type Viewer = NonNullable<ViewerQuery["viewer"]>;
 

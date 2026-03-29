@@ -27,7 +27,9 @@ interface GraphQLServerDeps {
   yogaApp: YogaApp;
 }
 
-export const buildYogaApp = ({ graphQLContext }: IocGeneratedCradle): YogaApp => {
+export const buildYogaApp = ({
+  graphQLContext,
+}: IocGeneratedCradle): YogaApp => {
   return createYoga<Koa.ParameterizedContext>({
     schema,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- cradle resolves graphQLContext after IoC registration
@@ -36,23 +38,23 @@ export const buildYogaApp = ({ graphQLContext }: IocGeneratedCradle): YogaApp =>
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- yoga app adapter
-export const buildGraphQLServer = (
-  { yogaApp }: GraphQLServerDeps,
-): GraphQLServer => {
-    return async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
-      void next;
-      const response = await yogaApp.handleNodeRequestAndResponse(
-        ctx.request,
-        ctx.res,
-        ctx,
-      );
+export const buildGraphQLServer = ({
+  yogaApp,
+}: GraphQLServerDeps): GraphQLServer => {
+  return async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
+    void next;
+    const response = await yogaApp.handleNodeRequestAndResponse(
+      ctx.request,
+      ctx.res,
+      ctx,
+    );
 
-      ctx.status = response.status;
+    ctx.status = response.status;
 
-      for (const [key, value] of response.headers.entries()) {
-        ctx.set(key, value);
-      }
+    for (const [key, value] of response.headers.entries()) {
+      ctx.set(key, value);
+    }
 
-      ctx.body = response.body;
-    };
+    ctx.body = response.body;
   };
+};

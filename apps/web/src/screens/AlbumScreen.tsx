@@ -61,7 +61,8 @@ const Header = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 
   @media (max-width: 768px) {
-    padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(3)};
+    padding: ${({ theme }) => theme.spacing(2)}
+      ${({ theme }) => theme.spacing(3)};
   }
 `;
 

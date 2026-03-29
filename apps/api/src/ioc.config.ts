@@ -29,15 +29,23 @@ export default defineIocConfig({
     AlbumService: {
       albumService: { name: "albumService", lifetime: "scoped" },
     },
-    BindViewerReadServices: {
-      bindViewerReadServices: {
-        name: "bindViewerReadServices",
-        lifetime: "scoped",
-      },
-    },
+    // BindViewerReadServices: {
+    //   bindViewerReadServices: {
+    //     name: "bindViewerReadServices",
+    //     lifetime: "scoped",
+    //   },
+    // },
     AuthMiddleware: {
       authMiddleware: { default: true },
       optionalAuthMiddleware: {},
+    },
+  },
+  bundles: {
+    routes: ["AuthRoutes", "MediaRoutes"],
+    readServices: {
+      $discover: {
+        baseInterface: "ReadServiceBaseType",
+      },
     },
   },
 });

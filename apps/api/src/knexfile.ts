@@ -2,7 +2,8 @@ import type { Knex } from "knex";
 import knexStringcase from "knex-stringcase";
 import path from "path";
 import { fileURLToPath } from "url";
-import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
+import { buildConfig, type Config } from "./config";
+import type { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 
 export type KnexConfig = Knex.Config;
 
@@ -26,7 +27,7 @@ const convertNullsToUndefined = (obj: unknown): unknown => {
   return obj;
 };
 
-export const buildKnexConfig = ({ config }: IocGeneratedCradle): KnexConfig => {
+const createKnexConfig = (config: Config): KnexConfig => {
   const isCompiled = path.basename(__dirname) === "dist";
   const ROOT = isCompiled ? __dirname : path.resolve(__dirname, "..");
   const MIGRATIONS_DIR = path.join(ROOT, "db/migrations");
@@ -58,3 +59,11 @@ export const buildKnexConfig = ({ config }: IocGeneratedCradle): KnexConfig => {
     },
   };
 };
+
+export const buildKnexConfig = ({ config }: IocGeneratedCradle): KnexConfig => {
+  return createKnexConfig(config);
+};
+
+export const knexConfig: KnexConfig = createKnexConfig(buildConfig());
+
+export default knexConfig;

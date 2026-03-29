@@ -29,7 +29,9 @@ export const HomeScreen = () => {
       <EmptyState>
         <EmptyIcon>📷</EmptyIcon>
         <EmptyTitle>No photos yet</EmptyTitle>
-        <EmptyText>Upload your first photos to start building your family gallery</EmptyText>
+        <EmptyText>
+          Upload your first photos to start building your family gallery
+        </EmptyText>
         <EmptyButton>Upload Photos</EmptyButton>
       </EmptyState>
     </Container>
@@ -75,7 +77,8 @@ const HeaderActions = styled.div`
 `;
 
 const UploadButton = styled.button`
-  padding: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(3)};
+  padding: ${({ theme }) => theme.spacing(1.5)}
+    ${({ theme }) => theme.spacing(3)};
   background: ${({ theme }) => theme.colors.accent};
   color: ${({ theme }) => theme.colors.bg};
   border: none;
@@ -141,7 +144,8 @@ const PlaceholderIcon = styled.div`
 `;
 
 const PhotoInfo = styled.div`
-  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(0.5)};
+  padding: ${({ theme }) => theme.spacing(1)}
+    ${({ theme }) => theme.spacing(0.5)};
 `;
 
 const PhotoDate = styled.div`

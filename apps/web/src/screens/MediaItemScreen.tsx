@@ -7,7 +7,7 @@ export const MediaItemScreen = () => {
   return (
     <Container>
       <CloseButton onClick={() => window.history.back()}>✕</CloseButton>
-      
+
       <MediaViewer>
         <MediaPlaceholder>
           <PlaceholderIcon>🖼️</PlaceholderIcon>
@@ -160,10 +160,14 @@ const MetadataValue = styled.div`
 `;
 
 const ActionButton = styled.button<{ danger?: boolean }>`
-  padding: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(2)};
+  padding: ${({ theme }) => theme.spacing(1.5)}
+    ${({ theme }) => theme.spacing(2)};
   background: transparent;
-  border: 1px solid ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.border)};
-  color: ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.subtext)};
+  border: 1px solid
+    ${({ theme, danger }) =>
+      danger ? theme.colors.danger : theme.colors.border};
+  color: ${({ theme, danger }) =>
+    danger ? theme.colors.danger : theme.colors.subtext};
   border-radius: ${({ theme }) => theme.radius.md};
   font-size: 14px;
   transition: all 0.2s ease;
@@ -171,6 +175,7 @@ const ActionButton = styled.button<{ danger?: boolean }>`
   &:hover {
     background: ${({ theme, danger }) =>
       danger ? "rgba(217, 140, 126, 0.1)" : theme.colors.bg};
-    color: ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.text)};
+    color: ${({ theme, danger }) =>
+      danger ? theme.colors.danger : theme.colors.text};
   }
 `;

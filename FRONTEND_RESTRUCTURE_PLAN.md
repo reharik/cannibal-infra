@@ -3,6 +3,7 @@
 ## Current State Assessment
 
 ### ✅ KEEP - Solid Infrastructure
+
 - **Provider hierarchy** - Well-structured (Theme → QueryClient → Auth → Router)
 - **AuthContext & useApiFetch** - Well-implemented, properly typed
 - **ProtectedRoute component** - Clean auth guard
@@ -13,6 +14,7 @@
 - **Config pattern** - Clean environment variable handling
 
 ### 🔧 REPLACE/FIX - Generic Scaffold
+
 - **Missing theme.ts** - CRITICAL: File imported but doesn't exist
 - **Generic blue SaaS styling** - Replace with warm dark editorial aesthetic
 - **Login page** - Keep structure, replace styling completely
@@ -22,6 +24,7 @@
 - **Routing** - Only one route exists, need full routing structure
 
 ### ❌ REMOVE - Unused/Low-Value
+
 - `parse-fetch` dependency (not used)
 - Inline styled components in Login (move to themed components)
 - Direct localStorage manipulation (abstract behind hooks if needed)
@@ -31,6 +34,7 @@
 ## New Architecture
 
 ### Folder Structure
+
 ```
 apps/web/src/
 ├── app/
@@ -70,6 +74,7 @@ apps/web/src/
 ### Theme: Warm Dark Editorial
 
 **New Color Palette:**
+
 ```typescript
 colors: {
   bg: '#111315',           // Warm near-black
@@ -86,6 +91,7 @@ colors: {
 ```
 
 **Design Principles:**
+
 - Photos provide most color
 - Chrome stays quiet and low-saturation
 - Large imagery with generous spacing
@@ -97,6 +103,7 @@ colors: {
 ## Implementation Plan
 
 ### Phase 1: Foundation (Critical Fixes)
+
 1. ✅ Create missing `theme.ts` with warm dark palette
 2. ✅ Update `globalStyle.ts` with new aesthetic
 3. ✅ Install GraphQL client (Apollo Client)
@@ -104,6 +111,7 @@ colors: {
 5. ✅ Create `graphql/client.ts`
 
 ### Phase 2: Auth Bootstrap & Layout
+
 6. ✅ Create `app/ViewerBootstrap.tsx` with viewer query
 7. ✅ Create `app/providers/AppProviders.tsx`
 8. ✅ Create `shared/components/AppShell.tsx` (navigation, layout)
@@ -111,18 +119,21 @@ colors: {
 10. ✅ Update `App.tsx` to use new structure
 
 ### Phase 3: Core Screens
+
 11. ✅ Create `screens/HomeScreen.tsx` with photo grid layout
 12. ✅ Create `screens/AlbumScreen.tsx` placeholder
 13. ✅ Create `screens/MediaItemScreen.tsx` placeholder
 14. ✅ Create `app/router/AppRouter.tsx` with all routes
 
 ### Phase 4: Feature Components
+
 15. ✅ Create `features/media/MediaGrid.tsx`
 16. ✅ Create `features/albums/AlbumCard.tsx`
 17. ✅ Update `shared/ui/` components with new theme
 18. ✅ Create `shared/components/Navigation.tsx`
 
 ### Phase 5: Cleanup
+
 19. ✅ Remove old `pages/` folder
 20. ✅ Remove unused dependencies
 21. ✅ Update `main.tsx` and `App.tsx` to use new structure
@@ -133,6 +144,7 @@ colors: {
 ## GraphQL Integration
 
 ### Viewer Query Pattern
+
 ```graphql
 query Viewer {
   viewer {
@@ -145,6 +157,7 @@ query Viewer {
 ```
 
 ### Auth Bootstrap Flow
+
 1. App starts → show loading skeleton
 2. Run viewer query
 3. If `viewer = null` → show LoggedOutScreen
@@ -152,6 +165,7 @@ query Viewer {
 5. Auth state lives in GraphQL cache, not separate context
 
 ### Data Fetching Pattern
+
 - Screens own route-level GraphQL queries
 - Child components receive props (presentational)
 - No duplicated server state in React state
@@ -162,6 +176,7 @@ query Viewer {
 ## Visual Components Needed
 
 ### Immediate
+
 - MediaGrid (responsive masonry/grid)
 - AlbumCard (cover image + metadata)
 - Navigation (subtle sidebar or top nav)
@@ -169,6 +184,7 @@ query Viewer {
 - MediaViewer (full-screen lightbox)
 
 ### Later
+
 - Upload dropzone
 - Sharing controls
 - Member avatars
@@ -194,16 +210,19 @@ query Viewer {
 ## Migration Notes
 
 ### Keep Using
+
 - AuthContext can stay during migration (or replace with GraphQL viewer)
 - useApiFetch can stay for non-GraphQL endpoints (uploads)
 - Existing Primitives components (update styling)
 
 ### Deprecate Gradually
+
 - REST endpoints → move to GraphQL
 - localStorage token → could move to httpOnly cookie (later)
 - Inline styled-components → use theme consistently
 
 ### Delete Immediately
+
 - Generic Login page styling (keep logic)
 - Placeholder Home page
 - Unused dependencies

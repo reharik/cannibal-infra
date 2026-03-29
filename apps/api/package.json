@@ -26,7 +26,10 @@
     "start": "node dist/index.js",
     "start:dev": "node --enable-source-maps dist/index.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' nx test api --runInBand --detectOpenHandles",
-    "install:ioc": "cd /home/reharik/Development/ioc-manifest && npm run pack:dev && cd /home/reharik/Development/photoapp/apps/api && npm install /home/reharik/Development/ioc-manifest/*.tgz"
+    "install:ioc": "cd /home/reharik/Development/ioc-manifest && npm run pack:dev && cd /home/reharik/Development/photoapp/apps/api && npm install /home/reharik/Development/ioc-manifest/*.tgz",
+    "ioc:inspect": "ioc inspect",
+    "ioc:inspect:discovery": "ioc inspect --discovery",
+    "ioc:bundles": "ioc bundles"
   },
   "dependencies": {
     "@graphql-tools/code-file-loader": "^8.1.28",
@@ -45,7 +48,7 @@
     "dotenv": "^16.6.1",
     "graphql": "^16.13.1",
     "graphql-yoga": "^5.18.1",
-    "ioc-manifest": "file:../../../ioc-manifest/ioc-manifest-0.1.0.tgz",
+    "ioc-manifest": "github:reharik/ioc-manifest#main",
     "jsonwebtoken": "^9.0.3",
     "knex": "^3.1.0",
     "knex-stringcase": "^1.6.0",

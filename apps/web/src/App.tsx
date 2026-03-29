@@ -11,7 +11,9 @@ export const App = () => {
       <AuthProvider>
         <BrowserRouter>
           <ViewerBootstrap>
-            {(viewer) => (viewer ? <AppRouter viewer={viewer} /> : <LoggedOutScreen />)}
+            {(viewer) =>
+              viewer ? <AppRouter viewer={viewer} /> : <LoggedOutScreen />
+            }
           </ViewerBootstrap>
         </BrowserRouter>
       </AuthProvider>
