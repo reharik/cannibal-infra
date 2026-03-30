@@ -34,8 +34,7 @@
     "test:ci": "NODE_OPTIONS='--experimental-vm-modules' nx run-many -t test --all -- --runInBand",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' nx run-many -t test --all -- --watch",
     "ioc:inspect": "ioc inspect",
-    "ioc:inspect:discovery": "ioc inspect --discovery",
-    "ioc:bundles": "ioc bundles"
+    "ioc:inspect:discovery": "ioc inspect --discovery"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
