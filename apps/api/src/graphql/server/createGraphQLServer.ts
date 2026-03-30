@@ -28,21 +28,18 @@ interface GraphQLServerDeps {
 }
 
 export const buildYogaApp = ({
-  graphQLContext,
+  graphQLContextFactory,
 }: IocGeneratedCradle): YogaApp => {
   return createYoga<Koa.ParameterizedContext>({
     schema,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- cradle resolves graphQLContext after IoC registration
-    context: graphQLContext,
+    context: graphQLContextFactory,
   }) as YogaApp;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- yoga app adapter
 export const buildGraphQLServer = ({
   yogaApp,
 }: GraphQLServerDeps): GraphQLServer => {
-  return async (ctx: Koa.ParameterizedContext, next: Koa.Next) => {
-    void next;
+  return async (ctx: Koa.ParameterizedContext) => {
     const response = await yogaApp.handleNodeRequestAndResponse(
       ctx.request,
       ctx.res,

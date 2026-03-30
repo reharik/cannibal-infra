@@ -7,8 +7,8 @@ import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 export type KoaServer = http.Server;
 
 export const buildKoaServer = ({
-  apiRoutes,
-  optionalAuthMiddleware,
+  rootRouter,
+  authMiddleware,
   logger,
   graphQLServer,
   errorHandler,
@@ -46,11 +46,11 @@ export const buildKoaServer = ({
   app.use(koaBody());
 
   // 5. Auth middleware (before routes)
-  app.use(optionalAuthMiddleware);
+  app.use(authMiddleware);
 
   // 6. Routes (the actual request handling)
 
-  app.use(apiRoutes.routes()).use(apiRoutes.allowedMethods());
+  app.use(rootRouter.routes()).use(rootRouter.allowedMethods());
 
   // 7. GraphQL endpoint
   app.use(graphQLServer);

@@ -10,7 +10,7 @@ const viewerResolvers: Pick<Resolvers, "Query" | "Viewer" | "Album"> = {
 
   Viewer: {
     albums: async (parent, _a, ctx): Promise<AlbumParent[]> => {
-      return ctx.readServices?.listAlbums() || [];
+      return ctx.readServices?.albumService.listAlbums() || [];
     },
   },
 };

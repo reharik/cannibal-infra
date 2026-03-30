@@ -1,14 +1,13 @@
-import { container, initializeContainer } from "../container";
-import { initLogger } from "../logger";
-import { config } from "../config";
+import { initializeContainer } from "../container";
 import { createExecuteGraphQL } from "./executeGQL";
+import { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
+import { AwilixContainer } from "awilix";
 
 describe("GraphQL", () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
-
+  let container: AwilixContainer<IocGeneratedCradle>;
   beforeAll(async () => {
-    const logger = initLogger();
-    initializeContainer(logger, config);
+    container = initializeContainer();
     const yogaApp = container.resolve("yogaApp");
     executeGraphQL = createExecuteGraphQL({ yogaApp });
   });

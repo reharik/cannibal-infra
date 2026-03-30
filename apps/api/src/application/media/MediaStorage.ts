@@ -14,4 +14,6 @@ export interface MediaStorage {
     size: number;
     mimeType?: string;
   }>;
+
+  verifyExistence(storageKey: string): Promise<boolean>;
 }

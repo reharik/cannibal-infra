@@ -2,11 +2,9 @@ import Router from "@koa/router";
 import { koaBody } from "koa-body";
 import { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
 
-export type MediaRoutes = Router;
-
-export const buildMediaRoutes = ({
+export const buildMediaRouter = ({
   mediaController,
-}: IocGeneratedCradle): MediaRoutes => {
+}: IocGeneratedCradle): Router => {
   const router = new Router({ prefix: "/media" });
 
   router.put(

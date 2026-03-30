@@ -4,7 +4,7 @@ Re-run `npm run gen:manifest` after changing factories or IoC config.
 import type Router from "../../../../../node_modules/@types/koa__router/index.d.js";
 import type { Knex } from "../../../../../node_modules/knex/types/index.d.js";
 import type { MediaStorage } from "../../application/media/MediaStorage.js";
-import type { AlbumService } from "../../application/readServices/viewerReadServices/albumService.js";
+import type { AlbumServiceFactory } from "../../application/readServices/viewerReadServices/albumService.js";
 import type { Config } from "../../config.js";
 import type { AuthController } from "../../controllers/authController.js";
 import type { MediaController } from "../../controllers/mediaController.js";
@@ -27,31 +27,23 @@ import type { ShareLinkRepository } from "../../repositories/domainRepositories/
 import type { UserRepository } from "../../repositories/domainRepositories/userRepository.js";
 import type { AlbumReadRepository } from "../../repositories/readRepositories/albumReadRepository.js";
 import type { MediaItemReadRepository } from "../../repositories/readRepositories/mediaItemReadRepository.js";
-import type { AuthRoutes } from "../../routes/authRoutes.js";
-import type { MediaRoutes } from "../../routes/mediaRoutes.js";
+import type { RootRouter } from "../../routes/apiRouter.js";
 import type { Server } from "../../server.js";
 import type { AuthService } from "../../services/authService.js";
 
 export interface IocGeneratedTypes {
   albumReadRepository: AlbumReadRepository;
   albumRepository: AlbumRepository;
-  albumService: AlbumService;
+  albumServiceFactory: AlbumServiceFactory;
   authController: AuthController;
   authMiddleware: AuthMiddleware;
-  optionalAuthMiddleware: AuthMiddleware;
-  authMiddlewares: Record<
-    "authMiddleware" | "optionalAuthMiddleware",
-    AuthMiddleware
-  >;
-  authRoutes: AuthRoutes;
+  authMiddlewares: ReadonlyArray<AuthMiddleware>;
   authService: AuthService;
   commentRepository: CommentRepository;
   config: Config;
   errorHandler: ErrorHandler;
   graphQLContextFactory: GraphQLContextFactory;
-  graphQLContext: GraphQLContextFactory;
   graphQLServer: GraphQLServer;
-  knex: Knex;
   database: Knex;
   knexConfig: KnexConfig;
   koaServer: KoaServer;
@@ -59,18 +51,19 @@ export interface IocGeneratedTypes {
   mediaController: MediaController;
   mediaItemReadRepository: MediaItemReadRepository;
   mediaItemRepository: MediaItemRepository;
-  mediaRoutes: MediaRoutes;
   mediaStorage: MediaStorage;
   notificationRepository: NotificationRepository;
   requestLogger: RequestLogger;
+  rootRouter: RootRouter;
   router: Router;
-  apiRoutes: Router;
+  routers: ReadonlyArray<Router>;
   server: Server;
   shareLinkRepository: ShareLinkRepository;
   userRepository: UserRepository;
   yogaApp: YogaApp;
-  readServices: ReadonlyArray<AlbumService>;
-  routes: ReadonlyArray<AuthRoutes | MediaRoutes>;
+  readServiceFactories: {
+    albumServiceFactory: AlbumServiceFactory;
+  };
 }
 
 export type IocGeneratedCradle = IocGeneratedTypes;

@@ -8,7 +8,7 @@ const albumResolvers: Pick<Resolvers, "Album"> = {
       _a,
       ctx,
     ): Promise<MediaItemParent | undefined> => {
-      return null;
+      return undefined;
     },
   },
 };

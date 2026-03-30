@@ -1,7 +1,6 @@
 import { AwilixContainer, createContainer } from "awilix";
 import { registerIocFromManifest } from "ioc-manifest";
 import { iocManifest } from "./di/generated/ioc-manifest";
-import { iocRegistrationManifest } from "./di/generated/ioc-manifest.support";
 import type { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
 
 let container: AwilixContainer<IocGeneratedCradle> | undefined;
@@ -15,13 +14,7 @@ const initializeContainer = (): AwilixContainer<IocGeneratedCradle> => {
     injectionMode: "PROXY",
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- ioc-manifest runtime registration
-  registerIocFromManifest(
-    _container,
-    iocRegistrationManifest,
-    iocManifest.moduleImports,
-    iocManifest.bundles,
-  );
+  registerIocFromManifest(_container, iocManifest);
 
   container = _container;
   return container;

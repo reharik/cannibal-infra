@@ -22,6 +22,7 @@ export type Config = {
   serverPort: number;
   logLevel: "error" | "warn" | "info" | "http" | "verbose" | "debug";
   warnings?: string[];
+  logJsonFilePath?: string;
 };
 
 const getValidValue = <T extends string>(
@@ -83,6 +84,7 @@ const createConfigFromEnv = (): Config => {
       (process.env.LOG_LEVEL as Config["logLevel"] | undefined) ||
       (isProduction ? "info" : "debug"),
     ...(warnings.length > 0 ? { warnings } : {}),
+    logJsonFilePath: process.env.LOG_JSON_FILE_PATH || undefined,
   };
 };
 

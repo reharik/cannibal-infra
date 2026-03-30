@@ -1,9 +1,15 @@
 import { User } from "@packages/contracts";
 import type { YogaInitialContext } from "graphql-yoga";
 import type Koa from "koa";
-import type { IocGeneratedCradle } from "../../di/generated/ioc-registry.types";
-// import type { WriteServices } from "../../application/writeServices";
-// import type { ViewerReadServices } from "../../application/readServices/readService";
+import type {
+  IocGeneratedCradle,
+  IocGeneratedTypes,
+} from "../../di/generated/ioc-registry.types";
+import { StripFactory } from "../../types/types";
+
+export type ReadServices = StripFactory<
+  IocGeneratedTypes["readServiceFactories"]
+>;
 
 export interface GraphQLContext {
   viewer?: {
@@ -14,24 +20,21 @@ export interface GraphQLContext {
     isAuthenticated: boolean;
   };
   // writeServices?: WriteServices;
-  // readServices?: ViewerReadServices;
+  readServices?: ReadServices;
 }
 
-export type GraphQLContextFactory = (
-  initialContext: YogaInitialContext &
-    Koa.Context & { state: { isLoggedIn: boolean; user: User } },
-) => Promise<GraphQLContext>;
+type GraphQLInitialContext = YogaInitialContext &
+  Koa.Context & { state: { isLoggedIn: boolean; user: User } };
 
-export const buildGraphQLContext = (
-  {
-    // writeServices,
-    // bindViewerReadServices,
-  }: IocGeneratedCradle,
-): GraphQLContextFactory => {
-  return async (
-    initialContext: YogaInitialContext &
-      Koa.Context & { state: { isLoggedIn: boolean; user: User } },
-  ): Promise<GraphQLContext> => {
+export interface GraphQLContextFactory {
+  (initialContext: GraphQLInitialContext): GraphQLContext;
+}
+
+export const buildGraphQLContext = ({
+  // writeServices,
+  readServiceFactories,
+}: IocGeneratedCradle): GraphQLContextFactory => {
+  return (initialContext: GraphQLInitialContext): GraphQLContext => {
     if (!initialContext.state.isLoggedIn || !initialContext.state.user) {
       return {};
     }
@@ -44,10 +47,19 @@ export const buildGraphQLContext = (
       isAuthenticated: true,
     };
 
+    const rs: ReadServices = Object.entries(
+      readServiceFactories,
+    ).reduce<ReadServices>((acc, [key, service]) => {
+      return {
+        ...acc,
+        [key]: service({ viewerId: viewer.id }),
+      };
+    }, {} as ReadServices);
+
     return {
       viewer,
       // writeServices,
-      // readServices: bindViewerReadServices({ viewerId: viewer.id }),
+      readServices: rs,
     };
   };
 };

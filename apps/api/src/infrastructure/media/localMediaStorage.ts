@@ -23,4 +23,8 @@ export const buildLocalMediaStorage = ({
   ): Promise<{ size: number; mimeType?: string | undefined }> => {
     throw new Error("Not implemented");
   },
+
+  verifyExistence: async (storageKey: string): Promise<boolean> => {
+    throw new Error("Not implemented");
+  },
 });

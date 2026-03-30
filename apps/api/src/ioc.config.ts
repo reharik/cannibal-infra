@@ -18,7 +18,7 @@ export default defineIocConfig({
   },
   registrations: {
     MediaStorage: {
-      localMediaStorage: { name: "mediaStorage" },
+      localMediaStorage: { default: true },
     },
     AlbumReadRepository: {
       albumReadRepository: { lifetime: "scoped" },
@@ -26,8 +26,11 @@ export default defineIocConfig({
     MediaItemReadRepository: {
       mediaItemReadRepository: { lifetime: "scoped" },
     },
-    AlbumService: {
-      albumService: { name: "albumService", lifetime: "scoped" },
+    AlbumServiceFactory: {
+      albumServiceFactory: { lifetime: "scoped" },
+    },
+    Knex: {
+      $contract: { accessKey: "database" },
     },
     // BindViewerReadServices: {
     //   bindViewerReadServices: {
@@ -36,16 +39,13 @@ export default defineIocConfig({
     //   },
     // },
     AuthMiddleware: {
-      authMiddleware: { default: true },
-      optionalAuthMiddleware: {},
+      optionalAuthMiddleware: { default: true },
     },
   },
-  bundles: {
-    routes: ["AuthRoutes", "MediaRoutes"],
-    readServices: {
-      $discover: {
-        baseInterface: "ReadServiceBaseType",
-      },
+  groups: {
+    readServiceFactories: {
+      kind: "object",
+      baseType: "ReadServiceFactoryBase",
     },
   },
 });

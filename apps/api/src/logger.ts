@@ -93,12 +93,14 @@ const buildConsoleFormat = () =>
   );
 
 const jsonErrorFormatter = format((info) => {
-  const typed = info as typeof info & { err?: unknown };
+  const typed = info as typeof info & { err?: unknown; stack?: unknown };
 
   if (typed.err instanceof Error) {
-    typed.err = extractErrorMeta(typed.err);
-    (typed as Record<string, unknown>).stack =
-      typed.stack ?? typed.err.stack ?? undefined;
+    const err = typed.err;
+    const meta = extractErrorMeta(err);
+
+    typed.err = meta;
+    typed.stack = typed.stack ?? err.stack ?? undefined;
   }
 
   return typed;
