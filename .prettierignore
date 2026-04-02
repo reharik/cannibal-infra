@@ -11,3 +11,4 @@ package-lock.json
 # Auto-generated files
 # **/di/generated/ioc-manifest.ts
 # **/di/generated/ioc-registry.types.ts
+**/*.generated.ts

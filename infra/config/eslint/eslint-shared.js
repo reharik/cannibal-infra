@@ -1,64 +1,58 @@
-import js from "@eslint/js";
-import eslintConfigPrettier from "eslint-config-prettier";
-import prettierPlugin from "eslint-plugin-prettier";
-import { defineConfig } from "eslint/config";
-import globals from "globals";
-import tseslint from "typescript-eslint";
+import js from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
+import { defineConfig } from 'eslint/config';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 // Common TypeScript rules that all projects share
 export const commonTypeScriptRules = {
-  "@typescript-eslint/no-misused-promises": [
-    "error",
+  '@typescript-eslint/no-misused-promises': [
+    'error',
     {
       checksVoidReturn: false,
     },
   ],
   // Middle ground: Keep type safety but disable only the most problematic unsafe rules
-  "@typescript-eslint/no-unsafe-assignment": "warn",
-  "@typescript-eslint/no-unsafe-call": "warn",
-  "@typescript-eslint/no-unsafe-member-access": "warn",
-  "@typescript-eslint/no-unsafe-return": "warn",
-  "@typescript-eslint/no-unsafe-argument": "warn",
-  "@typescript-eslint/require-await": "warn",
+  '@typescript-eslint/no-unsafe-assignment': 'warn',
+  '@typescript-eslint/no-unsafe-call': 'warn',
+  '@typescript-eslint/no-unsafe-member-access': 'warn',
+  '@typescript-eslint/no-unsafe-return': 'warn',
+  '@typescript-eslint/no-unsafe-argument': 'warn',
+  '@typescript-eslint/require-await': 'warn',
 };
 
 // Common Prettier rules
 export const commonPrettierRules = {
   ...eslintConfigPrettier.rules,
-  "prettier/prettier": "warn",
+  'prettier/prettier': 'warn',
 };
+
+const defaultIgnores = ['**/dist/**', '**/build/**', '**/node_modules/**', '**/coverage/**'];
 
 // Base TypeScript configuration
 export const createBaseTypeScriptConfig = async (options = {}) => {
-  const jest = await import("eslint-plugin-jest");
+  const jest = await import('eslint-plugin-jest');
 
   const {
     globals: customGlobals = globals.node,
-    ecmaVersion = "latest",
+    ecmaVersion = 'latest',
     tsconfigRootDir = import.meta.dirname,
-    ignores = [
-      "**/dist/**",
-      "**/build/**",
-      "**/node_modules/**",
-      "**/coverage/**",
-    ],
+    ignores: extraIgnores = [],
     additionalRules = {},
     additionalPlugins = {},
   } = options;
 
   return defineConfig(
-    { ignores },
+    { ignores: [...defaultIgnores, ...extraIgnores] },
     {
-      files: ["**/*.ts"],
-      extends: [
-        js.configs.recommended,
-        ...tseslint.configs.recommendedTypeChecked,
-      ],
+      files: ['**/*.ts'],
+      extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
       languageOptions: {
         globals: customGlobals,
         parserOptions: {
           ecmaVersion,
-          sourceType: "module",
+          sourceType: 'module',
           projectService: true,
           tsconfigRootDir,
         },

@@ -1,8 +1,8 @@
-import { Routes, Route } from "react-router-dom";
-import { AppShell } from "../../shared/components/AppShell";
-import { HomeScreen } from "../../screens/HomeScreen";
-import { AlbumScreen } from "../../screens/AlbumScreen";
-import { MediaItemScreen } from "../../screens/MediaItemScreen";
+import { Route, Routes } from 'react-router-dom';
+import { AlbumScreen } from '../../screens/AlbumScreen';
+import { HomeScreen } from '../../screens/HomeScreen';
+import { MediaItemScreen } from '../../screens/MediaItemScreen';
+import { AppShell } from '../../shared/components/AppShell';
 
 interface AppRouterProps {
   viewer: { id: string; displayName: string };

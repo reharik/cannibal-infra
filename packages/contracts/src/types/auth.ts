@@ -1,6 +1,6 @@
 // Shared auth and user types for API and web
 
-import type { UserRoleEnum } from "../enums";
+import type { UserRoleEnum } from '../enums';
 
 export interface User {
   id: string;

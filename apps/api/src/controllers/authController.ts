@@ -1,6 +1,6 @@
-import type { Context } from "koa";
-import type { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
-import { UserRoleEnum } from "@packages/contracts";
+import { UserRoleEnum } from '@packages/contracts';
+import type { Context } from 'koa';
+import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
 export interface AuthController {
   login: (ctx: Context) => Promise<Context>;
@@ -9,10 +9,7 @@ export interface AuthController {
   me: (ctx: Context) => Context;
 }
 
-const sanitizeUser = (user: {
-  passwordHash?: string;
-  [key: string]: unknown;
-}) => {
+const sanitizeUser = (user: { passwordHash?: string; [key: string]: unknown }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...sanitized } = user;
   return sanitized;
@@ -30,22 +27,22 @@ export const buildAuthController = ({
 
     if (!email || !password) {
       ctx.status = 400;
-      ctx.body = { error: "Email and password are required" };
+      ctx.body = { error: 'Email and password are required' };
       return ctx;
     }
 
     const result = await authService.login({ email, password });
     if (!result) {
-      logger.warn("Login attempt failed from controller", {
+      logger.warn('Login attempt failed from controller', {
         email,
         ip: ctx.ip,
       });
       ctx.status = 401;
-      ctx.body = { error: "Invalid email or password" };
+      ctx.body = { error: 'Invalid email or password' };
       return ctx;
     }
 
-    logger.info("Login successful from controller", {
+    logger.info('Login successful from controller', {
       userId: result.user.id,
       email: result.user.email,
       role: result.user.role,
@@ -65,19 +62,19 @@ export const buildAuthController = ({
       email: string;
       password: string;
       name: string;
-      role?: "adult" | "kid";
+      role?: 'adult' | 'kid';
     };
 
     if (!email || !password || !name) {
       ctx.status = 400;
-      ctx.body = { error: "Email, password, and name are required" };
+      ctx.body = { error: 'Email, password, and name are required' };
       return ctx;
     }
 
     // Validate password length
     if (password.length < 8) {
       ctx.status = 400;
-      ctx.body = { error: "Password must be at least 8 characters long" };
+      ctx.body = { error: 'Password must be at least 8 characters long' };
       return ctx;
     }
 
@@ -90,16 +87,16 @@ export const buildAuthController = ({
       role: userRole,
     });
     if (!result) {
-      logger.warn("Signup attempt failed from controller", {
+      logger.warn('Signup attempt failed from controller', {
         email,
         ip: ctx.ip,
       });
       ctx.status = 409;
-      ctx.body = { error: "An account with this email already exists" };
+      ctx.body = { error: 'An account with this email already exists' };
       return ctx;
     }
 
-    logger.info("Signup successful from controller", {
+    logger.info('Signup successful from controller', {
       userId: result.user.id,
       email: result.user.email,
       role: result.user.role,
@@ -117,7 +114,7 @@ export const buildAuthController = ({
   logout: (ctx: Context): Context => {
     // Since we're using JWT, logout is handled client-side by removing the token
     ctx.status = 200;
-    ctx.body = { message: "Logged out successfully" };
+    ctx.body = { message: 'Logged out successfully' };
     return ctx;
   },
 
@@ -127,7 +124,7 @@ export const buildAuthController = ({
 
     if (!user) {
       ctx.status = 401;
-      ctx.body = { error: "Not authenticated" };
+      ctx.body = { error: 'Not authenticated' };
       return ctx;
     }
 

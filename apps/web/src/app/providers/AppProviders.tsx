@@ -1,9 +1,9 @@
-import { ApolloProvider } from "@apollo/client/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "styled-components";
-import { apolloClient } from "../../graphql/client";
-import { GlobalStyle } from "../../styles/globalStyle";
-import { theme } from "../../styles/theme";
+import { ApolloProvider } from '@apollo/client/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'styled-components';
+import { apolloClient } from '../../graphql/client';
+import { GlobalStyle } from '../../styles/globalStyle';
+import { theme } from '../../styles/theme';
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,7 +1,7 @@
-import { useViewer } from "../features/viewer/useViewer";
-import styled from "styled-components";
+import styled from 'styled-components';
+import { useViewer } from '../features/viewer/useViewer';
 
-import type { Viewer } from "../features/viewer/useViewer";
+import type { Viewer } from '../features/viewer/useViewer';
 
 interface ViewerBootstrapProps {
   children: (viewer?: Viewer) => React.ReactNode;

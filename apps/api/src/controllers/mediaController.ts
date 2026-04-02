@@ -1,6 +1,6 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import type { Context } from "koa";
+import type { Context } from 'koa';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 
 export interface MediaController {
   upload: (ctx: Context) => Promise<Context>;
@@ -14,22 +14,21 @@ interface UploadedFileLike {
 }
 
 const isUploadedFileLike = (value: unknown): value is UploadedFileLike => {
-  if (typeof value !== "object" || value === null) {
+  if (typeof value !== 'object' || value === null) {
     return false;
   }
 
   const candidate = value as Record<string, unknown>;
 
   return (
-    typeof candidate.filepath === "string" &&
-    typeof candidate.size === "number" &&
-    (typeof candidate.mimetype === "string" ||
-      typeof candidate.mimetype === "undefined")
+    typeof candidate.filepath === 'string' &&
+    typeof candidate.size === 'number' &&
+    (typeof candidate.mimetype === 'string' || typeof candidate.mimetype === 'undefined')
   );
 };
 
 const resolveUploadedFile = (files: unknown): UploadedFileLike | null => {
-  if (typeof files !== "object" || files === null) {
+  if (typeof files !== 'object' || files === null) {
     return null;
   }
 
@@ -54,7 +53,7 @@ const resolveUploadedFile = (files: unknown): UploadedFileLike | null => {
 };
 
 const sanitizePathSegment = (segment: string): string => {
-  return segment.replace(/[^a-zA-Z0-9_-]/g, "_");
+  return segment.replace(/[^a-zA-Z0-9_-]/g, '_');
 };
 
 export const buildMediaController = (): MediaController => ({
@@ -68,7 +67,7 @@ export const buildMediaController = (): MediaController => ({
     if (!userId || !mediaType || !mediaId) {
       ctx.status = 400;
       ctx.body = {
-        error: "Missing route params. Expected userId, mediaType, and mediaId.",
+        error: 'Missing route params. Expected userId, mediaType, and mediaId.',
       };
       return ctx;
     }
@@ -76,17 +75,17 @@ export const buildMediaController = (): MediaController => ({
     const uploadedFile = resolveUploadedFile(ctx.request.files);
     if (!uploadedFile) {
       ctx.status = 400;
-      ctx.body = { error: "No file uploaded." };
+      ctx.body = { error: 'No file uploaded.' };
       return ctx;
     }
 
-    if (!uploadedFile.mimetype || !uploadedFile.mimetype.startsWith("image/")) {
+    if (!uploadedFile.mimetype || !uploadedFile.mimetype.startsWith('image/')) {
       ctx.status = 400;
-      ctx.body = { error: "Uploaded file must be an image." };
+      ctx.body = { error: 'Uploaded file must be an image.' };
       return ctx;
     }
 
-    const uploadsRoot = path.resolve(process.cwd(), "uploads");
+    const uploadsRoot = path.resolve(process.cwd(), 'uploads');
     const targetDirectory = path.join(
       uploadsRoot,
       sanitizePathSegment(userId),
@@ -94,7 +93,7 @@ export const buildMediaController = (): MediaController => ({
     );
     await fs.mkdir(targetDirectory, { recursive: true });
 
-    const extensionFromMimeType = uploadedFile.mimetype.split("/")[1] ?? "bin";
+    const extensionFromMimeType = uploadedFile.mimetype.split('/')[1] ?? 'bin';
     const targetFilename = `${sanitizePathSegment(mediaId)}.${sanitizePathSegment(extensionFromMimeType)}`;
     const targetPath = path.join(targetDirectory, targetFilename);
 

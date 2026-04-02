@@ -1,5 +1,5 @@
-import styled from "styled-components";
-import { useParams } from "react-router-dom";
+import { useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
 export const AlbumScreen = () => {
   const { albumId } = useParams<{ albumId: string }>();
@@ -27,9 +27,7 @@ export const AlbumScreen = () => {
               <StatDivider>•</StatDivider>
               <Stat>Shared with 3 members</Stat>
             </AlbumStats>
-            <AlbumDescription>
-              Album description and metadata will appear here
-            </AlbumDescription>
+            <AlbumDescription>Album description and metadata will appear here</AlbumDescription>
           </AlbumInfo>
         </AlbumMeta>
 
@@ -61,8 +59,7 @@ const Header = styled.div`
   gap: ${({ theme }) => theme.spacing(3)};
 
   @media (max-width: 768px) {
-    padding: ${({ theme }) => theme.spacing(2)}
-      ${({ theme }) => theme.spacing(3)};
+    padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(3)};
   }
 `;
 

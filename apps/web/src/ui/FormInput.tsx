@@ -1,5 +1,5 @@
-import React from "react";
-import styled, { css } from "styled-components";
+import React from 'react';
+import styled, { css } from 'styled-components';
 
 const baseInput = css<{ $hasError: boolean }>`
   width: 100%;
@@ -8,8 +8,7 @@ const baseInput = css<{ $hasError: boolean }>`
   padding: 10px 12px;
   background: #0c0f15;
   border: 1px solid
-    ${({ theme, $hasError }) =>
-      $hasError ? theme.colors.danger : theme.colors.border};
+    ${({ theme, $hasError }) => ($hasError ? theme.colors.danger : theme.colors.border)};
   color: ${({ theme }) => theme.colors.text};
   border-radius: ${({ theme }) => theme.radius.sm};
   outline: none;
@@ -70,10 +69,9 @@ type OwnProps = {
   error?: string;
 };
 
-type PropsOf<T extends keyof React.JSX.IntrinsicElements> =
-  React.JSX.IntrinsicElements[T];
-type AllowedTags = "input" | "select" | "textarea";
-export type FormInputProps<T extends AllowedTags = "input"> = OwnProps & {
+type PropsOf<T extends keyof React.JSX.IntrinsicElements> = React.JSX.IntrinsicElements[T];
+type AllowedTags = 'input' | 'select' | 'textarea';
+export type FormInputProps<T extends AllowedTags = 'input'> = OwnProps & {
   as?: T;
 } & PropsOf<T>;
 
@@ -81,45 +79,31 @@ export type FormInputProps<T extends AllowedTags = "input"> = OwnProps & {
  * A reusable form input component that wraps label, input/select/textarea, and error message display
  */
 export const FormInput = React.forwardRef(
-  <T extends AllowedTags = "input">(
+  <T extends AllowedTags = 'input'>(
     props: FormInputProps<T>,
-    ref: React.ForwardedRef<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    ref: React.ForwardedRef<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { label, error, as, ...rest } = props as FormInputProps<AllowedTags>;
-    const tag: AllowedTags = (as ?? "input") as AllowedTags;
+    const tag: AllowedTags = (as ?? 'input') as AllowedTags;
 
     const hasError = !!error;
 
     let field: React.ReactNode;
-    if (tag === "select") {
-      const restProps = rest as PropsOf<"select">;
-      field = (
-        <StyledSelect {...restProps} $hasError={hasError} ref={ref as never} />
-      );
-    } else if (tag === "textarea") {
-      const restProps = rest as PropsOf<"textarea">;
-      field = (
-        <StyledTextArea
-          {...restProps}
-          $hasError={hasError}
-          ref={ref as never}
-        />
-      );
+    if (tag === 'select') {
+      const restProps = rest as PropsOf<'select'>;
+      field = <StyledSelect {...restProps} $hasError={hasError} ref={ref as never} />;
+    } else if (tag === 'textarea') {
+      const restProps = rest as PropsOf<'textarea'>;
+      field = <StyledTextArea {...restProps} $hasError={hasError} ref={ref as never} />;
     } else {
-      const restProps = rest as PropsOf<"input">;
-      field = (
-        <StyledInput {...restProps} $hasError={hasError} ref={ref as never} />
-      );
+      const restProps = rest as PropsOf<'input'>;
+      field = <StyledInput {...restProps} $hasError={hasError} ref={ref as never} />;
     }
 
     return (
       <FieldWrapper>
         {label && (
-          <LabelWrapper
-            htmlFor={(rest as PropsOf<"input">).id as string | undefined}
-          >
+          <LabelWrapper htmlFor={(rest as PropsOf<'input'>).id as string | undefined}>
             {label}
           </LabelWrapper>
         )}
@@ -130,4 +114,4 @@ export const FormInput = React.forwardRef(
   },
 );
 
-FormInput.displayName = "FormInput";
+FormInput.displayName = 'FormInput';

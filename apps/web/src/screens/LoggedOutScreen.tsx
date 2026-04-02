@@ -1,15 +1,15 @@
-import { useState } from "react";
-import styled from "styled-components";
-import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { FormInput } from "../ui/FormInput";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { useAuth } from '../contexts/AuthContext';
+import { FormInput } from '../ui/FormInput';
 
 export const LoggedOutScreen = () => {
   const [isSignup, setIsSignup] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<"adult" | "kid">("adult");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'adult' | 'kid'>('adult');
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,15 +30,13 @@ export const LoggedOutScreen = () => {
       }
 
       if (!success) {
-        setError(
-          "Authentication failed. Please check your credentials and try again.",
-        );
+        setError('Authentication failed. Please check your credentials and try again.');
         return;
       }
 
-      navigate("/", { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -77,13 +75,11 @@ export const LoggedOutScreen = () => {
         <RightPanel>
           <AuthCard>
             <AuthHeader>
-              <AuthTitle>
-                {isSignup ? "Create Account" : "Welcome Back"}
-              </AuthTitle>
+              <AuthTitle>{isSignup ? 'Create Account' : 'Welcome Back'}</AuthTitle>
               <AuthSubtitle>
                 {isSignup
-                  ? "Start preserving your family memories"
-                  : "Sign in to access your photos"}
+                  ? 'Start preserving your family memories'
+                  : 'Sign in to access your photos'}
               </AuthSubtitle>
             </AuthHeader>
 
@@ -93,9 +89,7 @@ export const LoggedOutScreen = () => {
                   label="Name"
                   type="text"
                   value={name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setName(e.target.value)
-                  }
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
                   required
                   autoComplete="name"
                 />
@@ -104,9 +98,7 @@ export const LoggedOutScreen = () => {
                 label="Email"
                 type="email"
                 value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setEmail(e.target.value)
-                }
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
               />
@@ -114,11 +106,9 @@ export const LoggedOutScreen = () => {
                 label="Password"
                 type="password"
                 value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setPassword(e.target.value)
-                }
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 required
-                autoComplete={isSignup ? "new-password" : "current-password"}
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
               />
               {isSignup && (
                 <FormInput
@@ -126,7 +116,7 @@ export const LoggedOutScreen = () => {
                   as="select"
                   value={role}
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setRole(e.target.value as "adult" | "kid")
+                    setRole(e.target.value as 'adult' | 'kid')
                   }
                 >
                   <option value="adult">Adult</option>
@@ -137,21 +127,15 @@ export const LoggedOutScreen = () => {
               {error && <ErrorMessage>{error}</ErrorMessage>}
 
               <SubmitButton type="submit" disabled={isLoading}>
-                {isLoading
-                  ? "Loading..."
-                  : isSignup
-                    ? "Create Account"
-                    : "Sign In"}
+                {isLoading ? 'Loading...' : isSignup ? 'Create Account' : 'Sign In'}
               </SubmitButton>
             </Form>
 
             <AuthFooter>
               <ToggleText>
-                {isSignup
-                  ? "Already have an account?"
-                  : "Don't have an account?"}{" "}
+                {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
                 <ToggleLink onClick={() => setIsSignup(!isSignup)}>
-                  {isSignup ? "Sign In" : "Create Account"}
+                  {isSignup ? 'Sign In' : 'Create Account'}
                 </ToggleLink>
               </ToggleText>
             </AuthFooter>

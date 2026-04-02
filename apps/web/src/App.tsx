@@ -1,9 +1,9 @@
-import { BrowserRouter } from "react-router-dom";
-import { AppProviders } from "./app/providers/AppProviders";
-import { ViewerBootstrap } from "./app/ViewerBootstrap";
-import { AppRouter } from "./app/router/AppRouter";
-import { LoggedOutScreen } from "./screens/LoggedOutScreen";
-import { AuthProvider } from "./contexts/AuthContext";
+import { BrowserRouter } from 'react-router-dom';
+import { AppProviders } from './app/providers/AppProviders';
+import { AppRouter } from './app/router/AppRouter';
+import { ViewerBootstrap } from './app/ViewerBootstrap';
+import { AuthProvider } from './contexts/AuthContext';
+import { LoggedOutScreen } from './screens/LoggedOutScreen';
 
 export const App = () => {
   return (
@@ -11,9 +11,7 @@ export const App = () => {
       <AuthProvider>
         <BrowserRouter>
           <ViewerBootstrap>
-            {(viewer) =>
-              viewer ? <AppRouter viewer={viewer} /> : <LoggedOutScreen />
-            }
+            {(viewer) => (viewer ? <AppRouter viewer={viewer} /> : <LoggedOutScreen />)}
           </ViewerBootstrap>
         </BrowserRouter>
       </AuthProvider>

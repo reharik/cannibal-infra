@@ -1,18 +1,18 @@
 export default {
-  displayName: "web",
-  preset: "../../infra/config/jest/jest.preset.cjs",
-  testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
+  displayName: 'web',
+  preset: '../../infra/config/jest/jest.preset.cjs',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transform: {
-    "^.+\\.(ts|tsx|js|jsx|mjs)$": "ts-jest",
+    '^.+\\.(ts|tsx|js|jsx|mjs)$': 'ts-jest',
   },
   globals: {
-    "ts-jest": {
+    'ts-jest': {
       useESM: true,
-      tsconfig: "<rootDir>/tsconfig.spec.json",
+      tsconfig: '<rootDir>/tsconfig.spec.json',
     },
   },
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "mjs"],
-  coverageDirectory: "<rootDir>/coverage",
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs'],
+  coverageDirectory: '<rootDir>/coverage',
   setupFiles: [],
 };

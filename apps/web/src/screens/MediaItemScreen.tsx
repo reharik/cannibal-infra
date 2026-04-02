@@ -1,5 +1,5 @@
-import styled from "styled-components";
-import { useParams } from "react-router-dom";
+import { useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
 export const MediaItemScreen = () => {
   const { mediaId } = useParams<{ mediaId: string }>();
@@ -160,22 +160,16 @@ const MetadataValue = styled.div`
 `;
 
 const ActionButton = styled.button<{ danger?: boolean }>`
-  padding: ${({ theme }) => theme.spacing(1.5)}
-    ${({ theme }) => theme.spacing(2)};
+  padding: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(2)};
   background: transparent;
-  border: 1px solid
-    ${({ theme, danger }) =>
-      danger ? theme.colors.danger : theme.colors.border};
-  color: ${({ theme, danger }) =>
-    danger ? theme.colors.danger : theme.colors.subtext};
+  border: 1px solid ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.border)};
+  color: ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.subtext)};
   border-radius: ${({ theme }) => theme.radius.md};
   font-size: 14px;
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${({ theme, danger }) =>
-      danger ? "rgba(217, 140, 126, 0.1)" : theme.colors.bg};
-    color: ${({ theme, danger }) =>
-      danger ? theme.colors.danger : theme.colors.text};
+    background: ${({ theme, danger }) => (danger ? 'rgba(217, 140, 126, 0.1)' : theme.colors.bg)};
+    color: ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.text)};
   }
 `;

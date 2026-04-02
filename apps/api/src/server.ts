@@ -1,25 +1,18 @@
-import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
+import { IocGeneratedCradle } from './di/generated/ioc-registry.types';
 
 export interface Server {
   start(): Promise<void>;
 }
 
-export const buildServer = ({
-  koaServer,
-  config,
-  logger,
-}: IocGeneratedCradle): Server => {
+export const buildServer = ({ koaServer, config, logger }: IocGeneratedCradle): Server => {
   return {
     async start() {
       await new Promise<void>((resolve) => {
         koaServer.listen(config.serverPort, () => {
-          logger.info(
-            `🚀 Server running on http://localhost:${config.serverPort}`,
-            {
-              port: config.serverPort,
-              nodeEnv: config.nodeEnv,
-            },
-          );
+          logger.info(`🚀 Server running on http://localhost:${config.serverPort}`, {
+            port: config.serverPort,
+            nodeEnv: config.nodeEnv,
+          });
           resolve();
         });
       });

@@ -3,11 +3,11 @@
  * Aggregate Root with its own lifecycle; references recipient (and optional resource) by ID only.
  */
 
-import { AggregateRoot } from "./AggregateRoot";
-import type { EntityAuditRecord } from "./Entity";
-import type { ActorId, EntityId } from "../types/types";
-import type { NotificationKindEnum } from "@packages/contracts";
-import { NotificationKindEnum as NotificationKindEnumCollection } from "@packages/contracts";
+import type { NotificationKindEnum } from '@packages/contracts';
+import { NotificationKindEnum as NotificationKindEnumCollection } from '@packages/contracts';
+import type { ActorId, EntityId } from '../types/types';
+import { AggregateRoot } from './AggregateRoot';
+import type { EntityAuditRecord } from './Entity';
 
 export type NotificationProps = {
   recipientId: EntityId;
@@ -36,19 +36,12 @@ export type CreateNotificationInput = {
 export class Notification extends AggregateRoot<NotificationRecord> {
   protected props: NotificationProps;
 
-  private constructor(
-    id: EntityId,
-    actorId: ActorId,
-    props: NotificationProps,
-  ) {
+  private constructor(id: EntityId, actorId: ActorId, props: NotificationProps) {
     super(id, actorId);
     this.props = props;
   }
 
-  static create(
-    input: CreateNotificationInput,
-    actorId: ActorId,
-  ): Notification {
+  static create(input: CreateNotificationInput, actorId: ActorId): Notification {
     return new Notification(crypto.randomUUID(), actorId, {
       recipientId: input.recipientId,
       kind: input.kind,

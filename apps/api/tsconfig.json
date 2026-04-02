@@ -4,6 +4,11 @@
     "outDir": "./dist",
     "noEmit": true,
     "allowJs": true,
+    "baseUrl": "../..",
+    "paths": {
+      "@packages/contracts": ["packages/contracts/dist/src/index"],
+      "@packages/contracts/*": ["packages/contracts/dist/src/*"]
+    },
     "types": ["jest", "vite/client"],
     "plugins": [
       {

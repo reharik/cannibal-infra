@@ -1,37 +1,13 @@
-import { User } from "@packages/contracts";
-import type { YogaInitialContext } from "graphql-yoga";
-import type Koa from "koa";
-import type {
-  IocGeneratedCradle,
-  IocGeneratedTypes,
-} from "../../di/generated/ioc-registry.types";
-import { StripFactory } from "../../types/types";
+import type { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
+import {
+  GraphQLContext,
+  GraphQLContextFactory,
+  GraphQLInitialContext,
+  ReadServices,
+} from './types';
 
-export type ReadServices = StripFactory<
-  IocGeneratedTypes["readServiceFactories"]
->;
-
-export interface GraphQLContext {
-  viewer?: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    displayName: string;
-    isAuthenticated: boolean;
-  };
-  // writeServices?: WriteServices;
-  readServices?: ReadServices;
-}
-
-type GraphQLInitialContext = YogaInitialContext &
-  Koa.Context & { state: { isLoggedIn: boolean; user: User } };
-
-export interface GraphQLContextFactory {
-  (initialContext: GraphQLInitialContext): GraphQLContext;
-}
-
-export const buildGraphQLContext = ({
-  // writeServices,
+export const buildCreateGraphQLContext = ({
+  writeServices,
   readServiceFactories,
 }: IocGeneratedCradle): GraphQLContextFactory => {
   return (initialContext: GraphQLInitialContext): GraphQLContext => {
@@ -47,18 +23,20 @@ export const buildGraphQLContext = ({
       isAuthenticated: true,
     };
 
-    const rs: ReadServices = Object.entries(
-      readServiceFactories,
-    ).reduce<ReadServices>((acc, [key, service]) => {
-      return {
-        ...acc,
-        [key]: service({ viewerId: viewer.id }),
-      };
-    }, {} as ReadServices);
+    const rs = {} as ReadServices;
+
+    for (const key of Object.keys(readServiceFactories) as Array<
+      keyof typeof readServiceFactories
+    >) {
+      const serviceKey = key.replace(/Factory$/, '') as keyof ReadServices;
+      (rs as Record<string, unknown>)[serviceKey] = readServiceFactories[key]({
+        viewerId: viewer.id,
+      });
+    }
 
     return {
       viewer,
-      // writeServices,
+      writeServices,
       readServices: rs,
     };
   };

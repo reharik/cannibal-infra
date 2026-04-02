@@ -5,9 +5,9 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "npm run lint:shell && npm run lint:yaml",
     "lint:shell": "shellcheck $(git ls-files '*.sh')",
-    "lint:yaml": "yamllint .",
-    "lint": "npm run lint:shell && npm run lint:yaml"
+    "lint:yaml": "yamllint ."
   },
   "devDependencies": {
     "prettier": "^3.2.5",

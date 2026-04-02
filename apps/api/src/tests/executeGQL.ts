@@ -1,5 +1,5 @@
-import type { YogaApp } from "../graphql/server/createGraphQLServer";
-import { createMockGraphQLContext } from "./createMockGraphQLContext";
+import type { YogaApp } from '../graphql/server/createGraphQLServer';
+import { createMockGraphQLContext } from './createMockGraphQLContext';
 
 interface GraphQLError {
   message: string;
@@ -8,6 +8,7 @@ interface GraphQLError {
 }
 
 // Using any for test helper flexibility - tests will add their own type assertions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface GraphQLResponse<T = any> {
   data?: T;
   errors?: GraphQLError[];
@@ -19,6 +20,7 @@ interface ExecuteGraphQLDeps {
 
 // Using any for test helper flexibility - tests will add their own type assertions
 export const createExecuteGraphQL = ({ yogaApp }: ExecuteGraphQLDeps) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async <T = any>({
     query,
     variables,
@@ -29,11 +31,11 @@ export const createExecuteGraphQL = ({ yogaApp }: ExecuteGraphQLDeps) => {
     context?: Record<string, unknown>;
   }): Promise<{ response: Response; json: GraphQLResponse<T> }> => {
     const response = await yogaApp.fetch(
-      "http://localhost/graphql",
+      'http://localhost/graphql',
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           query,

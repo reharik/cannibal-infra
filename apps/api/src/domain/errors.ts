@@ -9,7 +9,7 @@ export class DomainError extends Error {
     public readonly code?: string,
   ) {
     super(message);
-    this.name = "DomainError";
+    this.name = 'DomainError';
     Object.setPrototypeOf(this, DomainError.prototype);
   }
 }

@@ -1,3 +1,3 @@
 // Export types
-export * from "./types/auth";
-export * from "./enums";
+export * from './enums';
+export * from './types/auth';

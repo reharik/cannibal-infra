@@ -3,11 +3,10 @@
  * Aggregate Root with its own lifecycle; references target and author by ID only.
  */
 
-import { AggregateRoot } from "../AggregateRoot";
-import type { EntityAuditRecord } from "../Entity";
-import type { ActorId, EntityId } from "../../types/types";
-import type { ResourceTypeEnum } from "@packages/contracts";
-import { ResourceTypeEnum as ResourceTypeEnumCollection } from "@packages/contracts";
+import type { ResourceTypeEnum } from '@packages/contracts';
+import type { ActorId, EntityId } from '../../types/types';
+import { AggregateRoot } from '../AggregateRoot';
+import type { EntityAuditRecord } from '../Entity';
 
 export type CommentProps = {
   resourceType: ResourceTypeEnum;
@@ -17,7 +16,7 @@ export type CommentProps = {
 
 export type CommentRecord = {
   id: EntityId;
-  resourceType: string;
+  resourceType: ResourceTypeEnum;
   authorId: EntityId;
   content: string;
 } & EntityAuditRecord;
@@ -37,19 +36,11 @@ export class Comment extends AggregateRoot<CommentRecord> {
   }
 
   static create(input: CreateCommentInput, actorId: ActorId): Comment {
-    return new Comment(crypto.randomUUID(), actorId, {
-      resourceType: input.resourceType,
-      authorId: input.authorId,
-      content: input.content,
-    });
+    return new Comment(crypto.randomUUID(), actorId, input);
   }
 
   static rehydrate(record: CommentRecord): Comment {
-    const comment = new Comment(record.id, record.createdBy, {
-      resourceType: ResourceTypeEnumCollection.fromValue(record.resourceType),
-      authorId: record.authorId,
-      content: record.content,
-    });
+    const comment = new Comment(record.id, record.createdBy, record);
 
     comment.rehydrateAudit(record);
 

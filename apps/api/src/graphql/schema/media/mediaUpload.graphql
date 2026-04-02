@@ -1,0 +1,38 @@
+type Mutation {
+  createMediaUpload(input: CreateMediaUploadInput!): CreateMediaUploadPayload!
+  finalizeMediaUpload(input: FinalizeMediaUploadInput!): FinalizeMediaUploadPayload!
+}
+
+input CreateMediaUploadInput {
+  kind: MediaKind!
+  mimeType: String!
+}
+
+type UploadInstructions {
+  method: String!
+  url: String!
+  headers: [UploadHeader!]!
+}
+
+type UploadHeader {
+  key: String!
+  value: String!
+}
+
+type CreateMediaUploadPayload {
+  mediaItemId: ID!
+  status: MediaItemStatus!
+  uploadInstructions: UploadInstructions!
+}
+
+input FinalizeMediaUploadInput {
+  mediaItemId: ID!
+}
+
+type FinalizeMediaUploadPayload {
+  mediaItemId: ID!
+  status: MediaItemStatus!
+  mimeType: String
+  size: Int!
+  kind: MediaKind!
+}

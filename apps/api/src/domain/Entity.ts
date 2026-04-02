@@ -1,5 +1,5 @@
-import type { ActorId, EntityId } from "../types/types";
-import { serializeEntity } from "./utilities/serializeAggregates";
+import type { ActorId, EntityId } from '../types/types';
+import { serializeEntity } from './utilities/serializeAggregates';
 
 export type ChildEntities = Record<
   string,

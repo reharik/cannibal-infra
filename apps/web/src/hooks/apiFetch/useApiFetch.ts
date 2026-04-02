@@ -1,7 +1,7 @@
-import { config } from "../../config";
-import type { ApiResult } from "../../types/ApiResult";
+import { config } from '../../config';
+import type { ApiResult } from '../../types/ApiResult';
 
-type JsonInit = Omit<RequestInit, "body"> & {
+type JsonInit = Omit<RequestInit, 'body'> & {
   body?: unknown;
 };
 
@@ -16,21 +16,21 @@ export const useApiFetchBase = () => {
   ): Promise<ApiResult<T>> => {
     try {
       // Build the API URL
-      const API = config.apiBaseUrl.endsWith("/")
+      const API = config.apiBaseUrl.endsWith('/')
         ? config.apiBaseUrl.slice(0, -1)
         : config.apiBaseUrl;
-      const url = `${API}${path.startsWith("/") ? "" : "/"}${path}`;
+      const url = `${API}${path.startsWith('/') ? '' : '/'}${path}`;
 
       // Build the headers
       const headers: Record<string, string> = {
-        Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        Accept: 'application/json',
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
         ...(init.headers as Record<string, string> | undefined),
       };
 
       // Make the API call
       const response = await fetch(url, {
-        credentials: "include",
+        credentials: 'include',
         ...init,
         headers,
         body: init.body ? JSON.stringify(init.body) : undefined,
@@ -50,7 +50,7 @@ export const useApiFetchBase = () => {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   };
@@ -69,18 +69,18 @@ export const useApiFetch = () => {
   ): Promise<ApiResult<T>> => {
     try {
       // Build the API URL
-      const API = config.apiBaseUrl.endsWith("/")
+      const API = config.apiBaseUrl.endsWith('/')
         ? config.apiBaseUrl.slice(0, -1)
         : config.apiBaseUrl;
-      const url = `${API}${path.startsWith("/") ? "" : "/"}${path}`;
+      const url = `${API}${path.startsWith('/') ? '' : '/'}${path}`;
 
       // Get token from localStorage
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem('authToken');
 
       // Build the headers
       const headers: Record<string, string> = {
-        Accept: "application/json",
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        Accept: 'application/json',
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
         ...(init.headers as Record<string, string> | undefined),
       };
 
@@ -91,7 +91,7 @@ export const useApiFetch = () => {
 
       // Make the API call
       const response = await fetch(url, {
-        credentials: "include",
+        credentials: 'include',
         ...init,
         headers,
         body: init.body ? JSON.stringify(init.body) : undefined,
@@ -111,7 +111,7 @@ export const useApiFetch = () => {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   };

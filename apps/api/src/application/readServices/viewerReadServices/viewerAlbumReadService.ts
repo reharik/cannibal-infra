@@ -1,5 +1,5 @@
-import { IocGeneratedCradle } from "apps/api/src/di/generated/ioc-registry.types";
-import { ReadServiceFactoryBase } from "../readServiceBaseType";
+import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
+import { ReadServiceFactoryBase } from '../readServiceBaseType';
 
 type AlbumRow = {
   id: string;
@@ -18,21 +18,19 @@ type MediaItemRow = {
   height?: number;
 };
 
-export interface AlbumService {
+export interface ViewerAlbumReadService {
   listAlbums: () => Promise<AlbumRow[]>;
-  getAlbumCoverMedia: (args: {
-    albumId: string;
-  }) => Promise<MediaItemRow | undefined>;
+  getAlbumCoverMedia: (args: { albumId: string }) => Promise<MediaItemRow | undefined>;
 }
 
-export interface AlbumServiceFactory extends ReadServiceFactoryBase {
-  (args: { viewerId: string }): AlbumService;
+export interface ViewerAlbumReadServiceFactory extends ReadServiceFactoryBase {
+  (args: { viewerId: string }): ViewerAlbumReadService;
 }
 
-export const buildAlbumServiceFactory = ({
+export const buildViewerAlbumReadServiceFactory = ({
   albumReadRepository,
   mediaItemReadRepository,
-}: IocGeneratedCradle): AlbumServiceFactory => {
+}: IocGeneratedCradle): ViewerAlbumReadServiceFactory => {
   return ({ viewerId }: { viewerId: string }) => ({
     listAlbums: async (): Promise<AlbumRow[]> => {
       return albumReadRepository.listByViewerId({ viewerId });
@@ -43,7 +41,7 @@ export const buildAlbumServiceFactory = ({
     }: {
       albumId: string;
     }): Promise<MediaItemRow | undefined> => {
-      const album = await albumReadRepository.getByViewerId({
+      const album = await albumReadRepository.getAlbumForViewer({
         albumId,
         viewerId,
       });
@@ -52,7 +50,10 @@ export const buildAlbumServiceFactory = ({
         return;
       }
 
-      return mediaItemReadRepository.getCoverMediaByAlbumId({ albumId });
+      return mediaItemReadRepository.getCoverMediaByAlbumIdForViewer({
+        albumId,
+        viewerId,
+      });
     },
   });
 };

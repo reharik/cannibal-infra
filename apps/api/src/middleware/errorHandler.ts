@@ -1,5 +1,5 @@
-import { Context, HttpError, Next } from "koa";
-import { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
+import { Context, HttpError, Next } from 'koa';
+import { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
 export type ErrorHandler = (ctx: Context, next: Next) => Promise<void>;
 
@@ -12,12 +12,12 @@ export const buildErrorHandler =
       if (err instanceof HttpError) {
         ctx.status = err.status || 500;
         ctx.body = {
-          error: err.expose ? err.message : "Internal Server Error",
+          error: err.expose ? err.message : 'Internal Server Error',
         };
       } else if (err instanceof Error) {
         ctx.status = 500;
         ctx.body = {
-          error: err.message ? err.message : "Internal Server Error",
+          error: err.message ? err.message : 'Internal Server Error',
         };
       }
 
@@ -27,11 +27,11 @@ export const buildErrorHandler =
         status: ctx.status,
         method: ctx.method,
         path: ctx.path,
-        requestId: ctx.get("x-request-id") || undefined,
+        requestId: ctx.get('x-request-id') || undefined,
         isHttpError: err instanceof HttpError,
         expose: err instanceof HttpError ? err.expose : false,
       });
 
-      ctx.app.emit("error", err, ctx);
+      ctx.app.emit('error', err, ctx);
     }
   };

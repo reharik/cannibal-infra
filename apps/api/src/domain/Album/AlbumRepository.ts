@@ -1,5 +1,5 @@
-import type { EntityId } from "../../types/types";
-import type { Album } from "./Album";
+import type { EntityId } from '../../types/types';
+import type { Album } from './Album';
 
 export type AlbumRepository = {
   getById: (id: EntityId) => Promise<Album | undefined>;

@@ -1,11 +1,7 @@
 {
   "pluginsConfig": { "@nx/js": { "analyzeSourceFiles": false } },
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "!{projectRoot}/**/*.spec.*",
-      "!{projectRoot}/**/*.test.*"
-    ],
+    "default": ["{projectRoot}/**/*", "!{projectRoot}/**/*.spec.*", "!{projectRoot}/**/*.test.*"],
     "prod": [
       "default",
       "!{projectRoot}/**/*.spec.*",

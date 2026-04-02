@@ -1,8 +1,8 @@
-import type { Knex } from "knex";
-import "koa";
-import type { Context } from "koa";
+import type { Knex } from 'knex';
+import 'koa';
+import type { Context } from 'koa';
 
-declare module "koa" {
+declare module 'koa' {
   interface DefaultContext {
     db: Knex;
     user?: {
@@ -14,9 +14,6 @@ declare module "koa" {
   }
 }
 
-export type TypedContext<T extends Record<string, string>> = Omit<
-  Context,
-  "params"
-> & {
+export type TypedContext<T extends Record<string, string>> = Omit<Context, 'params'> & {
   params: T;
 };

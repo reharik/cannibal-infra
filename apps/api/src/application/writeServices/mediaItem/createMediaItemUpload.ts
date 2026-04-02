@@ -1,43 +1,52 @@
-import { MediaItemKindEnum, MediaItemStatusEnum } from "@packages/contracts";
-import { EntityId } from "../../../types/types";
-import { MediaItem } from "../../../domain/MediaItem/MediaItem";
-import { IocGeneratedCradle } from "../../../di/generated/ioc-registry.types";
-import { UploadTarget } from "../../media/MediaStorage";
+import { MediaItemStatus, MediaKind } from '@packages/contracts';
+import { ok } from 'apps/api/src/domain/utilities/writeResponse';
+import { IocGeneratedCradle } from '../../../di/generated/ioc-registry.types';
+import { MediaItem } from '../../../domain/MediaItem/MediaItem';
+import { EntityId, WriteResult } from '../../../types/types';
+import { UploadTarget } from '../../media/MediaStorage';
+import { WriteServiceBase } from '../writeServiceBaseType';
 
-type CreateMediaUploadInput = {
+export type CreateMediaUploadInput = {
   viewerId: string;
-  kind: MediaItemKindEnum;
+  kind: MediaKind;
   mimeType: string;
 };
 
-type CreateMediaUploadResult = {
+export interface CreateMediaUpload extends WriteServiceBase {
+  (input: CreateMediaUploadInput): Promise<WriteResult<CreateMediaUploadResult>>;
+}
+
+export type CreateMediaUploadResult = {
   mediaItemId: EntityId;
-  status: MediaItemStatusEnum;
+  status: MediaItemStatus;
   uploadTarget: UploadTarget;
 };
 
-export const buildMediaItemUpload = ({
+export const buildCreateMediaItemUpload = ({
   mediaItemRepository,
   mediaStorage,
-}: IocGeneratedCradle) => {
-  return async (
-    input: CreateMediaUploadInput,
-  ): Promise<CreateMediaUploadResult> => {
+}: IocGeneratedCradle): CreateMediaUpload => {
+  return async (input: CreateMediaUploadInput): Promise<WriteResult<CreateMediaUploadResult>> => {
     const { viewerId, kind, mimeType } = input;
     const mediaItem = MediaItem.create(
       {
-        ownerId: viewerId,
         kind,
         mimeType,
       },
       viewerId,
     );
 
-    await mediaItemRepository.save(mediaItem);
     const uploadTarget = await mediaStorage.getUploadTarget({
       storageKey: mediaItem.storageKey(),
       mimeType,
     });
-    return { mediaItemId, status: mediaItem.status(), uploadTarget };
+
+    await mediaItemRepository.save(mediaItem);
+
+    return ok({
+      mediaItemId: mediaItem.id(),
+      status: mediaItem.status(),
+      uploadTarget,
+    });
   };
 };

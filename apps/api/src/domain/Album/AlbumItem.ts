@@ -3,8 +3,8 @@
  * createdBy is the user who added the media item; createdAt is when it was added.
  */
 
-import { Entity, type EntityAuditRecord } from "../Entity";
-import type { ActorId, EntityId } from "../../types/types";
+import type { ActorId, EntityId } from '../../types/types';
+import { Entity, type EntityAuditRecord } from '../Entity';
 
 export type AlbumItemProps = {
   mediaItemId: EntityId;

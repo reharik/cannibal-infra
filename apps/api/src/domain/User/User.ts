@@ -4,9 +4,9 @@
  * References other aggregates by ID only; does not own collections of albums, media, comments, or notifications.
  */
 
-import { AggregateRoot } from "../AggregateRoot";
-import type { ActorId, EntityId } from "../../types/types";
-import type { EntityAuditRecord } from "../Entity";
+import type { ActorId, EntityId } from '../../types/types';
+import { AggregateRoot } from '../AggregateRoot';
+import type { EntityAuditRecord } from '../Entity';
 
 export type UserProps = {
   email: string;
@@ -56,29 +56,11 @@ export class User extends AggregateRoot<UserRecord> {
   }
 
   static create(input: CreateUserInput, actorId: ActorId): User {
-    return new User(crypto.randomUUID(), actorId, {
-      email: input.email,
-      firstName: input.firstName,
-      lastName: input.lastName,
-    });
+    return new User(crypto.randomUUID(), actorId, input);
   }
 
   static rehydrate(record: UserRecord): User {
-    const user = new User(record.id, record.createdBy, {
-      email: record.email,
-      firstName: record.firstName,
-      lastName: record.lastName,
-      phone: record.phone,
-      addressLine1: record.addressLine1,
-      addressLine2: record.addressLine2,
-      city: record.city,
-      postalCode: record.postalCode,
-      state: record.state,
-      country: record.country,
-      passwordHash: record.passwordHash,
-      lastLoginAt: record.lastLoginAt,
-      emailVerified: record.emailVerified,
-    });
+    const user = new User(record.id, record.createdBy, record);
 
     user.rehydrateAudit(record);
 
@@ -109,13 +91,10 @@ export class User extends AggregateRoot<UserRecord> {
     actorId: ActorId,
   ): void {
     if (contact.phone !== undefined) this.props.phone = contact.phone;
-    if (contact.addressLine1 !== undefined)
-      this.props.addressLine1 = contact.addressLine1;
-    if (contact.addressLine2 !== undefined)
-      this.props.addressLine2 = contact.addressLine2;
+    if (contact.addressLine1 !== undefined) this.props.addressLine1 = contact.addressLine1;
+    if (contact.addressLine2 !== undefined) this.props.addressLine2 = contact.addressLine2;
     if (contact.city !== undefined) this.props.city = contact.city;
-    if (contact.postalCode !== undefined)
-      this.props.postalCode = contact.postalCode;
+    if (contact.postalCode !== undefined) this.props.postalCode = contact.postalCode;
     if (contact.state !== undefined) this.props.state = contact.state;
     if (contact.country !== undefined) this.props.country = contact.country;
     this.touch(actorId);

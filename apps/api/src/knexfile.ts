@@ -1,9 +1,18 @@
-import type { Knex } from "knex";
-import knexStringcase from "knex-stringcase";
-import path from "path";
-import { fileURLToPath } from "url";
-import { buildConfig, type Config } from "./config";
-import type { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
+import { createSmartEnumPostProcessResponse } from '@reharik/smart-enum-knex';
+import type { Knex } from 'knex';
+import knexStringcase from 'knex-stringcase';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { buildConfig, type Config } from './config';
+import type { IocGeneratedCradle } from './di/generated/ioc-registry.types';
+
+// knex-stringcase runs its pipeline as: optional postProcessResponse → camelCase keys → appPostProcessResponse.
+// We run null→undefined first, then @reharik/smart-enum-knex (reads queryContext from withEnumRevival on a query).
+const smartEnumPostProcessResponseRaw = createSmartEnumPostProcessResponse();
+if (smartEnumPostProcessResponseRaw === undefined) {
+  throw new Error('createSmartEnumPostProcessResponse returned undefined');
+}
+const smartEnumPostProcessResponse = smartEnumPostProcessResponseRaw;
 
 export type KnexConfig = Knex.Config;
 
@@ -16,22 +25,19 @@ const convertNullsToUndefined = (obj: unknown): unknown => {
   if (obj === null) return undefined;
   if (obj instanceof Date) return obj; // Preserve Date objects
   if (Array.isArray(obj)) return obj.map(convertNullsToUndefined);
-  if (typeof obj === "object" && obj !== null) {
+  if (typeof obj === 'object' && obj !== null) {
     return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [
-        key,
-        convertNullsToUndefined(value),
-      ]),
+      Object.entries(obj).map(([key, value]) => [key, convertNullsToUndefined(value)]),
     );
   }
   return obj;
 };
 
 const createKnexConfig = (config: Config): KnexConfig => {
-  const isCompiled = path.basename(__dirname) === "dist";
-  const ROOT = isCompiled ? __dirname : path.resolve(__dirname, "..");
-  const MIGRATIONS_DIR = path.join(ROOT, "db/migrations");
-  const SEEDS_DIR = path.join(ROOT, "db/seeds");
+  const isCompiled = path.basename(__dirname) === 'dist';
+  const ROOT = isCompiled ? __dirname : path.resolve(__dirname, '..');
+  const MIGRATIONS_DIR = path.join(ROOT, 'db/migrations');
+  const SEEDS_DIR = path.join(ROOT, 'db/seeds');
 
   const connection: Knex.StaticConnectionConfig = {
     host: config.postgresHost,
@@ -42,20 +48,20 @@ const createKnexConfig = (config: Config): KnexConfig => {
   };
 
   return {
-    client: "pg",
+    client: 'pg',
     connection,
     ...knexStringcase({
-      appPostProcessResponse: (result: unknown) =>
-        convertNullsToUndefined(result),
+      appPostProcessResponse: (result: unknown, queryContext?: unknown) =>
+        smartEnumPostProcessResponse(convertNullsToUndefined(result), queryContext),
     }),
     migrations: {
       directory: MIGRATIONS_DIR,
-      tableName: "knex_migrations",
-      extension: isCompiled ? "js" : "ts",
+      tableName: 'knex_migrations',
+      extension: isCompiled ? 'js' : 'ts',
     },
     seeds: {
       directory: SEEDS_DIR,
-      extension: isCompiled ? "js" : "ts",
+      extension: isCompiled ? 'js' : 'ts',
     },
   };
 };

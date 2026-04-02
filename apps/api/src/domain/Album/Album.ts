@@ -1,13 +1,12 @@
-import type { WriteResult } from "../../types/types";
-import { fail, ok } from "../utilities/writeResponse";
-import { AggregateRoot } from "../AggregateRoot";
-import type { ActorId, EntityId } from "../../types/types";
-import { AppErrorCollection } from "@packages/contracts";
-import type { AlbumMemberRoleEnum } from "@packages/contracts";
-import type { ChildEntities, EntityAuditRecord } from "../Entity";
-import { AlbumItem } from "./AlbumItem";
-import type { AlbumItemRecord } from "./AlbumItem";
-import { AlbumMember, AlbumMemberRecord } from "./AlbumMember";
+import type { AlbumMemberRoleEnum } from '@packages/contracts';
+import { AppErrorCollection, MediaItemStatus } from '@packages/contracts';
+import type { ActorId, EntityId, WriteResult } from '../../types/types';
+import { AggregateRoot } from '../AggregateRoot';
+import type { ChildEntities, EntityAuditRecord } from '../Entity';
+import { fail, ok } from '../utilities/writeResponse';
+import type { AlbumItemRecord } from './AlbumItem';
+import { AlbumItem } from './AlbumItem';
+import { AlbumMember, AlbumMemberRecord } from './AlbumMember';
 
 export type AlbumProps = {
   title: string;
@@ -57,42 +56,43 @@ export class Album extends AggregateRoot<AlbumRecord> {
     return album;
   }
 
-  addItem(mediaItemId: EntityId, actorId: ActorId): WriteResult {
+  addItem(mediaItemId: EntityId, status: MediaItemStatus, actorId: ActorId): WriteResult {
     if (this.#items.some((i) => i.mediaItemId() === mediaItemId)) {
       return fail(AppErrorCollection.album.MediaAlreadyInAlbum);
+    }
+    if (status !== MediaItemStatus.ready) {
+      return fail(AppErrorCollection.mediaItem.MediaItemNotReady);
     }
     this.#items.push(AlbumItem.create({ mediaItemId }, actorId));
 
     this.touch(actorId);
-    return ok();
+    return ok(undefined);
   }
 
-  addMember(
-    userId: EntityId,
-    role: AlbumMemberRoleEnum,
-    actorId: ActorId,
-  ): WriteResult {
+  addMember(userId: EntityId, role: AlbumMemberRoleEnum, actorId: ActorId): WriteResult {
     if (this.#members.some((m) => m.userId() === userId)) {
       return fail(AppErrorCollection.album.UserAlreadyMember);
     }
     this.#members.push(AlbumMember.create({ userId, role }, actorId));
     this.touch(actorId);
-    return ok();
+    return ok(undefined);
   }
 
-  setCoverMedia(
-    mediaItemId: EntityId | undefined,
-    actorId: ActorId,
-  ): WriteResult {
-    if (
-      mediaItemId &&
-      !this.#items.some((i) => i.mediaItemId() === mediaItemId)
-    ) {
+  /* Currently the rule is that album cover must be a reference to a 
+  media item that is part of the album.  This is an easier implementation for now. 
+  If we decide to open that up there are two ways to do it.  We could add a 
+  role to the albumItem that state whether to display it or not ( in the album item list ),
+  or perhaps just state that it's of kind albumCover.
+  Another way would be to have the albumCoverMedia reference a media item directly with out
+  requiring it to be part of the albumItems.  In the later case we must make sure to 
+  check that the mediaItem has the status of ready as we wont have the previous albumItem check.*/
+  setCoverMedia(mediaItemId: EntityId, actorId: ActorId): WriteResult {
+    if (mediaItemId && !this.#items.some((i) => i.mediaItemId() === mediaItemId)) {
       return fail(AppErrorCollection.album.CoverMediaNotPartOfAlbum);
     }
     this.props.coverMediaId = mediaItemId;
     this.touch(actorId);
-    return ok();
+    return ok(undefined);
   }
 
   protected childEntities(): ChildEntities {

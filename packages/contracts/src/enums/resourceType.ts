@@ -1,7 +1,7 @@
-import { enumeration, type Enumeration } from "smart-enums";
-const input = ["album", "mediaItem"];
+import { enumeration, type Enumeration } from '@reharik/smart-enum';
+const input = ['album', 'mediaItem'];
 
 export type ResourceTypeEnum = Enumeration<typeof ResourceTypeEnum>;
-export const ResourceTypeEnum = enumeration<typeof input>("ResourceType", {
+export const ResourceTypeEnum = enumeration<typeof input>('ResourceType', {
   input,
 });

@@ -9,10 +9,11 @@ generates:
       - typescript
       - typescript-resolvers
     config:
-      contextType: ../context/createGraphQLContext#GraphQLContext
+      contextType: ../context/types#GraphQLContext
       useIndexSignature: true
-      maybeValue: "T | undefined"
-      inputMaybeValue: "T | undefined"
+      maybeValue: 'T | undefined'
+      inputMaybeValue: 'T | undefined'
+      enumsAsTypes: true
       mappers:
         Viewer: ../resolvers/parentModels#ViewerParent
         Album: ../resolvers/parentModels#AlbumParent

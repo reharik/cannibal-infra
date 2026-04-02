@@ -2,10 +2,10 @@
  * ShareLink: token-based sharing for an Album with permission and optional expiration.
  */
 
-import { AggregateRoot } from "../AggregateRoot";
-import type { EntityAuditRecord } from "../Entity";
-import type { ActorId, EntityId } from "../../types/types";
-import { ShareLinkPermissionEnum } from "@packages/contracts";
+import { ShareLinkPermissionEnum } from '@packages/contracts';
+import type { ActorId, EntityId } from '../../types/types';
+import { AggregateRoot } from '../AggregateRoot';
+import type { EntityAuditRecord } from '../Entity';
 
 export type ShareLinkProps = {
   permission: ShareLinkPermissionEnum;
@@ -15,7 +15,7 @@ export type ShareLinkProps = {
 
 export type ShareLinkRecord = {
   id: EntityId;
-  permission: string;
+  permission: ShareLinkPermissionEnum;
   linkToken: string;
   expiresAt?: Date;
 } & EntityAuditRecord;
@@ -41,11 +41,7 @@ export class ShareLink extends AggregateRoot<ShareLinkRecord> {
   }
 
   static rehydrate(record: ShareLinkRecord): ShareLink {
-    const link = new ShareLink(record.id, record.createdBy, {
-      permission: ShareLinkPermissionEnum.fromValue(record.permission),
-      linkToken: record.linkToken,
-      expiresAt: record.expiresAt,
-    });
+    const link = new ShareLink(record.id, record.createdBy, record);
 
     link.rehydrateAudit(record);
 
@@ -60,10 +56,7 @@ export class ShareLink extends AggregateRoot<ShareLinkRecord> {
     return this.props.linkToken;
   }
 
-  updatePermission(
-    permission: ShareLinkPermissionEnum,
-    actorId: ActorId,
-  ): void {
+  updatePermission(permission: ShareLinkPermissionEnum, actorId: ActorId): void {
     this.props.permission = permission;
     this.touch(actorId);
   }

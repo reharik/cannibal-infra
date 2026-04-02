@@ -1,29 +1,26 @@
 export default {
-  displayName: "api",
-  preset: "../../infra/config/jest/jest.preset.cjs",
-  testEnvironment: "node",
-  extensionsToTreatAsEsm: [".ts"],
+  displayName: 'api',
+  preset: '../../infra/config/jest/jest.preset.cjs',
+  testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
   transform: {
-    "^.+\\.(ts|tsx|js|mjs)$": [
-      "ts-jest",
+    '^.+\\.(ts|tsx|js|mjs)$': [
+      'ts-jest',
       {
         useESM: true,
-        tsconfig: "<rootDir>/tsconfig.spec.json",
+        tsconfig: '<rootDir>/tsconfig.spec.json',
       },
     ],
   },
-  moduleFileExtensions: ["ts", "tsx", "js", "mjs"],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'mjs'],
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1",
-    "^./knexfile$": "<rootDir>/src/tests/__mocks__/knexfile.js",
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^./knexfile$': '<rootDir>/src/tests/__mocks__/knexfile.js',
   },
-  coverageDirectory: "<rootDir>/coverage",
-  setupFiles: ["<rootDir>/src/tests/setup.ts"],
-  testMatch: [
-    "**/tests/**/*.tests.ts",
-    "**/?(*.)+(spec|test).?([mc])[jt]s?(x)",
-  ],
+  coverageDirectory: '<rootDir>/coverage',
+  setupFiles: ['<rootDir>/src/tests/setup.ts'],
+  testMatch: ['**/tests/**/*.tests.ts', '**/?(*.)+(spec|test).?([mc])[jt]s?(x)'],
   transformIgnorePatterns: [
-    "node_modules/(?!(smart-enums|case-anything|@network|koa|@koa|only|http-errors|statuses|graphql-yoga|@graphql-tools)/)",
+    'node_modules/(?!(@reharik/smart-enum|@reharik/smart-enum-knex|case-anything|@network|koa|@koa|only|http-errors|statuses|graphql-yoga|@graphql-tools)/)',
   ],
 };

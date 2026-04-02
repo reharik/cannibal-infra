@@ -3,10 +3,10 @@
  * Aggregate Root with its own lifecycle; references recipient (and optional resource) by ID only.
  */
 
-import { AggregateRoot } from "../AggregateRoot";
-import type { EntityAuditRecord } from "../Entity";
-import type { ActorId, EntityId } from "../../types/types";
-import { NotificationKindEnum } from "@packages/contracts";
+import { NotificationKindEnum } from '@packages/contracts';
+import type { ActorId, EntityId } from '../../types/types';
+import { AggregateRoot } from '../AggregateRoot';
+import type { EntityAuditRecord } from '../Entity';
 
 export type NotificationProps = {
   recipientId: EntityId;
@@ -19,7 +19,7 @@ export type NotificationProps = {
 export type NotificationRecord = {
   id: EntityId;
   recipientId: EntityId;
-  kind: string;
+  kind: NotificationKindEnum;
   title: string;
   body: string;
   readAt?: Date;
@@ -35,35 +35,17 @@ export type CreateNotificationInput = {
 export class Notification extends AggregateRoot<NotificationRecord> {
   protected props: NotificationProps;
 
-  private constructor(
-    id: EntityId,
-    actorId: ActorId,
-    props: NotificationProps,
-  ) {
+  private constructor(id: EntityId, actorId: ActorId, props: NotificationProps) {
     super(id, actorId);
     this.props = props;
   }
 
-  static create(
-    input: CreateNotificationInput,
-    actorId: ActorId,
-  ): Notification {
-    return new Notification(crypto.randomUUID(), actorId, {
-      recipientId: input.recipientId,
-      kind: input.kind,
-      title: input.title,
-      body: input.body,
-    });
+  static create(input: CreateNotificationInput, actorId: ActorId): Notification {
+    return new Notification(crypto.randomUUID(), actorId, input);
   }
 
   static rehydrate(record: NotificationRecord): Notification {
-    const notification = new Notification(record.id, record.createdBy, {
-      recipientId: record.recipientId,
-      kind: NotificationKindEnum.fromValue(record.kind),
-      title: record.title,
-      body: record.body,
-      readAt: record.readAt,
-    });
+    const notification = new Notification(record.id, record.createdBy, record);
 
     notification.rehydrateAudit(record);
 

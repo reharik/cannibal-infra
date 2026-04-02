@@ -26,6 +26,31 @@ export type Album = Node & {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type CreateMediaUploadInput = {
+  kind: MediaKind;
+  mimeType: Scalars['String']['input'];
+};
+
+export type CreateMediaUploadPayload = {
+  __typename?: 'CreateMediaUploadPayload';
+  mediaItemId: Scalars['ID']['output'];
+  status: MediaItemStatus;
+  uploadInstructions: UploadInstructions;
+};
+
+export type FinalizeMediaUploadInput = {
+  mediaItemId: Scalars['ID']['input'];
+};
+
+export type FinalizeMediaUploadPayload = {
+  __typename?: 'FinalizeMediaUploadPayload';
+  kind: MediaKind;
+  mediaItemId: Scalars['ID']['output'];
+  mimeType?: Maybe<Scalars['String']['output']>;
+  size: Scalars['Int']['output'];
+  status: MediaItemStatus;
+};
+
 export type MediaItem = Node & {
   __typename?: 'MediaItem';
   createdAt: Scalars['DateTime']['output'];
@@ -52,6 +77,22 @@ export type MediaItemStatus =
 export type MediaKind =
   | 'PHOTO'
   | 'VIDEO';
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createMediaUpload: CreateMediaUploadPayload;
+  finalizeMediaUpload: FinalizeMediaUploadPayload;
+};
+
+
+export type MutationCreateMediaUploadArgs = {
+  input: CreateMediaUploadInput;
+};
+
+
+export type MutationFinalizeMediaUploadArgs = {
+  input: FinalizeMediaUploadInput;
+};
 
 /** Implemented by all entities that have an id. */
 export type Node = {
@@ -126,6 +167,19 @@ export type SharedMediaItem = Node & {
 export type SortDir =
   | 'ASC'
   | 'DESC';
+
+export type UploadHeader = {
+  __typename?: 'UploadHeader';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type UploadInstructions = {
+  __typename?: 'UploadInstructions';
+  headers: Array<UploadHeader>;
+  method: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
 
 export type Viewer = {
   __typename?: 'Viewer';

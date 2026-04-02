@@ -1,5 +1,5 @@
-import type { EntityId } from "../../types/types";
-import type { Comment } from "./Comment";
+import type { EntityId } from '../../types/types';
+import type { Comment } from './Comment';
 
 export type CommentRepository = {
   getById: (id: EntityId) => Promise<Comment | undefined>;

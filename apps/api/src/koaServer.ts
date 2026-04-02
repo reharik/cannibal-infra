@@ -1,8 +1,8 @@
-import cors from "@koa/cors";
-import http from "http";
-import Koa, { Context } from "koa";
-import { koaBody } from "koa-body";
-import { IocGeneratedCradle } from "./di/generated/ioc-registry.types";
+import cors from '@koa/cors';
+import http from 'http';
+import Koa, { Context } from 'koa';
+import { koaBody } from 'koa-body';
+import { IocGeneratedCradle } from './di/generated/ioc-registry.types';
 
 export type KoaServer = http.Server;
 
@@ -28,17 +28,17 @@ export const buildKoaServer = ({
   app.use(
     cors({
       origin: (ctx): string => {
-        const requestOrigin = ctx.get("Origin");
+        const requestOrigin = ctx.get('Origin');
 
         if (!requestOrigin) {
-          return "";
+          return '';
         }
 
-        return config.corsOrigins.includes(requestOrigin) ? requestOrigin : "";
+        return config.corsOrigins.includes(requestOrigin) ? requestOrigin : '';
       },
       credentials: true,
-      allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     }),
   );
 
@@ -57,28 +57,26 @@ export const buildKoaServer = ({
 
   // Health check endpoint (no /api prefix, no auth required)
   app.use(async (ctx, next) => {
-    if (ctx.path === "/health") {
+    if (ctx.path === '/health') {
       ctx.status = 200;
       ctx.body = {
-        status: "ok",
+        status: 'ok',
         timestamp: new Date().toISOString(),
-        service: "photo-app-api",
+        service: 'photo-app-api',
       };
       return;
     }
     await next();
   });
 
-  app.on("error", (err: unknown, ctx?: Context) => {
+  app.on('error', (err: unknown, ctx?: Context) => {
     const error = err instanceof Error ? err : new Error(String(err));
 
     const requestId =
-      ctx && "req" in ctx
-        ? (ctx.req?.headers["x-request-id"] as string | undefined)
-        : undefined;
+      ctx && 'req' in ctx ? (ctx.req?.headers['x-request-id'] as string | undefined) : undefined;
 
     logger.error(
-      `Unhandled error${ctx ? ` on ${ctx.method ?? "unknown"} ${ctx.path ?? ""}` : ""}`,
+      `Unhandled error${ctx ? ` on ${ctx.method ?? 'unknown'} ${ctx.path ?? ''}` : ''}`,
       error,
       {
         status: ctx?.status,

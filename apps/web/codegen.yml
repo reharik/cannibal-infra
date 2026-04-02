@@ -1,6 +1,6 @@
 schema: ../api/src/graphql/generated/schema.graphql
 documents:
-  - "src/graphql/**/*.graphql"
+  - 'src/graphql/**/*.graphql'
 generates:
   src/graphql/generated/types.ts:
     plugins:
@@ -11,8 +11,8 @@ generates:
       skipTypename: false
       enumsAsTypes: true
       constEnums: false
-      maybeValue: "T | undefined"
-      inputMaybeValue: "T | undefined"
+      maybeValue: 'T | undefined'
+      inputMaybeValue: 'T | undefined'
       namingConvention:
         typeNames: pascal-case#pascalCase
         enumValues: keep

@@ -1,36 +1,35 @@
-import { defineIocConfig } from "ioc-manifest";
+import { defineIocConfig } from 'ioc-manifest';
 
 export default defineIocConfig({
   discovery: {
-    rootDir: "src",
-    generatedDir: "di/generated",
-    includes: ["**/*.{ts,tsx}"],
+    rootDir: 'src',
+    generatedDir: 'di/generated',
+    includes: ['**/*.{ts,tsx}'],
     excludes: [
-      "**/*.d.ts",
-      "**/*.test.{ts,tsx}",
-      "**/*.spec.{ts,tsx}",
-      "di/generated/**",
-      "dist/**",
-      "**/node_modules/**",
-      "application/writeServices/**",
+      '**/*.d.ts',
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.{ts,tsx}',
+      'di/generated/**',
+      'dist/**',
+      '**/node_modules/**',
     ],
-    factoryPrefix: "build",
+    factoryPrefix: 'build',
   },
   registrations: {
     MediaStorage: {
       localMediaStorage: { default: true },
     },
     AlbumReadRepository: {
-      albumReadRepository: { lifetime: "scoped" },
+      albumReadRepository: { lifetime: 'scoped' },
     },
     MediaItemReadRepository: {
-      mediaItemReadRepository: { lifetime: "scoped" },
+      mediaItemReadRepository: { lifetime: 'scoped' },
     },
-    AlbumServiceFactory: {
-      albumServiceFactory: { lifetime: "scoped" },
+    ViewerAlbumReadServiceFactory: {
+      viewerAlbumReadServiceFactory: { lifetime: 'scoped' },
     },
     Knex: {
-      $contract: { accessKey: "database" },
+      $contract: { accessKey: 'database' },
     },
     // BindViewerReadServices: {
     //   bindViewerReadServices: {
@@ -44,8 +43,12 @@ export default defineIocConfig({
   },
   groups: {
     readServiceFactories: {
-      kind: "object",
-      baseType: "ReadServiceFactoryBase",
+      kind: 'object',
+      baseType: 'ReadServiceFactoryBase',
+    },
+    writeServices: {
+      kind: 'object',
+      baseType: 'WriteServiceBase',
     },
   },
 });

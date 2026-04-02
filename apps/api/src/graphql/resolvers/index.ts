@@ -1,14 +1,14 @@
-import { mergeResolvers } from "@graphql-tools/merge";
-import fg from "fast-glob";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
-import type { Resolvers } from "../generated/types.generated.js";
+import { mergeResolvers } from '@graphql-tools/merge';
+import fg from 'fast-glob';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { Resolvers } from '../generated/types.generated.js';
 
 export const resolvers = await loadResolvers();
 
 async function loadResolvers() {
   const currentDir = dirname(fileURLToPath(import.meta.url));
-  const resolverPattern = join(currentDir, "**", "*Resolver.{ts,js}");
+  const resolverPattern = join(currentDir, '**', '*Resolver.{ts,js}');
 
   const resolverFiles = await fg(resolverPattern);
 

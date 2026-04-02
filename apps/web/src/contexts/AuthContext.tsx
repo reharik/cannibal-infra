@@ -1,14 +1,8 @@
-import type { User } from "@packages/contracts";
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useQuery } from "@apollo/client/react";
-import { ViewerDocument } from "../graphql/generated/types";
-import { useApiFetchBase } from "../hooks/apiFetch/useApiFetch";
+import { useQuery } from '@apollo/client/react';
+import type { User } from '@packages/contracts';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { ViewerDocument } from '../graphql/generated/types';
+import { useApiFetchBase } from '../hooks/apiFetch/useApiFetch';
 
 interface AuthContextType {
   user: User | undefined;
@@ -17,7 +11,7 @@ interface AuthContextType {
     email: string,
     password: string,
     name: string,
-    role?: "adult" | "kid",
+    role?: 'adult' | 'kid',
   ) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
@@ -32,7 +26,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | undefined>(undefined);
-  const [hasToken, setHasToken] = useState(!!localStorage.getItem("authToken"));
+  const [hasToken, setHasToken] = useState(!!localStorage.getItem('authToken'));
   const { apiFetch } = useApiFetchBase();
 
   const {
@@ -42,7 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refetch: refetchViewer,
   } = useQuery(ViewerDocument, {
     skip: !hasToken,
-    errorPolicy: "all",
+    errorPolicy: 'all',
   });
 
   useEffect(() => {
@@ -54,15 +48,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } as User);
     } else if (!viewerLoading && !viewerData?.viewer && hasToken) {
       setUser(undefined);
-      localStorage.removeItem("authToken");
+      localStorage.removeItem('authToken');
       setHasToken(false);
     }
   }, [viewerData, viewerLoading, hasToken]);
 
   useEffect(() => {
     if (viewerError) {
-      console.error("Viewer query failed:", viewerError);
-      localStorage.removeItem("authToken");
+      console.error('Viewer query failed:', viewerError);
+      localStorage.removeItem('authToken');
       setHasToken(false);
       setUser(undefined);
     }
@@ -70,23 +64,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const data = await apiFetch<{ user: User; token: string }>(
-        `/auth/login`,
-        {
-          method: "POST",
-          body: { email, password },
-        },
-      );
+      const data = await apiFetch<{ user: User; token: string }>(`/auth/login`, {
+        method: 'POST',
+        body: { email, password },
+      });
 
       if (data.success) {
-        localStorage.setItem("authToken", data.data.token);
+        localStorage.setItem('authToken', data.data.token);
         setHasToken(true);
         await refetchViewer();
         return true;
       }
       return false;
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error('Login failed:', error);
       return false;
     }
   };
@@ -95,28 +86,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     email: string,
     password: string,
     name: string,
-    role?: "adult" | "kid",
+    role?: 'adult' | 'kid',
   ): Promise<boolean> => {
     try {
-      const data = await apiFetch<{ user: User; token: string }>(
-        `/auth/signup`,
-        {
-          method: "POST",
-          body: { email, password, name, role },
-        },
-      );
+      const data = await apiFetch<{ user: User; token: string }>(`/auth/signup`, {
+        method: 'POST',
+        body: { email, password, name, role },
+      });
 
       if (data.success) {
-        localStorage.setItem("authToken", data.data.token);
+        localStorage.setItem('authToken', data.data.token);
         setHasToken(true);
         await refetchViewer();
         return true;
       } else {
-        console.error("Signup failed:", data.error);
+        console.error('Signup failed:', data.error);
         return false;
       }
     } catch (error) {
-      console.error("Signup exception:", error);
+      console.error('Signup exception:', error);
       return false;
     }
   };
@@ -124,7 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(undefined);
     setHasToken(false);
-    localStorage.removeItem("authToken");
+    localStorage.removeItem('authToken');
   };
 
   const value: AuthContextType = {
@@ -142,7 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

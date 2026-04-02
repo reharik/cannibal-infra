@@ -1,40 +1,37 @@
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export default defineConfig(({ mode }) => {
-  const isProduction = mode === "production";
+  const isProduction = mode === 'production';
 
   return {
     root: __dirname, // api
-    cacheDir: "../node_modules/.vite/api",
+    cacheDir: '../node_modules/.vite/api',
     plugins: [tsconfigPaths()],
     build: {
-      outDir: "dist",
+      outDir: 'dist',
       emptyOutDir: false, // Keep knexfile.js and db directory from build:knexfile
       ssr: true, // Server-side rendering mode for Node.js
-      target: "node22",
-      format: "esm",
+      target: 'node22',
+      format: 'esm',
       sourcemap: !isProduction, // Sourcemaps for development
       minify: isProduction, // Minify for production
       rollupOptions: {
         input: {
-          index: join(__dirname, "src/index.ts"),
-          "scripts/runMigrations": join(
-            __dirname,
-            "src/scripts/runMigrations.ts",
-          ),
-          "scripts/runSeeds": join(__dirname, "src/scripts/runSeeds.ts"),
-          knexfile: join(__dirname, "src/knexfile.ts"),
-          koaServer: join(__dirname, "src/koaServer.ts"),
+          index: join(__dirname, 'src/index.ts'),
+          'scripts/runMigrations': join(__dirname, 'src/scripts/runMigrations.ts'),
+          'scripts/runSeeds': join(__dirname, 'src/scripts/runSeeds.ts'),
+          knexfile: join(__dirname, 'src/knexfile.ts'),
+          koaServer: join(__dirname, 'src/koaServer.ts'),
         },
         output: {
-          entryFileNames: "[name].js",
-          format: "es",
+          entryFileNames: '[name].js',
+          format: 'es',
           manualChunks: undefined,
         },
         external: (id) => {
@@ -44,31 +41,31 @@ export default defineConfig(({ mode }) => {
           // Node.js built-ins
           if (
             [
-              "fs",
-              "path",
-              "url",
-              "http",
-              "https",
-              "stream",
-              "util",
-              "crypto",
-              "os",
-              "events",
-              "buffer",
-              "querystring",
-              "zlib",
-              "net",
-              "tls",
-              "child_process",
-              "cluster",
-              "dgram",
-              "dns",
-              "readline",
-              "repl",
-              "string_decoder",
-              "tty",
-              "vm",
-              "worker_threads",
+              'fs',
+              'path',
+              'url',
+              'http',
+              'https',
+              'stream',
+              'util',
+              'crypto',
+              'os',
+              'events',
+              'buffer',
+              'querystring',
+              'zlib',
+              'net',
+              'tls',
+              'child_process',
+              'cluster',
+              'dgram',
+              'dns',
+              'readline',
+              'repl',
+              'string_decoder',
+              'tty',
+              'vm',
+              'worker_threads',
             ].includes(id)
           ) {
             return true;
@@ -76,16 +73,16 @@ export default defineConfig(({ mode }) => {
           // Database drivers and native modules
           if (
             [
-              "dotenv",
-              "knex",
-              "pg",
-              "mysql",
-              "mysql2",
-              "sqlite3",
-              "better-sqlite3",
-              "tedious",
-              "oracledb",
-              "pg-query-stream",
+              'dotenv',
+              'knex',
+              'pg',
+              'mysql',
+              'mysql2',
+              'sqlite3',
+              'better-sqlite3',
+              'tedious',
+              'oracledb',
+              'pg-query-stream',
             ].includes(id)
           ) {
             return true;
@@ -95,11 +92,11 @@ export default defineConfig(({ mode }) => {
             return true;
           }
           // Bundle workspace packages (like @packages/contracts) instead of externalizing
-          if (id.startsWith("@app/")) {
+          if (id.startsWith('@app/')) {
             return false;
           }
           // Externalize non-workspace node_modules
-          if (!id.startsWith(".") && !id.startsWith("/")) {
+          if (!id.startsWith('.') && !id.startsWith('/')) {
             return true;
           }
           return false;

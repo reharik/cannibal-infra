@@ -4,12 +4,12 @@ import {
   type LoginInput,
   type SignupInput,
   type User,
-} from "@packages/contracts";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import type { IocGeneratedCradle } from "../di/generated/ioc-registry.types";
+} from '@packages/contracts';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
-export type SanitizedUser = Omit<User, "passwordHash">;
+export type SanitizedUser = Omit<User, 'passwordHash'>;
 
 export interface AuthService {
   login: (credentials: LoginInput) => Promise<AuthResponse | undefined>;
@@ -19,9 +19,7 @@ export interface AuthService {
   comparePassword: (password: string, hash: string) => Promise<boolean>;
 }
 
-const sanitizeUser = (
-  user: User & { passwordHash?: string },
-): SanitizedUser => {
+const sanitizeUser = (user: User & { passwordHash?: string }): SanitizedUser => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...sanitized } = user;
   return sanitized as SanitizedUser;
@@ -36,9 +34,9 @@ export const buildAuthService = ({
     const { email, password } = credentials;
 
     // Find user by email
-    const user = await database("user").where({ email }).first();
+    const user = await database('user').where({ email }).first();
     if (!user || !user.passwordHash) {
-      logger.warn("Login attempt failed: user not found or no password hash", {
+      logger.warn('Login attempt failed: user not found or no password hash', {
         email,
         hasUser: !!user,
         hasPasswordHash: !!user?.passwordHash,
@@ -49,7 +47,7 @@ export const buildAuthService = ({
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
-      logger.warn("Login attempt failed: invalid password", {
+      logger.warn('Login attempt failed: invalid password', {
         email,
         userId: user.id,
       });
@@ -57,9 +55,7 @@ export const buildAuthService = ({
     }
 
     // Update last login
-    await database("user")
-      .where({ id: user.id })
-      .update({ lastLoginAt: new Date().toISOString() });
+    await database('user').where({ id: user.id }).update({ lastLoginAt: new Date().toISOString() });
 
     // Generate JWT token
     const token = jwt.sign(
@@ -72,7 +68,7 @@ export const buildAuthService = ({
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions,
     );
 
-    logger.info("User logged in successfully", {
+    logger.info('User logged in successfully', {
       userId: user.id,
       email: user.email,
       role: user.role,
@@ -85,9 +81,9 @@ export const buildAuthService = ({
     const { email, password, name, role = UserRoleEnum.KID } = credentials;
 
     // Check if user already exists
-    const existingUser = await database("user").where({ email }).first();
+    const existingUser = await database('user').where({ email }).first();
     if (existingUser) {
-      logger.warn("Signup attempt failed: user already exists", { email });
+      logger.warn('Signup attempt failed: user already exists', { email });
       return undefined;
     }
 
@@ -95,16 +91,16 @@ export const buildAuthService = ({
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Create user
-    const [user] = await database("user")
+    const [user] = await database('user')
       .insert({
-        id: database.raw("gen_random_uuid()"),
+        id: database.raw('gen_random_uuid()'),
         email,
         passwordHash,
         name,
         role,
         isActive: true,
       })
-      .returning("*");
+      .returning('*');
 
     // Generate JWT token
     const token = jwt.sign(
@@ -117,7 +113,7 @@ export const buildAuthService = ({
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions,
     );
 
-    logger.info("User signed up successfully", {
+    logger.info('User signed up successfully', {
       userId: user.id,
       email: user.email,
       role: user.role,
@@ -134,10 +130,10 @@ export const buildAuthService = ({
         role: string;
       };
 
-      const user = await database("user").where({ id: decoded.userId }).first();
+      const user = await database('user').where({ id: decoded.userId }).first();
 
       if (!user) {
-        logger.warn("Token verification failed: user not found", {
+        logger.warn('Token verification failed: user not found', {
           userId: decoded.userId,
           email: decoded.email,
         });
@@ -147,8 +143,8 @@ export const buildAuthService = ({
       return user;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      const errorType = err instanceof Error ? err.name : "Unknown";
-      logger.warn("Token verification failed: invalid or expired token", {
+      const errorType = err instanceof Error ? err.name : 'Unknown';
+      logger.warn('Token verification failed: invalid or expired token', {
         error: errorMessage,
         errorType,
       });

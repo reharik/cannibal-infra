@@ -1,14 +1,8 @@
 // src/ui/primitives.tsx
-import React from "react";
-import styled, { css } from "styled-components";
+import React from 'react';
+import styled, { css } from 'styled-components';
 
-export const Field = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) => (
+export const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <VStack gap={1}>
     <Label>{label}</Label>
     {children}
@@ -32,7 +26,7 @@ const HStackBase = styled.div<{
   display: flex;
   align-items: center;
   gap: ${({ $gap = 2, theme }) => theme.spacing($gap)};
-  flex-wrap: ${({ $wrap }) => ($wrap ? "wrap" : "nowrap")};
+  flex-wrap: ${({ $wrap }) => ($wrap ? 'wrap' : 'nowrap')};
 
   @media (max-width: 768px) {
     flex-wrap: wrap;
@@ -45,23 +39,17 @@ const HStackBase = styled.div<{
   }
 `;
 
-type HStackProps = React.ComponentPropsWithoutRef<"div"> & {
+type HStackProps = React.ComponentPropsWithoutRef<'div'> & {
   gap?: number;
   wrap?: boolean;
   stackOnMobile?: boolean;
 };
 export const HStack = React.forwardRef<HTMLDivElement, HStackProps>(
   ({ gap, wrap, stackOnMobile, ...rest }, ref) => (
-    <HStackBase
-      ref={ref}
-      $gap={gap}
-      $wrap={wrap}
-      $stackOnMobile={stackOnMobile}
-      {...rest}
-    />
+    <HStackBase ref={ref} $gap={gap} $wrap={wrap} $stackOnMobile={stackOnMobile} {...rest} />
   ),
 );
-HStack.displayName = "HStack";
+HStack.displayName = 'HStack';
 
 const VStackBase = styled.div<{ $gap?: number }>`
   display: flex;
@@ -69,11 +57,11 @@ const VStackBase = styled.div<{ $gap?: number }>`
   gap: ${({ $gap = 2, theme }) => theme.spacing($gap)};
 `;
 
-type VStackProps = React.ComponentPropsWithoutRef<"div"> & { gap?: number };
-export const VStack = React.forwardRef<HTMLDivElement, VStackProps>(
-  ({ gap, ...rest }, ref) => <VStackBase ref={ref} $gap={gap} {...rest} />,
-);
-VStack.displayName = "VStack";
+type VStackProps = React.ComponentPropsWithoutRef<'div'> & { gap?: number };
+export const VStack = React.forwardRef<HTMLDivElement, VStackProps>(({ gap, ...rest }, ref) => (
+  <VStackBase ref={ref} $gap={gap} {...rest} />
+));
+VStack.displayName = 'VStack';
 
 export const Spacer = styled.div`
   flex: 1 1 auto;
@@ -87,20 +75,20 @@ export const Label = styled.label`
 // moved input primitives to FormInput.tsx (StyledInput/Select/TextArea)
 
 const ButtonBase = styled.button<{
-  $variant?: "primary" | "secondary" | "ghost" | "danger";
-  $size?: "sm" | "md";
+  $variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  $size?: 'sm' | 'md';
   $fullWidth?: boolean;
 }>`
   border: 1px solid transparent;
   border-radius: ${({ theme }) => theme.radius.sm};
-  padding: ${({ $size = "md" }) => ($size === "sm" ? "8px 10px" : "10px 14px")};
+  padding: ${({ $size = 'md' }) => ($size === 'sm' ? '8px 10px' : '10px 14px')};
   cursor: pointer;
   font-weight: 600;
-  width: ${({ $fullWidth }) => ($fullWidth ? "100%" : "auto")};
+  width: ${({ $fullWidth }) => ($fullWidth ? '100%' : 'auto')};
 
-  ${({ $variant = "primary", theme }) => {
+  ${({ $variant = 'primary', theme }) => {
     switch ($variant) {
-      case "secondary":
+      case 'secondary':
         return css`
           background: transparent;
           color: ${theme.colors.text};
@@ -109,7 +97,7 @@ const ButtonBase = styled.button<{
             background: ${theme.colors.bg};
           }
         `;
-      case "ghost":
+      case 'ghost':
         return css`
           background: transparent;
           color: ${theme.colors.subtext};
@@ -118,7 +106,7 @@ const ButtonBase = styled.button<{
             background: ${theme.colors.bg};
           }
         `;
-      case "danger":
+      case 'danger':
         return css`
           background: ${theme.colors.danger};
           color: ${theme.colors.bg};
@@ -139,24 +127,18 @@ const ButtonBase = styled.button<{
 `;
 
 // Wrapper to map public props to transient props
-type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
-  variant?: "primary" | "secondary" | "ghost" | "danger";
-  size?: "sm" | "md";
+type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md';
   fullWidth?: boolean;
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant, size, fullWidth, ...rest }, ref) => (
-    <ButtonBase
-      ref={ref}
-      $variant={variant}
-      $size={size}
-      $fullWidth={fullWidth}
-      {...rest}
-    />
+    <ButtonBase ref={ref} $variant={variant} $size={size} $fullWidth={fullWidth} {...rest} />
   ),
 );
-Button.displayName = "Button";
+Button.displayName = 'Button';
 
 export const Badge = styled.span`
   display: inline-block;

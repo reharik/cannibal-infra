@@ -56,6 +56,13 @@
         "watch": true
       }
     },
+    "serve:with-contracts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["npm run dev --workspace=@packages/contracts", "nx run api:serve"],
+        "parallel": true
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {

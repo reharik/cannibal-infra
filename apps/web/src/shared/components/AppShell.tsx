@@ -1,6 +1,6 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import { useAuth } from "../../contexts/AuthContext";
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AppShellProps {
   viewer: { id: string; displayName: string };
@@ -12,7 +12,7 @@ export const AppShell = ({ viewer }: AppShellProps) => {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/", { replace: true });
+    navigate('/', { replace: true });
   };
 
   return (
