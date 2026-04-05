@@ -1,10 +1,10 @@
 import { MediaKind } from '@packages/contracts';
-import { authenticatedMutation } from '../../context/authenticatedContext';
+import { authenticatedResolver } from '../../context/authenticatedContext';
 import type { Resolvers } from '../../generated/types.generated';
 
 const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
   Mutation: {
-    createMediaUpload: authenticatedMutation(async (_parent, args, ctx) => {
+    createMediaUpload: authenticatedResolver(async (_parent, args, ctx) => {
       const result = await ctx.writeServices.createMediaUpload({
         viewerId: ctx.viewer.id,
         kind: MediaKind.fromValue(args.input.kind),
@@ -28,7 +28,7 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
         },
       };
     }),
-    finalizeMediaUpload: authenticatedMutation(async (_parent, args, ctx) => {
+    finalizeMediaUpload: authenticatedResolver(async (_parent, args, ctx) => {
       const result = await ctx.writeServices.finalizeMediaItemUpload({
         viewerId: ctx.viewer.id,
         mediaItemId: args.input.mediaItemId,

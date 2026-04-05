@@ -10,6 +10,7 @@ type NodeEnv = (typeof nodeEnvs)[number];
 
 export type Config = {
   nodeEnv: NodeEnv;
+  mediaStorageRoot: string;
   postgresHost: string;
   postgresPort: number;
   postgresUser: string;
@@ -55,6 +56,7 @@ const createConfigFromEnv = (): Config => {
 
   return {
     nodeEnv,
+    mediaStorageRoot: process.env.MEDIA_STORAGE_ROOT || path.resolve(__dirname, '../media'),
     postgresHost: process.env.POSTGRES_HOST || '127.0.0.1',
     postgresPort: Number(process.env.POSTGRES_PORT || 5432),
     postgresUser: process.env.POSTGRES_USER || 'postgres',

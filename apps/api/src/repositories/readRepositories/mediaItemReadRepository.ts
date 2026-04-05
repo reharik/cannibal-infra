@@ -2,6 +2,7 @@ import { MediaItemStatus, MediaKind } from '@packages/contracts';
 import { withEnumRevival } from '@reharik/smart-enum-knex';
 import type { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
 import { EntityId } from '../../types/types';
+import { MediaItemRecord } from '../../domain';
 
 export type MediaItemReadRepository = {
   getCoverMediaByAlbumIdForViewer: ({
@@ -10,34 +11,14 @@ export type MediaItemReadRepository = {
   }: {
     albumId: string;
     viewerId: EntityId;
-  }) => Promise<MediaItemRow | undefined>;
+  }) => Promise<MediaItemRecord | undefined>;
   getForViewer: ({
     mediaItemId,
     viewerId,
   }: {
     mediaItemId: EntityId;
     viewerId: EntityId;
-  }) => Promise<MediaItemRow | undefined>;
-};
-
-type MediaItemRow = {
-  id: string;
-  ownerId: string;
-  kind: MediaKind;
-  status: MediaItemStatus;
-  storageKey: string;
-  mimeType: string;
-  sizeBytes: number;
-  width?: number;
-  height?: number;
-  durationSeconds?: number;
-  title?: string;
-  description?: string;
-  takenAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: string;
-  updatedBy: string;
+  }) => Promise<MediaItemRecord | undefined>;
 };
 
 const mediaItemRowFields = [
@@ -69,12 +50,12 @@ export const buildMediaItemReadRepository = ({
   }: {
     albumId: string;
     viewerId: EntityId;
-  }): Promise<MediaItemRow | undefined> => {
+  }): Promise<MediaItemRecord | undefined> => {
     const row = await withEnumRevival(
-      database<MediaItemRow>('mediaItem')
+      database<MediaItemRecord>('mediaItem')
         .innerJoin('album', 'album.coverMediaId', 'mediaItem.id')
         .where({ id: albumId, ownerId: viewerId })
-        .first<MediaItemRow>(...mediaItemRowFields),
+        .first<MediaItemRecord>(...mediaItemRowFields),
       { mediaItem: MediaKind, mediaItemStatus: MediaItemStatus },
       { strict: true },
     );
@@ -88,11 +69,11 @@ export const buildMediaItemReadRepository = ({
   }: {
     mediaItemId: EntityId;
     viewerId: EntityId;
-  }): Promise<MediaItemRow | undefined> => {
+  }): Promise<MediaItemRecord | undefined> => {
     const row = await withEnumRevival(
-      database<MediaItemRow>('mediaItem')
+      database<MediaItemRecord>('mediaItem')
         .where({ id: mediaItemId, ownerId: viewerId })
-        .first<MediaItemRow>(...mediaItemRowFields),
+        .first<MediaItemRecord>(...mediaItemRowFields),
       { mediaItem: MediaKind, mediaItemStatus: MediaItemStatus },
       { strict: true },
     );

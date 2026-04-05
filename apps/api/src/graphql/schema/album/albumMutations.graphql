@@ -1,0 +1,23 @@
+type Mutation {
+  createAlbum(input: CreateAlbumInput!): CreateAlbumPayload!
+  AddMediaItemToAlbum(input: AddMediaItemToAlbumInput!): AddMediaItemToAlbumPayload!
+}
+
+type CreateAlbumPayload {
+  albumId: ID!
+}
+
+input CreateAlbumInput {
+  title: String!
+  description: String
+}
+
+type AddMediaItemToAlbumPayload {
+  albumId: ID!
+  albumItemId: ID!
+}
+
+input AddMediaItemToAlbumInput {
+  albumId: ID!
+  mediaItemId: ID!
+}

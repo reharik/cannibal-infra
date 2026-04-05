@@ -1,59 +1,58 @@
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { ReadServiceFactoryBase } from '../readServiceBaseType';
-
-type AlbumRow = {
-  id: string;
-  title: string;
-  coverMediaId?: string;
-};
-
-type MediaItemRow = {
-  id: string;
-  kind: string;
-  status: string;
-  storageKey: string;
-  mimeType: string;
-  sizeBytes: number;
-  width?: number;
-  height?: number;
-};
+import {
+  AlbumItemParent,
+  AlbumParent,
+  MediaItemParent,
+} from 'apps/api/src/graphql/resolvers/parentModels';
+import { MediaItemProjection } from 'apps/api/src/repositories/readRepositories/albumReadRepository';
 
 export interface ViewerAlbumReadService {
-  listAlbums: () => Promise<AlbumRow[]>;
-  getAlbumCoverMedia: (args: { albumId: string }) => Promise<MediaItemRow | undefined>;
+  listAlbums: () => Promise<AlbumParent[]>;
+  getAlbumItems: (args: { albumId: string }) => Promise<AlbumItemParent[]>;
 }
 
 export interface ViewerAlbumReadServiceFactory extends ReadServiceFactoryBase {
   (args: { viewerId: string }): ViewerAlbumReadService;
 }
 
+const mapMediaItemProjectionToParent = (mediaItem: MediaItemProjection): MediaItemParent => ({
+  id: mediaItem.mediaItemId ?? '',
+  kind: mediaItem.mediaItemKind ?? '',
+  status: mediaItem.mediaItemStatus ?? '',
+  storageKey: mediaItem.mediaItemStorageKey ?? '',
+  mimeType: mediaItem.mediaItemMimeType,
+  sizeBytes: mediaItem.mediaItemSizeBytes,
+  width: mediaItem.mediaItemWidth,
+  height: mediaItem.mediaItemHeight,
+  title: mediaItem.mediaItemTitle,
+  description: mediaItem.mediaItemDescription,
+  takenAt: mediaItem.mediaItemTakenAt,
+});
+
 export const buildViewerAlbumReadServiceFactory = ({
   albumReadRepository,
-  mediaItemReadRepository,
 }: IocGeneratedCradle): ViewerAlbumReadServiceFactory => {
   return ({ viewerId }: { viewerId: string }) => ({
-    listAlbums: async (): Promise<AlbumRow[]> => {
-      return albumReadRepository.listByViewerId({ viewerId });
+    listAlbums: async (): Promise<AlbumParent[]> => {
+      const albums = await albumReadRepository.listByViewerId({ viewerId });
+      return albums.map((album) => ({
+        id: album.id,
+        title: album.title,
+        description: album.description,
+        coverMedia: mapMediaItemProjectionToParent(album),
+      }));
     },
 
-    getAlbumCoverMedia: async ({
-      albumId,
-    }: {
-      albumId: string;
-    }): Promise<MediaItemRow | undefined> => {
-      const album = await albumReadRepository.getAlbumForViewer({
+    getAlbumItems: async ({ albumId }: { albumId: string }): Promise<AlbumItemParent[]> => {
+      const albumItems = await albumReadRepository.getAlbumItemsForViewer({
         albumId,
         viewerId,
       });
-
-      if (!album || !album.coverMediaId) {
-        return;
-      }
-
-      return mediaItemReadRepository.getCoverMediaByAlbumIdForViewer({
-        albumId,
-        viewerId,
-      });
+      return albumItems.map((albumItem) => ({
+        id: albumItem.id,
+        mediaItem: mapMediaItemProjectionToParent(albumItem),
+      }));
     },
   });
 };

@@ -20,6 +20,21 @@ const input = {
     message: 'Album not found',
     root: 'album',
   },
+  UserIsNotMember: {
+    code: 'USER_IS_NOT_MEMBER',
+    message: 'User is not member',
+    root: 'album',
+  },
+  MemberNotAllowedToAddItem: {
+    code: 'MEMBER_NOT_ALLOWED_TO_ADD_ITEM',
+    message: 'Member not allowed to add item',
+    root: 'album',
+  },
+  UserCanNotCreateAlbum: {
+    code: 'USER_CAN_NOT_CREATE_ALBUM',
+    message: 'User can not create album',
+    root: 'album',
+  },
 };
 
 export type AlbumErrorEnum = Enumeration<typeof AlbumErrorEnum>;

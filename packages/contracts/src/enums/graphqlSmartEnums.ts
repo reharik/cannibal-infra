@@ -17,16 +17,7 @@ export type MediaKind = Enumeration<typeof MediaKind>;
 export type ShareViewerRelationship = Enumeration<typeof ShareViewerRelationship>;
 export type SortDir = Enumeration<typeof SortDir>;
 
-export const MediaItemStatus = enumeration<typeof mediaItemStatusInput>('MediaItemStatus', {
-  input: mediaItemStatusInput,
-});
-export const MediaKind = enumeration<typeof mediaKindInput>('MediaKind', {
-  input: mediaKindInput,
-});
-export const ShareViewerRelationship = enumeration<typeof shareViewerRelationshipInput>(
-  'ShareViewerRelationship',
-  { input: shareViewerRelationshipInput },
-);
-export const SortDir = enumeration<typeof sortDirInput>('SortDir', {
-  input: sortDirInput,
-});
+export const MediaItemStatus = enumeration<typeof mediaItemStatusInput>('MediaItemStatus', { input: mediaItemStatusInput });
+export const MediaKind = enumeration<typeof mediaKindInput>('MediaKind', { input: mediaKindInput });
+export const ShareViewerRelationship = enumeration<typeof shareViewerRelationshipInput>('ShareViewerRelationship', { input: shareViewerRelationshipInput });
+export const SortDir = enumeration<typeof sortDirInput>('SortDir', { input: sortDirInput });

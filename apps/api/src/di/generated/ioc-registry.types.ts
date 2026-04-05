@@ -6,6 +6,7 @@ import type { Knex } from '../../../../../node_modules/knex/types/index.d.js';
 import type { MediaStorage } from '../../application/media/MediaStorage.js';
 import type { ViewerAlbumReadServiceFactory } from '../../application/readServices/viewerReadServices/viewerAlbumReadService.js';
 import type { ViewerMediaItemServiceFactory } from '../../application/readServices/viewerReadServices/viewerMediaItemService.js';
+import type { AddAlbumItem } from '../../application/writeServices/album/addAlbumItem.js';
 import type { CreateAlbum } from '../../application/writeServices/album/createAlbum.js';
 import type { CreateMediaUpload } from '../../application/writeServices/mediaItem/createMediaItemUpload.js';
 import type { FinalizeMediaItemUpload } from '../../application/writeServices/mediaItem/finalizeMediaItemUpload.js';
@@ -33,6 +34,7 @@ import type { Server } from '../../server.js';
 import type { AuthService } from '../../services/authService.js';
 
 export interface IocGeneratedTypes {
+  addAlbumItem: AddAlbumItem;
   albumReadRepository: AlbumReadRepository;
   albumRepository: AlbumRepository;
   authController: AuthController;
@@ -71,6 +73,7 @@ export interface IocGeneratedTypes {
     viewerMediaItemServiceFactory: ViewerMediaItemServiceFactory;
   };
   writeServices: {
+    addAlbumItem: AddAlbumItem;
     createAlbum: CreateAlbum;
     createMediaUpload: CreateMediaUpload;
     finalizeMediaItemUpload: FinalizeMediaItemUpload;

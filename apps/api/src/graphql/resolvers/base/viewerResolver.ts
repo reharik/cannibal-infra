@@ -1,8 +1,8 @@
-import { authenticatedMutation } from '../../context/authenticatedContext';
+import { authenticatedResolver } from '../../context/authenticatedContext';
 import type { Resolvers } from '../../generated/types.generated';
 import { AlbumParent, ViewerParent } from '../parentModels';
 
-const viewerResolvers: Pick<Resolvers, 'Query' | 'Viewer' | 'Album'> = {
+const viewerResolvers: Pick<Resolvers, 'Query' | 'Viewer'> = {
   Query: {
     viewer: (_p, _a, ctx): ViewerParent | undefined => {
       return ctx.viewer;
@@ -10,7 +10,7 @@ const viewerResolvers: Pick<Resolvers, 'Query' | 'Viewer' | 'Album'> = {
   },
 
   Viewer: {
-    albums: authenticatedMutation(async (parent, _a, ctx): Promise<AlbumParent[]> => {
+    albums: authenticatedResolver(async (parent, _a, ctx): Promise<AlbumParent[]> => {
       return (await ctx.readServices.viewerAlbumReadService.listAlbums()) || [];
     }),
   },

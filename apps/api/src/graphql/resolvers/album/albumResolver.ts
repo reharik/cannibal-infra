@@ -1,11 +1,13 @@
+import { authenticatedResolver } from '../../context/authenticatedContext';
 import type { Resolvers } from '../../generated/types.generated';
-import { MediaItemParent } from '../parentModels';
 
-const albumResolvers: Pick<Resolvers, 'Album'> = {
+const albumResolvers: Resolvers = {
   Album: {
-    coverMedia: async (): Promise<MediaItemParent | undefined> => {
-      return undefined;
-    },
+    items: authenticatedResolver(async (album, _args, ctx) => {
+      return ctx.readServices.viewerAlbumReadService.getAlbumItems({
+        albumId: album.id,
+      });
+    }),
   },
 };
 

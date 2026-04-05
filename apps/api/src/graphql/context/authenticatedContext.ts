@@ -1,3 +1,4 @@
+import type { ResolverFn } from '../generated/types.generated';
 import { AuthenticatedGraphQLContext, GraphQLContext } from './types';
 
 export const requireAuthenticatedContext = (ctx: GraphQLContext): AuthenticatedGraphQLContext => {
@@ -12,11 +13,11 @@ export const requireAuthenticatedContext = (ctx: GraphQLContext): AuthenticatedG
   } as AuthenticatedGraphQLContext;
 };
 
-export const authenticatedMutation =
-  <TArgs, TResult>(
-    resolver: (parent: unknown, args: TArgs, ctx: AuthenticatedGraphQLContext) => Promise<TResult>,
-  ) =>
-  async (parent: unknown, args: TArgs, ctx: GraphQLContext): Promise<TResult> => {
+export const authenticatedResolver =
+  <TParent, TArgs, TResult>(
+    resolver: ResolverFn<TResult, TParent, AuthenticatedGraphQLContext, TArgs>,
+  ): ResolverFn<TResult, TParent, GraphQLContext, TArgs> =>
+  (parent, args, ctx, info) => {
     const authCtx = requireAuthenticatedContext(ctx);
-    return resolver(parent, args, authCtx);
+    return resolver(parent, args, authCtx, info);
   };

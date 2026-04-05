@@ -1,6 +1,7 @@
+import { MediaItemStatus } from '@packages/contracts';
 import type { Context } from 'koa';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+
+import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
 export interface MediaController {
   upload: (ctx: Context) => Promise<Context>;
@@ -52,23 +53,41 @@ const resolveUploadedFile = (files: unknown): UploadedFileLike | null => {
   return null;
 };
 
-const sanitizePathSegment = (segment: string): string => {
-  return segment.replace(/[^a-zA-Z0-9_-]/g, '_');
-};
-
-export const buildMediaController = (): MediaController => ({
+export const buildMediaController = ({
+  mediaItemRepository,
+  mediaStorage,
+}: IocGeneratedCradle): MediaController => ({
   upload: async (ctx: Context): Promise<Context> => {
-    const { userId, mediaType, mediaId } = ctx.params as {
-      userId?: string;
-      mediaType?: string;
-      mediaId?: string;
-    };
+    const viewer = ctx.user;
+    if (!viewer) {
+      ctx.status = 401;
+      ctx.body = { error: 'Authentication required' };
+      return ctx;
+    }
 
-    if (!userId || !mediaType || !mediaId) {
+    const { mediaItemId } = ctx.params as { mediaItemId?: string };
+    if (!mediaItemId) {
       ctx.status = 400;
-      ctx.body = {
-        error: 'Missing route params. Expected userId, mediaType, and mediaId.',
-      };
+      ctx.body = { error: 'Missing route param mediaItemId.' };
+      return ctx;
+    }
+
+    const mediaItem = await mediaItemRepository.getById(mediaItemId);
+    if (!mediaItem) {
+      ctx.status = 404;
+      ctx.body = { error: 'Media item not found.' };
+      return ctx;
+    }
+
+    if (mediaItem.ownerId() !== viewer.id) {
+      ctx.status = 403;
+      ctx.body = { error: 'Forbidden' };
+      return ctx;
+    }
+
+    if (mediaItem.status() !== MediaItemStatus.pending) {
+      ctx.status = 409;
+      ctx.body = { error: 'Media item is not awaiting upload.' };
       return ctx;
     }
 
@@ -79,34 +98,19 @@ export const buildMediaController = (): MediaController => ({
       return ctx;
     }
 
-    if (!uploadedFile.mimetype || !uploadedFile.mimetype.startsWith('image/')) {
-      ctx.status = 400;
-      ctx.body = { error: 'Uploaded file must be an image.' };
-      return ctx;
-    }
-
-    const uploadsRoot = path.resolve(process.cwd(), 'uploads');
-    const targetDirectory = path.join(
-      uploadsRoot,
-      sanitizePathSegment(userId),
-      sanitizePathSegment(mediaType),
-    );
-    await fs.mkdir(targetDirectory, { recursive: true });
-
-    const extensionFromMimeType = uploadedFile.mimetype.split('/')[1] ?? 'bin';
-    const targetFilename = `${sanitizePathSegment(mediaId)}.${sanitizePathSegment(extensionFromMimeType)}`;
-    const targetPath = path.join(targetDirectory, targetFilename);
-
-    await fs.copyFile(uploadedFile.filepath, targetPath);
+    await mediaStorage.writeUploadedFile({
+      storageKey: mediaItem.storageKey(),
+      sourceFilePath: uploadedFile.filepath,
+      mimeType: uploadedFile.mimetype,
+    });
 
     ctx.status = 201;
     ctx.body = {
-      userId,
-      mediaType,
-      mediaId,
-      mimeType: uploadedFile.mimetype,
+      mediaItemId: mediaItem.id(),
       size: uploadedFile.size,
+      mimeType: uploadedFile.mimetype,
     };
+
     return ctx;
   },
 });

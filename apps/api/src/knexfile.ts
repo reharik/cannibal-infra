@@ -5,14 +5,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { buildConfig, type Config } from './config';
 import type { IocGeneratedCradle } from './di/generated/ioc-registry.types';
+import { configurePostgresTypes } from './infrastructure/database/configurePostgresTypes';
 
 // knex-stringcase runs its pipeline as: optional postProcessResponse → camelCase keys → appPostProcessResponse.
 // We run null→undefined first, then @reharik/smart-enum-knex (reads queryContext from withEnumRevival on a query).
-const smartEnumPostProcessResponseRaw = createSmartEnumPostProcessResponse();
-if (smartEnumPostProcessResponseRaw === undefined) {
-  throw new Error('createSmartEnumPostProcessResponse returned undefined');
-}
-const smartEnumPostProcessResponse = smartEnumPostProcessResponseRaw;
+const smartEnumPostProcessResponse = createSmartEnumPostProcessResponse();
 
 export type KnexConfig = Knex.Config;
 
@@ -46,6 +43,8 @@ const createKnexConfig = (config: Config): KnexConfig => {
     password: config.postgresPassword,
     database: config.postgresDatabase,
   };
+
+  configurePostgresTypes();
 
   return {
     client: 'pg',

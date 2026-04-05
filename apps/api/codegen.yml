@@ -18,3 +18,4 @@ generates:
         Viewer: ../resolvers/parentModels#ViewerParent
         Album: ../resolvers/parentModels#AlbumParent
         MediaItem: ../resolvers/parentModels#MediaItemParent
+        AlbumItem: ../resolvers/parentModels#AlbumItemParent

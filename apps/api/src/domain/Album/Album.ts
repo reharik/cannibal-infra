@@ -1,5 +1,4 @@
-import type { AlbumMemberRoleEnum } from '@packages/contracts';
-import { AppErrorCollection, MediaItemStatus } from '@packages/contracts';
+import { AlbumMemberRoleEnum, AppErrorCollection } from '@packages/contracts';
 import type { ActorId, EntityId, WriteResult } from '../../types/types';
 import { AggregateRoot } from '../AggregateRoot';
 import type { ChildEntities, EntityAuditRecord } from '../Entity';
@@ -37,9 +36,15 @@ export class Album extends AggregateRoot<AlbumRecord> {
   }
 
   static create(input: CreateAlbumInput, actorId: ActorId): Album {
-    return new Album(crypto.randomUUID(), actorId, {
+    const album = new Album(crypto.randomUUID(), actorId, {
       title: input.title,
     });
+    const member = AlbumMember.create(
+      { userId: actorId, role: AlbumMemberRoleEnum.owner },
+      actorId,
+    );
+    album.#members.push(member);
+    return album;
   }
 
   static rehydrate(record: AlbumRecord): Album {
@@ -56,17 +61,33 @@ export class Album extends AggregateRoot<AlbumRecord> {
     return album;
   }
 
-  addItem(mediaItemId: EntityId, status: MediaItemStatus, actorId: ActorId): WriteResult {
+  addItem(mediaItemId: EntityId, actorId: ActorId): WriteResult<AlbumItem> {
     if (this.#items.some((i) => i.mediaItemId() === mediaItemId)) {
       return fail(AppErrorCollection.album.MediaAlreadyInAlbum);
     }
-    if (status !== MediaItemStatus.ready) {
-      return fail(AppErrorCollection.mediaItem.MediaItemNotReady);
+    // TODO: check various invariants when they exist e.g. is album mutable
+    const member = this.#members.find((m) => m.userId() === actorId);
+    if (!member) {
+      return fail(AppErrorCollection.album.UserIsNotMember);
     }
-    this.#items.push(AlbumItem.create({ mediaItemId }, actorId));
 
+    const membersWhoCanEdit: AlbumMemberRoleEnum[] = [
+      AlbumMemberRoleEnum.owner,
+      AlbumMemberRoleEnum.admin,
+      AlbumMemberRoleEnum.contributor,
+    ];
+    if (!membersWhoCanEdit.includes(member.role())) {
+      return fail(AppErrorCollection.album.MemberNotAllowedToAddItem);
+    }
+
+    if (this.#items.some((x) => x.mediaItemId() === mediaItemId)) {
+      return fail(AppErrorCollection.album.MediaAlreadyInAlbum);
+    }
+
+    const albumItem = AlbumItem.create({ mediaItemId }, actorId);
+    this.#items.push(albumItem);
     this.touch(actorId);
-    return ok(undefined);
+    return ok(albumItem);
   }
 
   addMember(userId: EntityId, role: AlbumMemberRoleEnum, actorId: ActorId): WriteResult {

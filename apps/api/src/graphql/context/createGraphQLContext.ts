@@ -11,15 +11,16 @@ export const buildCreateGraphQLContext = ({
   readServiceFactories,
 }: IocGeneratedCradle): GraphQLContextFactory => {
   return (initialContext: GraphQLInitialContext): GraphQLContext => {
-    if (!initialContext.state.isLoggedIn || !initialContext.state.user) {
+    const user = initialContext.state?.user;
+    if (!initialContext.state?.isLoggedIn || !user) {
       return {};
     }
 
     const viewer = {
-      id: initialContext.state.user.id,
-      firstName: initialContext.state.user.firstName,
-      lastName: initialContext.state.user.lastName,
-      displayName: `${initialContext.state.user.firstName} ${initialContext.state.user.lastName}`,
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      displayName: `${user.firstName} ${user.lastName}`,
       isAuthenticated: true,
     };
 

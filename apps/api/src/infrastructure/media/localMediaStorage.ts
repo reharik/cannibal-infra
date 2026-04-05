@@ -1,22 +1,147 @@
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+
 import { MediaStorage, UploadTarget } from '../../application/media/MediaStorage';
 import { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
 
-export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaStorage => ({
-  getUploadTarget: (input: { storageKey: string; mimeType: string }): Promise<UploadTarget> => {
-    return Promise.resolve({
-      url: `${config.serverUrl}/media/${input.storageKey}`,
-      method: 'PUT',
-      headers: {},
-    });
-  },
+const assertSafeStorageKeySegments = (storageKey: string): string[] => {
+  const segments = storageKey.split('/').filter(Boolean);
 
-  getObjectMetadata: async () // storageKey: string,
-  : Promise<{ size: number; mimeType?: string | undefined }> => {
-    throw new Error('Not implemented');
-  },
+  if (segments.length === 0) {
+    throw new Error('Invalid storage key: empty path');
+  }
 
-  verifyExistence: async () // storageKey: string
-  : Promise<boolean> => {
-    throw new Error('Not implemented');
-  },
-});
+  for (const segment of segments) {
+    if (segment === '.' || segment === '..') {
+      throw new Error('Invalid storage key: path traversal');
+    }
+
+    if (!/^[a-zA-Z0-9_.-]+$/.test(segment)) {
+      throw new Error(`Invalid storage key segment: ${segment}`);
+    }
+  }
+
+  return segments;
+};
+
+const getObjectFilePathForStorageKey = (storageRoot: string, storageKey: string): string => {
+  const segments = assertSafeStorageKeySegments(storageKey);
+  return path.join(storageRoot, ...segments);
+};
+
+const readOptionalMimeSidecar = async (objectPath: string): Promise<string | undefined> => {
+  try {
+    const mimeType = (await fs.readFile(`${objectPath}.mime`, 'utf8')).trim();
+    return mimeType.length > 0 ? mimeType : undefined;
+  } catch (err: unknown) {
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? (err as NodeJS.ErrnoException).code
+        : undefined;
+
+    if (code === 'ENOENT') {
+      return undefined;
+    }
+
+    throw err;
+  }
+};
+
+export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaStorage => {
+  const storageRoot = path.resolve(config.mediaStorageRoot);
+
+  return {
+    // eslint-disable-next-line @typescript-eslint/require-await
+    getUploadTarget: async (input: {
+      mediaItemId: string;
+      storageKey: string;
+      mimeType: string;
+    }): Promise<UploadTarget> => {
+      return {
+        url: `${config.serverUrl}/api/media/uploads/${input.mediaItemId}`,
+        method: 'PUT',
+        headers: {},
+      };
+    },
+
+    writeUploadedFile: async (input: {
+      storageKey: string;
+      sourceFilePath: string;
+      mimeType?: string;
+    }): Promise<void> => {
+      const destinationPath = getObjectFilePathForStorageKey(storageRoot, input.storageKey);
+
+      await fs.mkdir(path.dirname(destinationPath), { recursive: true });
+      await fs.copyFile(input.sourceFilePath, destinationPath);
+
+      if (input.mimeType && input.mimeType.length > 0) {
+        await fs.writeFile(`${destinationPath}.mime`, input.mimeType, 'utf8');
+      }
+
+      try {
+        await fs.unlink(input.sourceFilePath);
+      } catch (err: unknown) {
+        const code =
+          err && typeof err === 'object' && 'code' in err
+            ? (err as NodeJS.ErrnoException).code
+            : undefined;
+
+        if (code !== 'ENOENT') {
+          throw err;
+        }
+      }
+    },
+
+    getObjectMetadata: async (
+      storageKey: string,
+    ): Promise<{ size: number; mimeType?: string } | null> => {
+      const objectPath = getObjectFilePathForStorageKey(storageRoot, storageKey);
+
+      try {
+        const stat = await fs.stat(objectPath);
+
+        if (!stat.isFile()) {
+          return null;
+        }
+
+        const mimeType = await readOptionalMimeSidecar(objectPath);
+
+        return {
+          size: stat.size,
+          mimeType,
+        };
+      } catch (err: unknown) {
+        const code =
+          err && typeof err === 'object' && 'code' in err
+            ? (err as NodeJS.ErrnoException).code
+            : undefined;
+
+        if (code === 'ENOENT') {
+          return null;
+        }
+
+        throw err;
+      }
+    },
+
+    verifyExistence: async (storageKey: string): Promise<boolean> => {
+      const objectPath = getObjectFilePathForStorageKey(storageRoot, storageKey);
+
+      try {
+        const stat = await fs.stat(objectPath);
+        return stat.isFile();
+      } catch (err: unknown) {
+        const code =
+          err && typeof err === 'object' && 'code' in err
+            ? (err as NodeJS.ErrnoException).code
+            : undefined;
+
+        if (code === 'ENOENT') {
+          return false;
+        }
+
+        throw err;
+      }
+    },
+  };
+};

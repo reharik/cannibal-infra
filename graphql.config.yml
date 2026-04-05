@@ -1,0 +1,8 @@
+# GraphQL VS Code / graphql-config: single workspace config for the monorepo.
+# See https://github.com/graphql/graphiql/blob/main/packages/vscode-graphql/README.md
+projects:
+  api:
+    schema: apps/api/src/graphql/schema/**/*.graphql
+  web:
+    schema: apps/api/src/graphql/generated/schema.graphql
+    documents: apps/web/src/graphql/**/*.graphql

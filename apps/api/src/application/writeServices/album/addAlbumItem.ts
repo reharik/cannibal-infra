@@ -1,63 +1,97 @@
-// import {
-//   AppErrorCollection,
-//   MediaKind,
-//   MediaItemStatus,
-// } from "@packages/contracts";
-// import { IocGeneratedCradle } from "apps/api/src/di/generated/ioc-registry.types";
-// import { fail, ok } from "apps/api/src/domain/utilities/writeResponse";
-// import { EntityId, WriteResult } from "apps/api/src/types/types";
-// import { WriteServiceBase } from "../writeServiceBaseType";
+import {
+  AlbumErrorEnum,
+  AppErrorCollection,
+  MediaItemErrorEnum,
+  MediaItemStatus,
+} from '@packages/contracts';
+import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
+import { Album, AlbumRepository } from 'apps/api/src/domain';
+import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
+import {
+  MediaItemReadRepository,
+  MediaItemRow,
+} from 'apps/api/src/repositories/readRepositories/mediaItemReadRepository';
+import { EntityId, WriteResult } from 'apps/api/src/types/types';
+import { WriteServiceBase } from '../writeServiceBaseType';
 
-// export type AddAlbumItemDTO = {
-//   viewerId: EntityId;
-//   albumId: EntityId;
-//   mediaItemId: EntityId;
-// };
+export type AddAlbumItemDTO = {
+  viewerId: EntityId;
+  albumId: EntityId;
+  mediaItemId: EntityId;
+};
 
-// export type AddAlbumItemResultDTO = {
-//   albumId: EntityId;
-//   albumItemId: EntityId;
-// };
+export type AddAlbumItemResultDTO = {
+  albumId: EntityId;
+  albumItemId: EntityId;
+};
 
-// export interface AddAlbumItem extends WriteServiceBase {
-//   (input: AddAlbumItemDTO): Promise<WriteResult<AddAlbumItemResultDTO>>;
-// }
+export interface AddAlbumItem extends WriteServiceBase {
+  (input: AddAlbumItemDTO): Promise<WriteResult<AddAlbumItemResultDTO>>;
+}
 
-// export const buildAddAlbumItem = ({
-//   albumRepository,
-//   mediaItemReadRepository,
-// }: IocGeneratedCradle): AddAlbumItem => {
-//   return async (
-//     input: AddAlbumItemDTO,
-//   ): Promise<WriteResult<AddAlbumItemResultDTO>> => {
-//     const { viewerId, albumId, mediaItemId } = input;
-//     const album = await albumRepository.getById(albumId);
-//     if (!album) {
-//       return fail(AppErrorCollection.album.AlbumNotFound);
-//     }
-//     if (album.ownerId !== viewerId) {
-//       return fail(AppErrorCollection.album.AlbumNotOwnedByViewer);
-//     }
+export const buildAddAlbumItem = ({
+  albumRepository,
+  mediaItemReadRepository,
+}: IocGeneratedCradle): AddAlbumItem => {
+  return async (input: AddAlbumItemDTO): Promise<WriteResult<AddAlbumItemResultDTO>> => {
+    const { viewerId, albumId, mediaItemId } = input;
+    const r1 = await getAlbumOrFailure(albumId, albumRepository);
+    if (!r1.success) {
+      return r1;
+    }
+    const r2 = await getMediaItemOrFailure(mediaItemId, viewerId, mediaItemReadRepository);
+    if (!r2.success) {
+      return r2;
+    }
+    const album = r1.value;
+    const mediaItem = r2.value;
 
-//     const mediaItem = await mediaItemReadRepository.getForViewer({
-//       mediaItemId,
-//       viewerId,
-//     });
-//     if (!mediaItem) {
-//       return fail(AppErrorCollection.mediaItem.MediaItemNotFound);
-//     }
-//     if (mediaItem.ownerId !== viewerId) {
-//       return fail(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer);
-//     }
-//     album.addItem(mediaItemId, mediaItem.status, viewerId);
-//     await albumRepository.save(album);
+    const r3 = ensureMediaItemOwnedByViewer(mediaItem, viewerId);
+    if (!r3.success) {
+      return r3;
+    }
+    const r4 = ensureMediaItemInReadyState(mediaItem);
+    if (!r4.success) {
+      return r4;
+    }
 
-//     return ok({
-//       mediaItemId: mediaItem.id(),
-//       status: mediaItem.status(),
-//       mimeType: objectMetadata.mimeType,
-//       size: objectMetadata.size,
-//       kind: mediaItem.kind(),
-//     });
-//   };
-// };
+    const r5 = album.addItem(mediaItemId, viewerId);
+    if (!r5.success) {
+      return r5;
+    }
+    const albumItem = r5.value;
+    await albumRepository.save(album);
+
+    return ok({
+      albumId: album.id(),
+      albumItemId: albumItem.id(),
+    });
+  };
+};
+
+const getAlbumOrFailure = async (
+  albumId: EntityId,
+  albumRepository: AlbumRepository,
+): Promise<WriteResult<Album, AlbumErrorEnum>> => {
+  const album = await albumRepository.getById(albumId);
+  return album ? ok(album) : fail(AppErrorCollection.album.AlbumNotFound);
+};
+
+const getMediaItemOrFailure = async (
+  mediaItemId: EntityId,
+  viewerId: EntityId,
+  mediaItemReadRepository: MediaItemReadRepository,
+): Promise<WriteResult<MediaItemRow, MediaItemErrorEnum>> => {
+  const mediaItem = await mediaItemReadRepository.getForViewer({ mediaItemId, viewerId });
+  return mediaItem ? ok(mediaItem) : fail(AppErrorCollection.mediaItem.MediaItemNotFound);
+};
+
+const ensureMediaItemOwnedByViewer = (item: MediaItemRow, viewerId: EntityId) =>
+  item?.ownerId === viewerId
+    ? ok(undefined)
+    : fail(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer);
+
+const ensureMediaItemInReadyState = (mediaItem: MediaItemRow) =>
+  mediaItem.status === MediaItemStatus.ready
+    ? ok(undefined)
+    : fail(AppErrorCollection.mediaItem.MediaItemNotReady);

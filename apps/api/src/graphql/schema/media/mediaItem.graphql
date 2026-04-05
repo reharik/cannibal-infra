@@ -1,0 +1,27 @@
+type MediaItem implements Node {
+  id: ID!
+  kind: MediaKind!
+  status: MediaItemStatus!
+  storageKey: String!
+  mimeType: String!
+  sizeBytes: Int!
+  width: Int
+  height: Int
+  durationSeconds: Int
+  title: String
+  description: String
+  takenAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum MediaKind {
+  PHOTO
+  VIDEO
+}
+
+enum MediaItemStatus {
+  PENDING
+  READY
+  FAILED
+}

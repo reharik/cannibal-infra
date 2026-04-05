@@ -31,7 +31,6 @@ export type MediaItemRecord = {
   ownerId: EntityId;
   kind: MediaKind;
   status: MediaItemStatus;
-
   storageKey: string;
   mimeType: string;
   sizeBytes?: number;
@@ -73,6 +72,7 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     const mediaItemId = crypto.randomUUID();
     return new MediaItem(mediaItemId, actorId, {
       ...input,
+      sizeBytes: input.sizeBytes ?? 0,
       storageKey: `media/${actorId}/${input.kind.key}/${mediaItemId}`,
       status: MediaItemStatus.pending,
       ownerId: actorId,

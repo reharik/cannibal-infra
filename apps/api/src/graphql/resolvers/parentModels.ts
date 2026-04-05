@@ -11,10 +11,13 @@ export type MediaItemParent = {
   kind: string;
   status: string;
   storageKey: string;
-  mimeType: string;
-  sizeBytes: number;
+  mimeType?: string;
+  sizeBytes?: number;
   width?: number;
   height?: number;
+  title?: string;
+  description?: string;
+  takenAt?: Date;
 };
 
 export type AlbumParent = {
@@ -23,4 +26,9 @@ export type AlbumParent = {
   description?: string;
   coverMediaId?: string;
   coverMedia?: MediaItemParent;
+};
+
+export type AlbumItemParent = {
+  id: string;
+  mediaItem: MediaItemParent;
 };

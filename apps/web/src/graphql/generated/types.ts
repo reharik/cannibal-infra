@@ -17,13 +17,43 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+export type AddMediaItemToAlbumInput = {
+  albumId: Scalars['ID']['input'];
+  mediaItemId: Scalars['ID']['input'];
+};
+
+export type AddMediaItemToAlbumPayload = {
+  __typename?: 'AddMediaItemToAlbumPayload';
+  albumId: Scalars['ID']['output'];
+  albumItemId: Scalars['ID']['output'];
+};
+
 export type Album = Node & {
   __typename?: 'Album';
   coverMedia?: Maybe<MediaItem>;
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
+  items: Array<AlbumItem>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type AlbumItem = Node & {
+  __typename?: 'AlbumItem';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  mediaItem: MediaItem;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type CreateAlbumInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type CreateAlbumPayload = {
+  __typename?: 'CreateAlbumPayload';
+  albumId: Scalars['ID']['output'];
 };
 
 export type CreateMediaUploadInput = {
@@ -80,8 +110,20 @@ export type MediaKind =
 
 export type Mutation = {
   __typename?: 'Mutation';
+  AddMediaItemToAlbum: AddMediaItemToAlbumPayload;
+  createAlbum: CreateAlbumPayload;
   createMediaUpload: CreateMediaUploadPayload;
   finalizeMediaUpload: FinalizeMediaUploadPayload;
+};
+
+
+export type MutationAddMediaItemToAlbumArgs = {
+  input: AddMediaItemToAlbumInput;
+};
+
+
+export type MutationCreateAlbumArgs = {
+  input: CreateAlbumInput;
 };
 
 

@@ -37,6 +37,7 @@ export const buildCreateMediaItemUpload = ({
     );
 
     const uploadTarget = await mediaStorage.getUploadTarget({
+      mediaItemId: mediaItem.id(),
       storageKey: mediaItem.storageKey(),
       mimeType,
     });

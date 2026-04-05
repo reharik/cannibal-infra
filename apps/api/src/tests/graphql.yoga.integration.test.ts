@@ -1,15 +1,12 @@
-import { AwilixContainer } from 'awilix';
-import { initializeContainer } from '../container';
-import { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
+import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
+import { TEST_VIEWER_1_ID } from './testViewerIds';
 
 describe('GraphQL', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
-  let container: AwilixContainer<IocGeneratedCradle>;
   beforeAll(async () => {
-    container = initializeContainer();
-    const yogaApp = container.resolve('yogaApp');
-    executeGraphQL = createExecuteGraphQL({ yogaApp });
+    const setup = await setupGraphqlIntegrationTests();
+    executeGraphQL = setup.executeGraphQL;
   });
 
   describe('viewer', () => {
@@ -56,7 +53,7 @@ describe('GraphQL', () => {
         expect(response.status).toBe(200);
         expect(json.errors).toBeUndefined();
         expect(json.data?.viewer).toBeTruthy();
-        expect(json.data?.viewer?.id).toBe('viewer-1');
+        expect(json.data?.viewer?.id).toBe(TEST_VIEWER_1_ID);
         expect(json.data?.viewer?.displayName).toBe('Demo User');
       });
     });

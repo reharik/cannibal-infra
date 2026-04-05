@@ -7,6 +7,7 @@ import { WriteServiceBase } from '../writeServiceBaseType';
 export type CreateAlbumDTO = {
   viewerId: string;
   title: string;
+  description?: string;
 };
 
 export interface CreateAlbum extends WriteServiceBase {

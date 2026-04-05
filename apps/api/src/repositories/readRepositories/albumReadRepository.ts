@@ -1,37 +1,92 @@
-import { AlbumMemberRoleEnum } from '@packages/contracts';
-import { withEnumRevival } from '@reharik/smart-enum-knex';
 import type { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
+import { EntityId } from '../../types/types';
 
 export type AlbumReadRepository = {
-  listByViewerId: ({ viewerId }: { viewerId: string }) => Promise<AlbumRow[]>;
+  listByViewerId: ({ viewerId }: { viewerId: string }) => Promise<AlbumWithCoverProjection[]>;
   getAlbumForViewer: ({
     albumId,
     viewerId,
   }: {
     albumId: string;
     viewerId: string;
-  }) => Promise<AlbumRow | undefined>;
+  }) => Promise<AlbumWithCoverProjection | undefined>;
+  getAlbumItemsForViewer: ({
+    albumId,
+    viewerId,
+  }: {
+    albumId: string;
+    viewerId: string;
+  }) => Promise<AlbumItemWithMediaProjection[]>;
 };
 
-// THIS IS ALL BROKE probably needs the child rows on there to from the joins
-type AlbumRow = {
+export type MediaItemProjection = {
+  mediaItemId?: EntityId;
+  mediaItemOwnerId?: EntityId;
+  mediaItemKind?: string;
+  mediaItemStatus?: string;
+  mediaItemStorageKey?: string;
+  mediaItemMimeType?: string;
+  mediaItemSizeBytes?: number;
+  mediaItemWidth?: number;
+  mediaItemHeight?: number;
+  mediaItemDurationSeconds?: number;
+  mediaItemTitle?: string;
+  mediaItemDescription?: string;
+  mediaItemTakenAt?: Date;
+};
+
+type AlbumWithCoverProjection = {
   id: string;
   title: string;
-  coverMediaId: string | undefined;
-};
+  description?: string;
+} & MediaItemProjection;
+
+type AlbumItemWithMediaProjection = {
+  id: EntityId;
+} & MediaItemProjection;
+
+const mediaItemSelectColumns = [
+  'mediaItem.id as mediaItemId',
+  'mediaItem.ownerId as mediaItemOwnerId',
+  'mediaItem.kind as mediaItemKind',
+  'mediaItem.status as mediaItemStatus',
+  'mediaItem.storageKey as mediaItemStorageKey',
+  'mediaItem.mimeType as mediaItemMimeType',
+  'mediaItem.sizeBytes as mediaItemSizeBytes',
+  'mediaItem.width as mediaItemWidth',
+  'mediaItem.height as mediaItemHeight',
+  'mediaItem.durationSeconds as mediaItemDurationSeconds',
+  'mediaItem.title as mediaItemTitle',
+  'mediaItem.description as mediaItemDescription',
+  'mediaItem.takenAt as mediaItemTakenAt',
+];
+
+const albumWithCoverSelectColumns = [
+  'album.id  as albumId',
+  'album.title as albumTitle',
+  'album.description as albumDescription',
+  ...mediaItemSelectColumns,
+];
+
+const albumItemWithMediaSelectColumns = [
+  'albumItem.id',
+  'albumItem.mediaItemId',
+  ...mediaItemSelectColumns,
+];
 
 export const buildAlbumReadRepository = ({
   database,
 }: IocGeneratedCradle): AlbumReadRepository => ({
-  listByViewerId: async ({ viewerId }: { viewerId: string }): Promise<AlbumRow[]> => {
-    return withEnumRevival(
-      database<AlbumRow>('album')
-        .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
-        .where('albumMember.userId', viewerId)
-        .select<AlbumRow[]>('album.id', 'album.title', 'album.coverMediaId'),
-      { albumMemberRole: AlbumMemberRoleEnum },
-      { strict: true },
-    );
+  listByViewerId: async ({
+    viewerId,
+  }: {
+    viewerId: string;
+  }): Promise<AlbumWithCoverProjection[]> => {
+    return database<AlbumWithCoverProjection>('album')
+      .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
+      .innerJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
+      .where('albumMember.userId', viewerId)
+      .select<AlbumWithCoverProjection[]>(...albumWithCoverSelectColumns);
   },
 
   getAlbumForViewer: async ({
@@ -40,13 +95,28 @@ export const buildAlbumReadRepository = ({
   }: {
     albumId: string;
     viewerId: string;
-  }): Promise<AlbumRow | undefined> => {
-    const row = await database('album')
+  }): Promise<AlbumWithCoverProjection | undefined> => {
+    const row = await database<AlbumWithCoverProjection>('album')
+      .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
+      .innerJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
+      .where('albumMember.userId', viewerId)
+      .andWhere('album.id', albumId)
+      .first<AlbumWithCoverProjection>(...albumWithCoverSelectColumns);
+
+    return row;
+  },
+  getAlbumItemsForViewer: async ({
+    albumId,
+    viewerId,
+  }: {
+    albumId: string;
+    viewerId: string;
+  }): Promise<AlbumItemWithMediaProjection[]> => {
+    return database<AlbumItemWithMediaProjection>('albumItem')
+      .innerJoin('album', 'albumItem.albumId', 'album.id')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
       .where('albumMember.userId', viewerId)
       .andWhere('album.id', albumId)
-      .first<AlbumRow>('album.id', 'album.title', 'album.coverMediaId');
-
-    return row;
+      .select<AlbumItemWithMediaProjection[]>(...albumItemWithMediaSelectColumns);
   },
 });

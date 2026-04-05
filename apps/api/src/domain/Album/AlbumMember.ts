@@ -10,7 +10,7 @@ export type AlbumMemberProps = {
 export type AlbumMemberRecord = {
   id: EntityId;
   userId: EntityId;
-  role: string;
+  role: AlbumMemberRoleEnum;
 } & EntityAuditRecord;
 
 export class AlbumMember extends Entity<AlbumMemberRecord> {
@@ -28,7 +28,7 @@ export class AlbumMember extends Entity<AlbumMemberRecord> {
   public static rehydrate(record: AlbumMemberRecord): AlbumMember {
     const member = new AlbumMember(record.id, record.createdBy, {
       userId: record.userId,
-      role: AlbumMemberRoleEnum.fromValue(record.role),
+      role: record.role,
     });
 
     member.rehydrateAudit(record);
@@ -40,8 +40,8 @@ export class AlbumMember extends Entity<AlbumMemberRecord> {
     return this.props.userId;
   }
 
-  public hasUser(userId: string): boolean {
-    return this.props.userId === userId;
+  public role(): AlbumMemberRoleEnum {
+    return this.props.role;
   }
 
   public changeRole(role: AlbumMemberRoleEnum, actorId: ActorId): void {
