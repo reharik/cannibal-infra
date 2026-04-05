@@ -169,7 +169,7 @@ export const iocManifest = {
     AuthMiddleware: {
       authMiddleware: {
         exportName: 'buildAuthMiddleware',
-        registrationKey: 'authMiddleware',
+        registrationKey: 'strictAuthMiddleware',
         modulePath: 'middleware/authMiddleware.ts',
         relImport: '../../middleware/authMiddleware.js',
         contractName: 'AuthMiddleware',
@@ -177,6 +177,7 @@ export const iocManifest = {
         lifetime: 'singleton',
         moduleIndex: 16,
         discoveredBy: 'naming',
+        configOverridesApplied: ['name'],
         dependencyContractNames: ['AuthService', 'Logger'],
       },
       optionalAuthMiddleware: {

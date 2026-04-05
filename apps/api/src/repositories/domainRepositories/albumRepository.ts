@@ -25,7 +25,7 @@ export const buildAlbumRepository = ({ database }: IocGeneratedCradle): AlbumRep
 
     const memberRows = await withEnumRevival(
       database<AlbumMemberRecord>('albumMember').where({ albumId: id }).orderBy('createdAt', 'asc'),
-      { albumMemberRole: AlbumMemberRoleEnum },
+      { role: AlbumMemberRoleEnum },
       { strict: true },
     );
 

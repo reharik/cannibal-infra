@@ -14,10 +14,9 @@ export const buildMediaItemRepository = ({ database }: IocGeneratedCradle): Medi
   const getById = async (id: EntityId): Promise<MediaItem | undefined> => {
     const mediaItemRow = await withEnumRevival(
       database<MediaItemRecord>('mediaItem').where({ id }).first(),
-      { mediaItem: MediaKind, mediaItemStatus: MediaItemStatus },
+      { kind: MediaKind, status: MediaItemStatus },
       { strict: true },
     );
-
     if (!mediaItemRow) {
       return;
     }
@@ -31,7 +30,6 @@ export const buildMediaItemRepository = ({ database }: IocGeneratedCradle): Medi
     );
 
     mediaItemRow.comments = commentRows;
-
     return MediaItem.rehydrate(mediaItemRow);
   };
 

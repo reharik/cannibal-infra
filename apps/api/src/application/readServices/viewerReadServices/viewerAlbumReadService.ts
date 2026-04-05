@@ -1,11 +1,11 @@
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
-import { ReadServiceFactoryBase } from '../readServiceBaseType';
 import {
   AlbumItemParent,
   AlbumParent,
   MediaItemParent,
 } from 'apps/api/src/graphql/resolvers/parentModels';
 import { MediaItemProjection } from 'apps/api/src/repositories/readRepositories/albumReadRepository';
+import { ReadServiceFactoryBase } from '../readServiceBaseType';
 
 export interface ViewerAlbumReadService {
   listAlbums: () => Promise<AlbumParent[]>;
@@ -18,11 +18,12 @@ export interface ViewerAlbumReadServiceFactory extends ReadServiceFactoryBase {
 
 const mapMediaItemProjectionToParent = (mediaItem: MediaItemProjection): MediaItemParent => ({
   id: mediaItem.mediaItemId ?? '',
+  ownerId: mediaItem.mediaItemOwnerId ?? '',
   kind: mediaItem.mediaItemKind ?? '',
   status: mediaItem.mediaItemStatus ?? '',
   storageKey: mediaItem.mediaItemStorageKey ?? '',
-  mimeType: mediaItem.mediaItemMimeType,
-  sizeBytes: mediaItem.mediaItemSizeBytes,
+  mimeType: mediaItem.mediaItemMimeType ?? '',
+  sizeBytes: mediaItem.mediaItemSizeBytes ?? 0,
   width: mediaItem.mediaItemWidth,
   height: mediaItem.mediaItemHeight,
   title: mediaItem.mediaItemTitle,
@@ -39,7 +40,6 @@ export const buildViewerAlbumReadServiceFactory = ({
       return albums.map((album) => ({
         id: album.id,
         title: album.title,
-        description: album.description,
         coverMedia: mapMediaItemProjectionToParent(album),
       }));
     },

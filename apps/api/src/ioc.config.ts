@@ -38,6 +38,8 @@ export default defineIocConfig({
     //   },
     // },
     AuthMiddleware: {
+      // Keep strict middleware under a distinct key so `authMiddleware` (contract default slot) aliases to optional.
+      authMiddleware: { name: 'strictAuthMiddleware' },
       optionalAuthMiddleware: { default: true },
     },
   },

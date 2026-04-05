@@ -33,8 +33,8 @@ export const buildAuthMiddleware =
     }
 
     // Add user directly on context for easy access
-    ctx.user = user;
-    ctx.isLoggedIn = true;
+    ctx.state.user = user;
+    ctx.state.isLoggedIn = true;
 
     await next();
   };

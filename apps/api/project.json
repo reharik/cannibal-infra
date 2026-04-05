@@ -75,12 +75,12 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "command": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --passWithNoTests",
+        "command": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --runInBand --passWithNoTests",
         "cwd": "{projectRoot}"
       },
       "configurations": {
         "runInBand": {
-          "command": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --runInBand --passWithNoTests"
+          "command": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.js --runInBand --detectOpenHandles --passWithNoTests"
         }
       }
     },

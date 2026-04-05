@@ -7,10 +7,8 @@ import {
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { Album, AlbumRepository } from 'apps/api/src/domain';
 import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
-import {
-  MediaItemReadRepository,
-  MediaItemRow,
-} from 'apps/api/src/repositories/readRepositories/mediaItemReadRepository';
+import { MediaItemParent } from 'apps/api/src/graphql/resolvers/parentModels';
+import { MediaItemReadRepository } from 'apps/api/src/repositories/readRepositories/mediaItemReadRepository';
 import { EntityId, WriteResult } from 'apps/api/src/types/types';
 import { WriteServiceBase } from '../writeServiceBaseType';
 
@@ -81,17 +79,17 @@ const getMediaItemOrFailure = async (
   mediaItemId: EntityId,
   viewerId: EntityId,
   mediaItemReadRepository: MediaItemReadRepository,
-): Promise<WriteResult<MediaItemRow, MediaItemErrorEnum>> => {
+): Promise<WriteResult<MediaItemParent, MediaItemErrorEnum>> => {
   const mediaItem = await mediaItemReadRepository.getForViewer({ mediaItemId, viewerId });
   return mediaItem ? ok(mediaItem) : fail(AppErrorCollection.mediaItem.MediaItemNotFound);
 };
 
-const ensureMediaItemOwnedByViewer = (item: MediaItemRow, viewerId: EntityId) =>
+const ensureMediaItemOwnedByViewer = (item: MediaItemParent, viewerId: EntityId) =>
   item?.ownerId === viewerId
     ? ok(undefined)
     : fail(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer);
 
-const ensureMediaItemInReadyState = (mediaItem: MediaItemRow) =>
-  mediaItem.status === MediaItemStatus.ready
+const ensureMediaItemInReadyState = (mediaItem: MediaItemParent) =>
+  mediaItem.status === MediaItemStatus.ready.value
     ? ok(undefined)
     : fail(AppErrorCollection.mediaItem.MediaItemNotReady);

@@ -8,6 +8,7 @@ export type ViewerParent = {
 
 export type MediaItemParent = {
   id: string;
+  ownerId: string;
   kind: string;
   status: string;
   storageKey: string;

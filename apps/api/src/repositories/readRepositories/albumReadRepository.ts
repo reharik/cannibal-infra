@@ -62,17 +62,12 @@ const mediaItemSelectColumns = [
 ];
 
 const albumWithCoverSelectColumns = [
-  'album.id  as albumId',
-  'album.title as albumTitle',
-  'album.description as albumDescription',
+  'album.id as id',
+  'album.title as title',
   ...mediaItemSelectColumns,
 ];
 
-const albumItemWithMediaSelectColumns = [
-  'albumItem.id',
-  'albumItem.mediaItemId',
-  ...mediaItemSelectColumns,
-];
+const albumItemWithMediaSelectColumns = ['albumItem.id', ...mediaItemSelectColumns];
 
 export const buildAlbumReadRepository = ({
   database,
@@ -84,7 +79,7 @@ export const buildAlbumReadRepository = ({
   }): Promise<AlbumWithCoverProjection[]> => {
     return database<AlbumWithCoverProjection>('album')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
-      .innerJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
+      .leftJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
       .where('albumMember.userId', viewerId)
       .select<AlbumWithCoverProjection[]>(...albumWithCoverSelectColumns);
   },
@@ -98,7 +93,7 @@ export const buildAlbumReadRepository = ({
   }): Promise<AlbumWithCoverProjection | undefined> => {
     const row = await database<AlbumWithCoverProjection>('album')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
-      .innerJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
+      .leftJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
       .where('albumMember.userId', viewerId)
       .andWhere('album.id', albumId)
       .first<AlbumWithCoverProjection>(...albumWithCoverSelectColumns);
@@ -115,6 +110,7 @@ export const buildAlbumReadRepository = ({
     return database<AlbumItemWithMediaProjection>('albumItem')
       .innerJoin('album', 'albumItem.albumId', 'album.id')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
+      .innerJoin('mediaItem', 'mediaItem.id', 'albumItem.mediaItemId')
       .where('albumMember.userId', viewerId)
       .andWhere('album.id', albumId)
       .select<AlbumItemWithMediaProjection[]>(...albumItemWithMediaSelectColumns);

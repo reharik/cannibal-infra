@@ -73,7 +73,7 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     return new MediaItem(mediaItemId, actorId, {
       ...input,
       sizeBytes: input.sizeBytes ?? 0,
-      storageKey: `media/${actorId}/${input.kind.key}/${mediaItemId}`,
+      storageKey: `${actorId}/${input.kind.key}/${mediaItemId}`,
       status: MediaItemStatus.pending,
       ownerId: actorId,
     });
@@ -83,7 +83,6 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     const mediaItem = new MediaItem(record.id, record.createdBy, record);
 
     mediaItem.rehydrateAudit(record);
-
     mediaItem.#comments = record.comments.map((r) => Comment.rehydrate(r));
 
     return mediaItem;

@@ -11,11 +11,11 @@ export const seed = async (knex: Knex): Promise<void> => {
   await knex('user').insert({
     id: userId,
     email: 'harik.raif@gmail.com',
-    first_name: 'Raif',
-    last_name: 'Harik',
-    password_hash: passwordHash,
-    email_verified: true,
-    created_by: userId,
-    updated_by: userId,
+    firstName: 'Raif',
+    lastName: 'Harik',
+    passwordHash,
+    emailVerified: true,
+    createdBy: userId,
+    updatedBy: userId,
   });
 };

@@ -8,7 +8,8 @@ import { Album } from '../domain/Album/Album';
 import type { AlbumRepository } from '../domain/Album/AlbumRepository';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
-import type { MediaItemRow } from '../repositories/readRepositories/mediaItemReadRepository';
+import { MediaItemParent } from '../graphql/resolvers/parentModels';
+import { EntityId } from '../types/types';
 import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID } from './testViewerIds';
 
 type ObjectState = { size: number; mimeType?: string };
@@ -55,26 +56,21 @@ const createTrackingMediaStorage = (
   };
 };
 
-const rowFromItem = (item: MediaItem): MediaItemRow => {
+const projectionFromAggregate = (item: MediaItem): MediaItemParent => {
   const p = item.toPersistence();
   return {
     id: item.id(),
     ownerId: item.ownerId(),
-    kind: item.kind(),
-    status: item.status(),
+    kind: item.kind().value,
+    status: item.status().value,
     storageKey: item.storageKey(),
     mimeType: p.mimeType,
     sizeBytes: p.sizeBytes ?? 0,
     width: p.width,
     height: p.height,
-    durationSeconds: p.durationSeconds,
     title: p.title,
     description: p.description,
     takenAt: p.takenAt,
-    createdAt: p.createdAt,
-    updatedAt: p.updatedAt,
-    createdBy: p.createdBy,
-    updatedBy: p.updatedBy,
   };
 };
 
@@ -226,11 +222,11 @@ describe('Media upload pipeline (application services)', () => {
         mediaItemId: created.value.mediaItemId,
       });
       expect(finalized.success).toBe(false);
+      let code = '';
       if (!finalized.success) {
-        expect(finalized.error.code).toBe(
-          AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer.code,
-        );
+        code = finalized.error.code;
       }
+      expect(code).toBe(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer.code);
     });
   });
 });
@@ -256,7 +252,7 @@ describe('Album integration (application services)', () => {
     it('should fail with media not ready', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository();
-      const rows = new Map<string, MediaItemRow>();
+      const projectionFromReadRepo = new Map<string, MediaItemParent>();
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
       const albumResult = await createAlbum({ viewerId, title: 'Summer' });
@@ -282,13 +278,13 @@ describe('Album integration (application services)', () => {
       if (!item) {
         return;
       }
-      rows.set(item.id(), rowFromItem(item));
+      projectionFromReadRepo.set(item.id(), projectionFromAggregate(item));
 
       const addAlbumItem = buildAddAlbumItem({
         albumRepository,
         mediaItemReadRepository: {
-          getForViewer: async ({ mediaItemId }) => rows.get(mediaItemId),
-          getCoverMediaByAlbumIdForViewer: async () => undefined,
+          getForViewer: async ({ mediaItemId }: { mediaItemId: EntityId }) =>
+            projectionFromReadRepo.get(mediaItemId),
         },
       } as never);
 
@@ -298,9 +294,11 @@ describe('Album integration (application services)', () => {
         mediaItemId: item.id(),
       });
       expect(add.success).toBe(false);
+      let code = '';
       if (!add.success) {
-        expect(add.error.code).toBe(AppErrorCollection.mediaItem.MediaItemNotReady.code);
+        code = add.error.code;
       }
+      expect(code).toBe(AppErrorCollection.mediaItem.MediaItemNotReady.code);
     });
   });
 
@@ -308,7 +306,7 @@ describe('Album integration (application services)', () => {
     it('should persist the album item', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository();
-      const rows = new Map<string, MediaItemRow>();
+      const projectionFromReadRepo = new Map<string, MediaItemParent>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
@@ -350,13 +348,14 @@ describe('Album integration (application services)', () => {
       if (!readyItem) {
         return;
       }
-      rows.set(readyItem.id(), rowFromItem(readyItem));
+      projectionFromReadRepo.set(readyItem.id(), projectionFromAggregate(readyItem));
 
       const addAlbumItem = buildAddAlbumItem({
         albumRepository,
         mediaItemReadRepository: {
-          getForViewer: async ({ mediaItemId }) => rows.get(mediaItemId),
-          getCoverMediaByAlbumIdForViewer: async () => undefined,
+          // eslint-disable-next-line @typescript-eslint/require-await
+          getForViewer: async ({ mediaItemId }: { mediaItemId: EntityId }) =>
+            projectionFromReadRepo.get(mediaItemId),
         },
       } as never);
 
@@ -380,7 +379,7 @@ describe('Album integration (application services)', () => {
     it('should reject the duplicate when the aggregate disallows it', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository();
-      const rows = new Map<string, MediaItemRow>();
+      const projectionFromReadRepo = new Map<string, MediaItemParent>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
@@ -418,13 +417,14 @@ describe('Album integration (application services)', () => {
       if (!readyItem) {
         return;
       }
-      rows.set(readyItem.id(), rowFromItem(readyItem));
+      projectionFromReadRepo.set(readyItem.id(), projectionFromAggregate(readyItem));
 
       const addAlbumItem = buildAddAlbumItem({
         albumRepository,
         mediaItemReadRepository: {
-          getForViewer: async ({ mediaItemId }) => rows.get(mediaItemId),
-          getCoverMediaByAlbumIdForViewer: async () => undefined,
+          // eslint-disable-next-line @typescript-eslint/require-await
+          getForViewer: async ({ mediaItemId }: { mediaItemId: EntityId }) =>
+            projectionFromReadRepo.get(mediaItemId),
         },
       } as never);
 
@@ -440,9 +440,11 @@ describe('Album integration (application services)', () => {
         mediaItemId: readyItem.id(),
       });
       expect(second.success).toBe(false);
+      let code = '';
       if (!second.success) {
-        expect(second.error.code).toBe(AppErrorCollection.album.MediaAlreadyInAlbum.code);
+        code = second.error.code;
       }
+      expect(code).toBe(AppErrorCollection.album.MediaAlreadyInAlbum.code);
     });
   });
 });

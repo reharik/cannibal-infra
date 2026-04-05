@@ -1,24 +1,15 @@
-import { MediaItemStatus, MediaKind } from '@packages/contracts';
-import { withEnumRevival } from '@reharik/smart-enum-knex';
 import type { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
+import { MediaItemParent } from '../../graphql/resolvers/parentModels';
 import { EntityId } from '../../types/types';
-import { MediaItemRecord } from '../../domain';
 
 export type MediaItemReadRepository = {
-  getCoverMediaByAlbumIdForViewer: ({
-    albumId,
-    viewerId,
-  }: {
-    albumId: string;
-    viewerId: EntityId;
-  }) => Promise<MediaItemRecord | undefined>;
   getForViewer: ({
     mediaItemId,
     viewerId,
   }: {
     mediaItemId: EntityId;
     viewerId: EntityId;
-  }) => Promise<MediaItemRecord | undefined>;
+  }) => Promise<MediaItemParent | undefined>;
 };
 
 const mediaItemRowFields = [
@@ -44,39 +35,16 @@ const mediaItemRowFields = [
 export const buildMediaItemReadRepository = ({
   database,
 }: IocGeneratedCradle): MediaItemReadRepository => ({
-  getCoverMediaByAlbumIdForViewer: async ({
-    albumId,
-    viewerId,
-  }: {
-    albumId: string;
-    viewerId: EntityId;
-  }): Promise<MediaItemRecord | undefined> => {
-    const row = await withEnumRevival(
-      database<MediaItemRecord>('mediaItem')
-        .innerJoin('album', 'album.coverMediaId', 'mediaItem.id')
-        .where({ id: albumId, ownerId: viewerId })
-        .first<MediaItemRecord>(...mediaItemRowFields),
-      { mediaItem: MediaKind, mediaItemStatus: MediaItemStatus },
-      { strict: true },
-    );
-
-    return row;
-  },
-
   getForViewer: async ({
     mediaItemId,
     viewerId,
   }: {
     mediaItemId: EntityId;
     viewerId: EntityId;
-  }): Promise<MediaItemRecord | undefined> => {
-    const row = await withEnumRevival(
-      database<MediaItemRecord>('mediaItem')
-        .where({ id: mediaItemId, ownerId: viewerId })
-        .first<MediaItemRecord>(...mediaItemRowFields),
-      { mediaItem: MediaKind, mediaItemStatus: MediaItemStatus },
-      { strict: true },
-    );
+  }): Promise<MediaItemParent | undefined> => {
+    const row = await database<MediaItemParent>('mediaItem')
+      .where({ id: mediaItemId, ownerId: viewerId })
+      .first<MediaItemParent>(...mediaItemRowFields);
 
     return row;
   },

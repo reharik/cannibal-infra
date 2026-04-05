@@ -34,9 +34,11 @@ describe('MediaItem (domain)', () => {
       item.finalizeStatus(MediaItemStatus.ready, ownerId);
       const result = item.finalizeStatus(MediaItemStatus.ready, ownerId);
       expect(result.success).toBe(false);
+      let code = '';
       if (!result.success) {
-        expect(result.error.code).toBe(AppErrorCollection.mediaItem.StatusNotPending.code);
+        code = result.error.code;
       }
+      expect(code).toBe(AppErrorCollection.mediaItem.StatusNotPending.code);
     });
   });
 });
@@ -52,9 +54,11 @@ describe('Album (domain)', () => {
       expect(first.success).toBe(true);
       const second = album.addItem(mediaId, ownerId);
       expect(second.success).toBe(false);
+      let code = '';
       if (!second.success) {
-        expect(second.error.code).toBe(AppErrorCollection.album.MediaAlreadyInAlbum.code);
+        code = second.error.code;
       }
+      expect(code).toBe(AppErrorCollection.album.MediaAlreadyInAlbum.code);
     });
   });
 
@@ -63,9 +67,11 @@ describe('Album (domain)', () => {
       const album = Album.create({ title: 'Trip' }, ownerId);
       const r = album.setCoverMedia('not-in-album', ownerId);
       expect(r.success).toBe(false);
+      let code = '';
       if (!r.success) {
-        expect(r.error.code).toBe(AppErrorCollection.album.CoverMediaNotPartOfAlbum.code);
+        code = r.error.code;
       }
+      expect(code).toBe(AppErrorCollection.album.CoverMediaNotPartOfAlbum.code);
     });
   });
 
@@ -88,9 +94,11 @@ describe('Album (domain)', () => {
       expect(addMember.success).toBe(true);
       const r = album.addItem('media-x', viewerId);
       expect(r.success).toBe(false);
+      let code = '';
       if (!r.success) {
-        expect(r.error.code).toBe(AppErrorCollection.album.MemberNotAllowedToAddItem.code);
+        code = r.error.code;
       }
+      expect(code).toBe(AppErrorCollection.album.MemberNotAllowedToAddItem.code);
     });
   });
 });

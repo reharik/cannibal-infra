@@ -22,7 +22,7 @@ const seedPendingItem = (id: string, ownerId: string): MediaItem =>
     ownerId,
     kind: MediaKind.photo,
     status: MediaItemStatus.pending,
-    storageKey: `media/${ownerId}/photo/${id}`,
+    storageKey: `${ownerId}/photo/${id}`,
     mimeType: 'image/jpeg',
     comments: [],
     createdAt: new Date(),
@@ -44,7 +44,12 @@ const createMediaItemRepository = (items: MediaItem[]): MediaItemRepository => {
 const testUserFromHeader: Koa.Middleware = async (ctx, next) => {
   const id = ctx.get('X-Authenticated-User');
   if (id) {
-    ctx.user = { id, name: 'Test', email: 'test@example.com' };
+    ctx.user = {
+      id,
+      name: 'Test',
+      email: 'test@example.com',
+      isActive: true,
+    };
     ctx.isLoggedIn = true;
   }
   await next();
@@ -130,7 +135,7 @@ describe('Media byte upload (HTTP)', () => {
         });
       expect(res.status).toBe(201);
       expect(res.body.size).toBeGreaterThan(0);
-      const storedPath = path.join(tempRoot, 'media', 'media', TEST_VIEWER_A_ID, 'photo', 'item-1');
+      const storedPath = path.join(tempRoot, 'media', TEST_VIEWER_A_ID, 'photo', 'item-1');
       await expect(fs.stat(storedPath)).resolves.toBeDefined();
       server.close();
     });

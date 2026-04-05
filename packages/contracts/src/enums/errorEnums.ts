@@ -53,6 +53,11 @@ const mediaItemInput = {
     message: 'Media item not found',
     root: 'mediaItem',
   },
+  MediaBytesNotFound: {
+    code: 'MEDIA_BYTES_NOT_FOUND',
+    message: 'Media bytes not found',
+    root: 'mediaItem',
+  },
   MediaItemNotOwnedByViewer: {
     code: 'MEDIA_ITEM_NOT_OWNED_BY_VIEWER',
     message: 'Media item not owned by viewer',

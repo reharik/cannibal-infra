@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@packages/contracts';
+import { UserRoleEnum, type User } from '@packages/contracts';
 import type { Context } from 'koa';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
@@ -8,12 +8,6 @@ export interface AuthController {
   logout: (ctx: Context) => Context;
   me: (ctx: Context) => Context;
 }
-
-const sanitizeUser = (user: { passwordHash?: string; [key: string]: unknown }) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { passwordHash, ...sanitized } = user;
-  return sanitized;
-};
 
 export const buildAuthController = ({
   authService,
@@ -128,8 +122,9 @@ export const buildAuthController = ({
       return ctx;
     }
 
+    const { passwordHash: _passwordHash, ...sanitized } = user as User & { passwordHash?: string };
     ctx.status = 200;
-    ctx.body = { user: sanitizeUser(user) };
+    ctx.body = { user: sanitized };
     return ctx;
   },
 });

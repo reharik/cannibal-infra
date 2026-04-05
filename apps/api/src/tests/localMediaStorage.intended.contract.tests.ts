@@ -16,7 +16,7 @@ describe('LocalMediaStorage (intended contract)', () => {
       const storage = buildLocalMediaStorage(cradle);
       const target = await storage.getUploadTarget({
         mediaItemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        storageKey: `media/${TEST_VIEWER_1_ID}/photo/f47ac10b-58cc-4372-a567-0e02b2c3d479`,
+        storageKey: `${TEST_VIEWER_1_ID}/photo/f47ac10b-58cc-4372-a567-0e02b2c3d479`,
         mimeType: 'image/jpeg',
       });
       expect(target.method).toBe('PUT');

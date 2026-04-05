@@ -1,6 +1,12 @@
 import { MediaKind } from '@packages/contracts';
+import { GraphQLError } from 'graphql';
 import { authenticatedResolver } from '../../context/authenticatedContext';
 import type { Resolvers } from '../../generated/types.generated';
+
+const writeFailureAsGraphQLError = (message: string, code: string): GraphQLError =>
+  new GraphQLError(message, {
+    extensions: { code },
+  });
 
 const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
   Mutation: {
@@ -12,7 +18,7 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
       });
 
       if (!result.success) {
-        throw new Error(result.error.message);
+        throw writeFailureAsGraphQLError(result.error.message, result.error.code);
       }
 
       return {
@@ -35,9 +41,8 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
       });
 
       if (!result.success) {
-        throw new Error(result.error.message);
+        throw writeFailureAsGraphQLError(result.error.message, result.error.code);
       }
-
       return {
         mediaItemId: result.value.mediaItemId,
         status: result.value.status.value,

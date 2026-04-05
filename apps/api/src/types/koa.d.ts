@@ -1,15 +1,17 @@
+import type { User } from '@packages/contracts';
 import type { Knex } from 'knex';
 import 'koa';
 import type { Context } from 'koa';
 
 declare module 'koa' {
+  interface DefaultState {
+    user?: User;
+    isLoggedIn?: boolean;
+  }
+
   interface DefaultContext {
     db: Knex;
-    user?: {
-      id: string;
-      name: string;
-      email: string;
-    };
+    user?: User;
     isLoggedIn: boolean;
   }
 }

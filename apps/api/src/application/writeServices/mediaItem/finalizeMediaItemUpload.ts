@@ -37,9 +37,12 @@ export const buildFinalizeMediaItemUpload = ({
     }
     const objectMetadata = await mediaStorage.getObjectMetadata(mediaItem.storageKey());
     if (!objectMetadata) {
-      return fail(AppErrorCollection.mediaItem.MediaItemNotFound);
+      return fail(AppErrorCollection.mediaItem.MediaBytesNotFound);
     }
-    mediaItem.finalizeStatus(MediaItemStatus.ready, viewerId);
+    const finalized = mediaItem.finalizeStatus(MediaItemStatus.ready, viewerId);
+    if (!finalized.success) {
+      return finalized;
+    }
     await mediaItemRepository.save(mediaItem);
 
     return ok({

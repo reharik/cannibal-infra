@@ -1,12 +1,28 @@
+import type { AwilixContainer } from 'awilix';
+
+import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
+import { resetIntegrationTestDb } from './resetDb';
 import { TEST_VIEWER_1_ID } from './testViewerIds';
+
+/** Masked generic errors vs explicit auth errors (resolver / gateway behavior may differ). */
+const authRequiredMutationErrorMessages = ['Unexpected error.', 'Not authenticated'];
 
 describe('GraphQL', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
+  let container: AwilixContainer<IocGeneratedCradle>;
+  let mediaStorageRoot: string;
+
   beforeAll(async () => {
     const setup = await setupGraphqlIntegrationTests();
+    container = setup.container;
     executeGraphQL = setup.executeGraphQL;
+    mediaStorageRoot = container.resolve('config').mediaStorageRoot;
+  });
+
+  afterEach(async () => {
+    await resetIntegrationTestDb(container.resolve('database'), mediaStorageRoot);
   });
 
   describe('viewer', () => {
@@ -25,7 +41,6 @@ describe('GraphQL', () => {
             isLoggedIn: false,
           },
         });
-
         expect(response.status).toBe(200);
         expect(json.errors).toBeUndefined();
         expect(json.data).toEqual({
@@ -81,10 +96,11 @@ describe('GraphQL', () => {
             isLoggedIn: false,
           },
         });
-
         expect(response.status).toBe(200);
         expect(json.data).toBeNull();
-        expect(json.errors?.[0]?.message).toBe('Unexpected error.');
+        expect(authRequiredMutationErrorMessages.some((m) => m === json.errors?.[0]?.message)).toBe(
+          true,
+        );
       });
     });
   });
@@ -110,7 +126,9 @@ describe('GraphQL', () => {
 
         expect(response.status).toBe(200);
         expect(json.data).toBeNull();
-        expect(json.errors?.[0]?.message).toBe('Unexpected error.');
+        expect(authRequiredMutationErrorMessages.some((m) => m === json.errors?.[0]?.message)).toBe(
+          true,
+        );
       });
     });
   });

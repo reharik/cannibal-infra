@@ -70,7 +70,6 @@ export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaSto
       mimeType?: string;
     }): Promise<void> => {
       const destinationPath = getObjectFilePathForStorageKey(storageRoot, input.storageKey);
-
       await fs.mkdir(path.dirname(destinationPath), { recursive: true });
       await fs.copyFile(input.sourceFilePath, destinationPath);
 
@@ -96,10 +95,8 @@ export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaSto
       storageKey: string,
     ): Promise<{ size: number; mimeType?: string } | null> => {
       const objectPath = getObjectFilePathForStorageKey(storageRoot, storageKey);
-
       try {
         const stat = await fs.stat(objectPath);
-
         if (!stat.isFile()) {
           return null;
         }
