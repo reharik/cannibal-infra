@@ -1,37 +1,131 @@
+import { useApolloClient, useQuery } from '@apollo/client/react';
+import { DateTime } from 'luxon';
+import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { mediaUploadWorkflow } from '../application/media/mediaUploadWorkflow';
+import { ViewerRecentMediaDocument } from '../graphql/generated/types';
 
 export const HomeScreen = () => {
+  const navigate = useNavigate();
+  const client = useApolloClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadError, setUploadError] = useState<string | undefined>();
+  const [isUploading, setIsUploading] = useState(false);
+
+  const { data, loading, error, refetch } = useQuery(ViewerRecentMediaDocument);
+
+  const nodes = data?.viewer?.mediaItems.nodes ?? [];
+  const hasItems = nodes.length > 0;
+
+  const startUploadPick = () => {
+    setUploadError(undefined);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) {
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(undefined);
+
+    const result = await mediaUploadWorkflow(client, file);
+
+    setIsUploading(false);
+
+    if (!result.success) {
+      setUploadError(result.message);
+      return;
+    }
+
+    await refetch();
+    navigate(`/media/${result.mediaItemId}`);
+  };
+
+  const formatCreatedAt = (value: unknown): string => {
+    if (typeof value === 'string') {
+      const dt = DateTime.fromISO(value);
+      if (dt.isValid) {
+        return dt.toLocaleString(DateTime.DATE_MED);
+      }
+    }
+    return '—';
+  };
+
+  const kindLabel = (kind: string): string => {
+    if (kind === 'VIDEO') {
+      return 'Video';
+    }
+    if (kind === 'PHOTO') {
+      return 'Photo';
+    }
+    return 'Media';
+  };
+
   return (
     <Container>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       <Header>
-        <Title>Recent Photos</Title>
+        <Title>Recent Media</Title>
         <HeaderActions>
-          <UploadButton>Upload Photos</UploadButton>
+          <UploadButton type="button" onClick={startUploadPick} disabled={isUploading}>
+            {isUploading ? 'Uploading…' : 'Upload Media'}
+          </UploadButton>
         </HeaderActions>
       </Header>
 
-      <Content>
-        <PhotoGrid>
-          {/* Placeholder grid items */}
-          {Array.from({ length: 12 }).map((_, i) => (
-            <PhotoGridItem key={i}>
-              <PhotoPlaceholder>
-                <PlaceholderIcon>📸</PlaceholderIcon>
-              </PhotoPlaceholder>
-              <PhotoInfo>
-                <PhotoDate>Photo {i + 1}</PhotoDate>
-              </PhotoInfo>
-            </PhotoGridItem>
-          ))}
-        </PhotoGrid>
-      </Content>
+      {uploadError ? <InlineNotice role="alert">{uploadError}</InlineNotice> : null}
 
-      <EmptyState>
-        <EmptyIcon>📷</EmptyIcon>
-        <EmptyTitle>No photos yet</EmptyTitle>
-        <EmptyText>Upload your first photos to start building your family gallery</EmptyText>
-        <EmptyButton>Upload Photos</EmptyButton>
-      </EmptyState>
+      <Content>
+        {loading ? (
+          <StatusMessage>Loading media…</StatusMessage>
+        ) : error ? (
+          <StatusMessage role="alert">Could not load media. {error.message}</StatusMessage>
+        ) : hasItems ? (
+          <MediaGrid>
+            {nodes.map((item) => (
+              <MediaGridItem
+                key={item.id}
+                type="button"
+                onClick={() => navigate(`/media/${item.id}`)}
+              >
+                <MediaThumb>
+                  <ThumbIcon aria-hidden>{item.kind === 'VIDEO' ? '🎬' : '🖼️'}</ThumbIcon>
+                  {item.status === 'PENDING' ? <StatusPill>Processing</StatusPill> : null}
+                  {item.status === 'FAILED' ? <StatusPill $fail>Failed</StatusPill> : null}
+                </MediaThumb>
+                <MediaInfo>
+                  <MediaTitle>{item.title?.trim() || kindLabel(item.kind)}</MediaTitle>
+                  <MediaMeta>
+                    {formatCreatedAt(item.createdAt)}
+                    {item.width && item.height ? ` · ${item.width}×${item.height}` : ''}
+                  </MediaMeta>
+                </MediaInfo>
+              </MediaGridItem>
+            ))}
+          </MediaGrid>
+        ) : (
+          <EmptyState>
+            <EmptyIcon>📷</EmptyIcon>
+            <EmptyTitle>No media yet</EmptyTitle>
+            <EmptyText>Upload your first media to start building your family gallery</EmptyText>
+            <EmptyButton type="button" onClick={startUploadPick} disabled={isUploading}>
+              {isUploading ? 'Uploading…' : 'Upload Media'}
+            </EmptyButton>
+          </EmptyState>
+        )}
+      </Content>
     </Container>
   );
 };
@@ -84,9 +178,21 @@ const UploadButton = styled.button`
   font-weight: 500;
   transition: all 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.accentHover};
   }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
+const InlineNotice = styled.div`
+  padding: ${({ theme }) => theme.spacing(2)} ${({ theme }) => theme.spacing(6)};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.danger};
+  font-size: 14px;
 `;
 
 const Content = styled.div`
@@ -99,7 +205,14 @@ const Content = styled.div`
   }
 `;
 
-const PhotoGrid = styled.div`
+const StatusMessage = styled.div`
+  max-width: 560px;
+  margin: 0 auto;
+  color: ${({ theme }) => theme.colors.subtext};
+  font-size: 15px;
+`;
+
+const MediaGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: ${({ theme }) => theme.spacing(3)};
@@ -112,19 +225,25 @@ const PhotoGrid = styled.div`
   }
 `;
 
-const PhotoGridItem = styled.div`
+const MediaGridItem = styled.button`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(1)};
   cursor: pointer;
   transition: transform 0.2s ease;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
 
   &:hover {
     transform: translateY(-2px);
   }
 `;
 
-const PhotoPlaceholder = styled.div`
+const MediaThumb = styled.div`
+  position: relative;
   aspect-ratio: 4 / 3;
   background: ${({ theme }) => theme.colors.panel};
   border: 1px solid ${({ theme }) => theme.colors.border};
@@ -135,22 +254,43 @@ const PhotoPlaceholder = styled.div`
   overflow: hidden;
 `;
 
-const PlaceholderIcon = styled.div`
+const ThumbIcon = styled.div`
   font-size: 48px;
-  opacity: 0.3;
+  opacity: 0.35;
 `;
 
-const PhotoInfo = styled.div`
+const StatusPill = styled.span<{ $fail?: boolean }>`
+  position: absolute;
+  bottom: ${({ theme }) => theme.spacing(1)};
+  right: ${({ theme }) => theme.spacing(1)};
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: ${({ theme }) => theme.spacing(0.5)} ${({ theme }) => theme.spacing(1)};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  background: ${({ theme, $fail }) =>
+    $fail ? 'rgba(217, 140, 126, 0.25)' : 'rgba(0, 0, 0, 0.55)'};
+  color: ${({ theme }) => theme.colors.bg};
+`;
+
+const MediaInfo = styled.div`
   padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(0.5)};
 `;
 
-const PhotoDate = styled.div`
+const MediaTitle = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const MediaMeta = styled.div`
   font-size: 13px;
   color: ${({ theme }) => theme.colors.subtext};
 `;
 
 const EmptyState = styled.div`
-  display: none;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -189,7 +329,12 @@ const EmptyButton = styled.button`
   font-weight: 500;
   transition: all 0.2s ease;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: ${({ theme }) => theme.colors.accentHover};
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 `;

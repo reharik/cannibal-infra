@@ -10,12 +10,9 @@ const albumResolvers: Pick<Resolvers, 'Mutation'> = {
         description: args.input.description,
       });
 
-      if (!result.success) {
-        throw new Error(result.error.message);
-      }
-
       return {
-        albumId: result.value.albumId,
+        data: result.success ? { albumId: result.value.albumId } : undefined,
+        errors: result.success ? [] : [result.error],
       };
     }),
     AddMediaItemToAlbum: authenticatedResolver(async (_parent, args, ctx) => {
@@ -25,13 +22,14 @@ const albumResolvers: Pick<Resolvers, 'Mutation'> = {
         mediaItemId: args.input.mediaItemId,
       });
 
-      if (!result.success) {
-        throw new Error(result.error.message);
-      }
-
       return {
-        albumId: result.value.albumId,
-        albumItemId: result.value.albumItemId,
+        data: result.success
+          ? {
+              albumId: result.value.albumId,
+              albumItemId: result.value.albumItemId,
+            }
+          : undefined,
+        errors: result.success ? [] : [result.error],
       };
     }),
   },

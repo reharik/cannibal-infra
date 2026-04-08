@@ -1,49 +1,36 @@
+import { AlbumSortBy } from '@packages/contracts';
+import {
+  AlbumItemWithMediaRow,
+  AlbumWithCoverRow,
+} from '../../application/readServices/viewerReadServices/viewerAlbumReadService.types';
 import type { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
-import { EntityId } from '../../types/types';
+import { CollectionInfo } from '../../types/types';
 
 export type AlbumReadRepository = {
-  listByViewerId: ({ viewerId }: { viewerId: string }) => Promise<AlbumWithCoverProjection[]>;
+  listByViewerId: ({
+    viewerId,
+    collectionInfo,
+  }: {
+    viewerId: string;
+    collectionInfo: CollectionInfo<AlbumSortBy>;
+  }) => Promise<AlbumWithCoverRow[]>;
   getAlbumForViewer: ({
     albumId,
     viewerId,
   }: {
     albumId: string;
     viewerId: string;
-  }) => Promise<AlbumWithCoverProjection | undefined>;
+  }) => Promise<AlbumWithCoverRow | undefined>;
   getAlbumItemsForViewer: ({
     albumId,
     viewerId,
+    collectionInfo,
   }: {
     albumId: string;
     viewerId: string;
-  }) => Promise<AlbumItemWithMediaProjection[]>;
+    collectionInfo: CollectionInfo<AlbumSortBy>;
+  }) => Promise<AlbumItemWithMediaRow[]>;
 };
-
-export type MediaItemProjection = {
-  mediaItemId?: EntityId;
-  mediaItemOwnerId?: EntityId;
-  mediaItemKind?: string;
-  mediaItemStatus?: string;
-  mediaItemStorageKey?: string;
-  mediaItemMimeType?: string;
-  mediaItemSizeBytes?: number;
-  mediaItemWidth?: number;
-  mediaItemHeight?: number;
-  mediaItemDurationSeconds?: number;
-  mediaItemTitle?: string;
-  mediaItemDescription?: string;
-  mediaItemTakenAt?: Date;
-};
-
-type AlbumWithCoverProjection = {
-  id: string;
-  title: string;
-  description?: string;
-} & MediaItemProjection;
-
-type AlbumItemWithMediaProjection = {
-  id: EntityId;
-} & MediaItemProjection;
 
 const mediaItemSelectColumns = [
   'mediaItem.id as mediaItemId',
@@ -59,6 +46,8 @@ const mediaItemSelectColumns = [
   'mediaItem.title as mediaItemTitle',
   'mediaItem.description as mediaItemDescription',
   'mediaItem.takenAt as mediaItemTakenAt',
+  'mediaItem.createdAt as mediaItemCreatedAt',
+  'mediaItem.updatedAt as mediaItemUpdatedAt',
 ];
 
 const albumWithCoverSelectColumns = [
@@ -74,14 +63,20 @@ export const buildAlbumReadRepository = ({
 }: IocGeneratedCradle): AlbumReadRepository => ({
   listByViewerId: async ({
     viewerId,
+    collectionInfo,
   }: {
     viewerId: string;
-  }): Promise<AlbumWithCoverProjection[]> => {
-    return database<AlbumWithCoverProjection>('album')
+    collectionInfo: CollectionInfo<AlbumSortBy>;
+  }): Promise<AlbumWithCoverRow[]> => {
+    return database<AlbumWithCoverRow>('album')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
       .leftJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
       .where('albumMember.userId', viewerId)
-      .select<AlbumWithCoverProjection[]>(...albumWithCoverSelectColumns);
+      .select<AlbumWithCoverRow[]>(...albumWithCoverSelectColumns)
+      .orderBy(`album.${collectionInfo.sortBy.column}`, collectionInfo.sortDir.value)
+      .orderBy('album.id', 'asc') // tie-breaker (unqualified `id` / `created_at` are ambiguous with joined mediaItem)
+      .limit(collectionInfo.pageInfo.limit + 1)
+      .offset(collectionInfo.pageInfo.offset);
   },
 
   getAlbumForViewer: async ({
@@ -90,29 +85,35 @@ export const buildAlbumReadRepository = ({
   }: {
     albumId: string;
     viewerId: string;
-  }): Promise<AlbumWithCoverProjection | undefined> => {
-    const row = await database<AlbumWithCoverProjection>('album')
+  }): Promise<AlbumWithCoverRow | undefined> => {
+    const row = await database<AlbumWithCoverRow>('album')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
       .leftJoin('mediaItem', 'mediaItem.id', 'album.coverMediaId')
       .where('albumMember.userId', viewerId)
       .andWhere('album.id', albumId)
-      .first<AlbumWithCoverProjection>(...albumWithCoverSelectColumns);
+      .first<AlbumWithCoverRow>(...albumWithCoverSelectColumns);
 
     return row;
   },
   getAlbumItemsForViewer: async ({
     albumId,
     viewerId,
+    collectionInfo,
   }: {
     albumId: string;
     viewerId: string;
-  }): Promise<AlbumItemWithMediaProjection[]> => {
-    return database<AlbumItemWithMediaProjection>('albumItem')
+    collectionInfo: CollectionInfo<AlbumSortBy>;
+  }): Promise<AlbumItemWithMediaRow[]> => {
+    return database<AlbumItemWithMediaRow>('albumItem')
       .innerJoin('album', 'albumItem.albumId', 'album.id')
       .innerJoin('albumMember', 'albumMember.albumId', 'album.id')
       .innerJoin('mediaItem', 'mediaItem.id', 'albumItem.mediaItemId')
       .where('albumMember.userId', viewerId)
       .andWhere('album.id', albumId)
-      .select<AlbumItemWithMediaProjection[]>(...albumItemWithMediaSelectColumns);
+      .select<AlbumItemWithMediaRow[]>(...albumItemWithMediaSelectColumns)
+      .orderBy(`album_item.${collectionInfo.sortBy.column}`, collectionInfo.sortDir.value)
+      .orderBy('album_item.id', 'asc') // tie-breaker
+      .limit(collectionInfo.pageInfo.limit + 1)
+      .offset(collectionInfo.pageInfo.offset);
   },
 });

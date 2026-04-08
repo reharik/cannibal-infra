@@ -2,6 +2,22 @@ scalar DateTime
 scalar Date
 
 """
+Optional metadata on enum values for SmartEnum / codegen (e.g. DB column names).
+"""
+input EnumMetaPropInput {
+  name: String!
+  value: String!
+}
+
+directive @enumMeta(
+  display: String
+  shortDisplay: String
+  description: String
+  sortOrder: Int
+  props: [EnumMetaPropInput!]
+) on ENUM_VALUE
+
+"""
 Implemented by all entities that have an id.
 """
 interface Node {
@@ -13,7 +29,33 @@ enum SortDir {
   DESC
 }
 
+"""
+Cursor-free paging window (offset-based). Used on output types.
+"""
 type PageInfo {
-  hasNextPage: Boolean!
-  endCursor: String
+  limit: Int!
+  offset: Int!
+}
+
+"""
+Same shape as PageInfo; GraphQL requires a distinct input type for fields on input objects.
+"""
+input PageInfoInput {
+  limit: Int!
+  offset: Int!
+}
+
+type ContractError {
+  code: String!
+  message: String!
+  field: String
+  category: ErrorCategory!
+  retryable: Boolean!
+}
+
+enum ErrorCategory {
+  validation
+  domain
+  auth
+  conflict
 }

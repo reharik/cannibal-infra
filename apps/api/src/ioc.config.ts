@@ -19,11 +19,15 @@ export default defineIocConfig({
     MediaStorage: {
       localMediaStorage: { default: true },
     },
-    AlbumReadRepository: {
-      albumReadRepository: { lifetime: 'scoped' },
-    },
+
     MediaItemReadRepository: {
       mediaItemReadRepository: { lifetime: 'scoped' },
+    },
+    ViewerMediaItemReadServiceFactory: {
+      viewerMediaItemReadServiceFactory: { lifetime: 'scoped' },
+    },
+    AlbumReadRepository: {
+      albumReadRepository: { lifetime: 'scoped' },
     },
     ViewerAlbumReadServiceFactory: {
       viewerAlbumReadServiceFactory: { lifetime: 'scoped' },
@@ -31,12 +35,6 @@ export default defineIocConfig({
     Knex: {
       $contract: { accessKey: 'database' },
     },
-    // BindViewerReadServices: {
-    //   bindViewerReadServices: {
-    //     name: "bindViewerReadServices",
-    //     lifetime: "scoped",
-    //   },
-    // },
     AuthMiddleware: {
       // Keep strict middleware under a distinct key so `authMiddleware` (contract default slot) aliases to optional.
       authMiddleware: { name: 'strictAuthMiddleware' },

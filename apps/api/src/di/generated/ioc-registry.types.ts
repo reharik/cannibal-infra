@@ -5,7 +5,7 @@ import type Router from '../../../../../node_modules/@types/koa__router/index.d.
 import type { Knex } from '../../../../../node_modules/knex/types/index.d.js';
 import type { MediaStorage } from '../../application/media/MediaStorage.js';
 import type { ViewerAlbumReadServiceFactory } from '../../application/readServices/viewerReadServices/viewerAlbumReadService.js';
-import type { ViewerMediaItemServiceFactory } from '../../application/readServices/viewerReadServices/viewerMediaItemService.js';
+import type { ViewerMediaItemReadServiceFactory } from '../../application/readServices/viewerReadServices/viewerMediaItemReadService.js';
 import type { AddAlbumItem } from '../../application/writeServices/album/addAlbumItem.js';
 import type { CreateAlbum } from '../../application/writeServices/album/createAlbum.js';
 import type { CreateMediaUpload } from '../../application/writeServices/mediaItem/createMediaItemUpload.js';
@@ -66,11 +66,11 @@ export interface IocGeneratedTypes {
   shareLinkRepository: ShareLinkRepository;
   userRepository: UserRepository;
   viewerAlbumReadServiceFactory: ViewerAlbumReadServiceFactory;
-  viewerMediaItemServiceFactory: ViewerMediaItemServiceFactory;
+  viewerMediaItemReadServiceFactory: ViewerMediaItemReadServiceFactory;
   yogaApp: YogaApp;
   readServiceFactories: {
     viewerAlbumReadServiceFactory: ViewerAlbumReadServiceFactory;
-    viewerMediaItemServiceFactory: ViewerMediaItemServiceFactory;
+    viewerMediaItemReadServiceFactory: ViewerMediaItemReadServiceFactory;
   };
   writeServices: {
     addAlbumItem: AddAlbumItem;

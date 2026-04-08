@@ -47,7 +47,7 @@ export const LoggedOutScreen = () => {
       <ContentWrapper>
         <LeftPanel>
           <BrandSection>
-            <BrandTitle>Family Photos</BrandTitle>
+            <BrandTitle>Family Media</BrandTitle>
             <BrandTagline>
               A private, secure place to share and preserve your family memories
             </BrandTagline>
@@ -55,7 +55,7 @@ export const LoggedOutScreen = () => {
           <FeatureList>
             <Feature>
               <FeatureIcon>📸</FeatureIcon>
-              <FeatureText>Unlimited photo storage</FeatureText>
+              <FeatureText>Unlimited media storage</FeatureText>
             </Feature>
             <Feature>
               <FeatureIcon>👨‍👩‍👧‍👦</FeatureIcon>
@@ -79,7 +79,7 @@ export const LoggedOutScreen = () => {
               <AuthSubtitle>
                 {isSignup
                   ? 'Start preserving your family memories'
-                  : 'Sign in to access your photos'}
+                  : 'Sign in to access your media'}
               </AuthSubtitle>
             </AuthHeader>
 

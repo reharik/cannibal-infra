@@ -5,7 +5,7 @@ Re-run `npm run gen:manifest` after changing factories or IoC config.
 import type { IocGeneratedContainerManifest, IocModuleNamespace } from 'ioc-manifest';
 
 import * as ioc_application_readServices_viewerReadServices_viewerAlbumReadService from '../../application/readServices/viewerReadServices/viewerAlbumReadService.js';
-import * as ioc_application_readServices_viewerReadServices_viewerMediaItemService from '../../application/readServices/viewerReadServices/viewerMediaItemService.js';
+import * as ioc_application_readServices_viewerReadServices_viewerMediaItemReadService from '../../application/readServices/viewerReadServices/viewerMediaItemReadService.js';
 import * as ioc_application_writeServices_album_addAlbumItem from '../../application/writeServices/album/addAlbumItem.js';
 import * as ioc_application_writeServices_album_createAlbum from '../../application/writeServices/album/createAlbum.js';
 import * as ioc_application_writeServices_mediaItem_createMediaItemUpload from '../../application/writeServices/mediaItem/createMediaItemUpload.js';
@@ -43,9 +43,9 @@ type IocManifestGroupRoots = {
       readonly contractName: 'ViewerAlbumReadServiceFactory';
       readonly registrationKey: 'viewerAlbumReadServiceFactory';
     };
-    readonly viewerMediaItemServiceFactory: {
-      readonly contractName: 'ViewerMediaItemServiceFactory';
-      readonly registrationKey: 'viewerMediaItemServiceFactory';
+    readonly viewerMediaItemReadServiceFactory: {
+      readonly contractName: 'ViewerMediaItemReadServiceFactory';
+      readonly registrationKey: 'viewerMediaItemReadServiceFactory';
     };
   };
   readonly writeServices: {
@@ -71,7 +71,7 @@ type IocManifestGroupRoots = {
 export const iocManifest = {
   moduleImports: [
     ioc_application_readServices_viewerReadServices_viewerAlbumReadService,
-    ioc_application_readServices_viewerReadServices_viewerMediaItemService,
+    ioc_application_readServices_viewerReadServices_viewerMediaItemReadService,
     ioc_application_writeServices_album_addAlbumItem,
     ioc_application_writeServices_album_createAlbum,
     ioc_application_writeServices_mediaItem_createMediaItemUpload,
@@ -593,18 +593,20 @@ export const iocManifest = {
         dependencyContractNames: ['AlbumReadRepository'],
       },
     },
-    ViewerMediaItemServiceFactory: {
-      viewerMediaItemServiceFactory: {
-        exportName: 'buildViewerMediaItemServiceFactory',
-        registrationKey: 'viewerMediaItemServiceFactory',
-        modulePath: 'application/readServices/viewerReadServices/viewerMediaItemService.ts',
-        relImport: '../../application/readServices/viewerReadServices/viewerMediaItemService.js',
-        contractName: 'ViewerMediaItemServiceFactory',
-        implementationName: 'viewerMediaItemServiceFactory',
-        lifetime: 'singleton',
+    ViewerMediaItemReadServiceFactory: {
+      viewerMediaItemReadServiceFactory: {
+        exportName: 'buildViewerMediaItemReadServiceFactory',
+        registrationKey: 'viewerMediaItemReadServiceFactory',
+        modulePath: 'application/readServices/viewerReadServices/viewerMediaItemReadService.ts',
+        relImport:
+          '../../application/readServices/viewerReadServices/viewerMediaItemReadService.js',
+        contractName: 'ViewerMediaItemReadServiceFactory',
+        implementationName: 'viewerMediaItemReadServiceFactory',
+        lifetime: 'scoped',
         moduleIndex: 1,
         default: true,
         discoveredBy: 'naming',
+        configOverridesApplied: ['lifetime'],
         dependencyContractNames: ['MediaItemReadRepository'],
       },
     },
@@ -630,9 +632,9 @@ export const iocManifest = {
       contractName: 'ViewerAlbumReadServiceFactory',
       registrationKey: 'viewerAlbumReadServiceFactory',
     },
-    viewerMediaItemServiceFactory: {
-      contractName: 'ViewerMediaItemServiceFactory',
-      registrationKey: 'viewerMediaItemServiceFactory',
+    viewerMediaItemReadServiceFactory: {
+      contractName: 'ViewerMediaItemReadServiceFactory',
+      registrationKey: 'viewerMediaItemReadServiceFactory',
     },
   },
 

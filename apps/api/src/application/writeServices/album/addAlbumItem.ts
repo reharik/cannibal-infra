@@ -7,31 +7,21 @@ import {
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { Album, AlbumRepository } from 'apps/api/src/domain';
 import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
-import { MediaItemParent } from 'apps/api/src/graphql/resolvers/parentModels';
 import { MediaItemReadRepository } from 'apps/api/src/repositories/readRepositories/mediaItemReadRepository';
 import { EntityId, WriteResult } from 'apps/api/src/types/types';
 import { WriteServiceBase } from '../writeServiceBaseType';
-
-export type AddAlbumItemDTO = {
-  viewerId: EntityId;
-  albumId: EntityId;
-  mediaItemId: EntityId;
-};
-
-export type AddAlbumItemResultDTO = {
-  albumId: EntityId;
-  albumItemId: EntityId;
-};
+import { MediaItemRow } from '../../readServices/viewerReadServices/viewerMediaItemReadService.types';
+import { AddAlbumItemCommand, AddAlbumItemResult } from './writeAlbum.types';
 
 export interface AddAlbumItem extends WriteServiceBase {
-  (input: AddAlbumItemDTO): Promise<WriteResult<AddAlbumItemResultDTO>>;
+  (input: AddAlbumItemCommand): Promise<WriteResult<AddAlbumItemResult>>;
 }
 
 export const buildAddAlbumItem = ({
   albumRepository,
   mediaItemReadRepository,
 }: IocGeneratedCradle): AddAlbumItem => {
-  return async (input: AddAlbumItemDTO): Promise<WriteResult<AddAlbumItemResultDTO>> => {
+  return async (input: AddAlbumItemCommand): Promise<WriteResult<AddAlbumItemResult>> => {
     const { viewerId, albumId, mediaItemId } = input;
     const r1 = await getAlbumOrFailure(albumId, albumRepository);
     if (!r1.success) {
@@ -79,17 +69,17 @@ const getMediaItemOrFailure = async (
   mediaItemId: EntityId,
   viewerId: EntityId,
   mediaItemReadRepository: MediaItemReadRepository,
-): Promise<WriteResult<MediaItemParent, MediaItemErrorEnum>> => {
+): Promise<WriteResult<MediaItemRow, MediaItemErrorEnum>> => {
   const mediaItem = await mediaItemReadRepository.getForViewer({ mediaItemId, viewerId });
   return mediaItem ? ok(mediaItem) : fail(AppErrorCollection.mediaItem.MediaItemNotFound);
 };
 
-const ensureMediaItemOwnedByViewer = (item: MediaItemParent, viewerId: EntityId) =>
+const ensureMediaItemOwnedByViewer = (item: MediaItemRow, viewerId: EntityId) =>
   item?.ownerId === viewerId
     ? ok(undefined)
     : fail(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer);
 
-const ensureMediaItemInReadyState = (mediaItem: MediaItemParent) =>
+const ensureMediaItemInReadyState = (mediaItem: MediaItemRow) =>
   mediaItem.status === MediaItemStatus.ready.value
     ? ok(undefined)
     : fail(AppErrorCollection.mediaItem.MediaItemNotReady);

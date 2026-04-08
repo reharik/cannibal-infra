@@ -20,7 +20,7 @@ export const MediaItemScreen = () => {
           <SectionTitle>Details</SectionTitle>
           <MetadataItem>
             <MetadataLabel>Filename</MetadataLabel>
-            <MetadataValue>photo-{mediaId}.jpg</MetadataValue>
+            <MetadataValue>media-{mediaId}</MetadataValue>
           </MetadataItem>
           <MetadataItem>
             <MetadataLabel>Date</MetadataLabel>

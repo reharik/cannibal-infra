@@ -44,12 +44,15 @@ const createMediaItemRepository = (items: MediaItem[]): MediaItemRepository => {
 const testUserFromHeader: Koa.Middleware = async (ctx, next) => {
   const id = ctx.get('X-Authenticated-User');
   if (id) {
-    ctx.user = {
+    ctx.state.user = {
       id,
-      name: 'Test',
+      name: 'Test User',
+      firstName: 'Test',
+      lastName: 'User',
       email: 'test@example.com',
       isActive: true,
     };
+    ctx.state.isLoggedIn = true;
     ctx.isLoggedIn = true;
   }
   await next();
@@ -134,7 +137,7 @@ describe('Media byte upload (HTTP)', () => {
           contentType: 'image/jpeg',
         });
       expect(res.status).toBe(201);
-      expect(res.body.size).toBeGreaterThan(0);
+      expect((res.body as { size: number }).size).toBeGreaterThan(0);
       const storedPath = path.join(tempRoot, 'media', TEST_VIEWER_A_ID, 'photo', 'item-1');
       await expect(fs.stat(storedPath)).resolves.toBeDefined();
       server.close();

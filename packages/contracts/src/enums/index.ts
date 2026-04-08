@@ -1,7 +1,8 @@
 export type { Enumeration } from '@reharik/smart-enum';
 export * from './albumMemberRole';
 export * from './appErrorCollection';
-export * from './errorEnums';
+export * from './ContractError';
+export * from './FrontendError';
 export * from './graphqlSmartEnums';
 export * from './notificationKind';
 export * from './resourceType';

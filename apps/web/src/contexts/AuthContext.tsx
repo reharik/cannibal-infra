@@ -13,6 +13,7 @@ interface AuthContextType {
     name: string,
     role?: 'adult' | 'kid',
   ) => Promise<boolean>;
+
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;

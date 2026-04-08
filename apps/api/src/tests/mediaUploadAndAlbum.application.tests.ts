@@ -8,7 +8,7 @@ import { Album } from '../domain/Album/Album';
 import type { AlbumRepository } from '../domain/Album/AlbumRepository';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
-import { MediaItemParent } from '../graphql/resolvers/parentModels';
+import { MediaItemProjection } from '../application/readServices/viewerReadServices/viewerMediaItemReadService.types';
 import { EntityId } from '../types/types';
 import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID } from './testViewerIds';
 
@@ -56,7 +56,7 @@ const createTrackingMediaStorage = (
   };
 };
 
-const projectionFromAggregate = (item: MediaItem): MediaItemParent => {
+const projectionFromAggregate = (item: MediaItem): MediaItemProjection => {
   const p = item.toPersistence();
   return {
     id: item.id(),
@@ -71,6 +71,8 @@ const projectionFromAggregate = (item: MediaItem): MediaItemParent => {
     title: p.title,
     description: p.description,
     takenAt: p.takenAt,
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
   };
 };
 
@@ -252,7 +254,7 @@ describe('Album integration (application services)', () => {
     it('should fail with media not ready', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository();
-      const projectionFromReadRepo = new Map<string, MediaItemParent>();
+      const projectionFromReadRepo = new Map<string, MediaItemProjection>();
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
       const albumResult = await createAlbum({ viewerId, title: 'Summer' });
@@ -306,7 +308,7 @@ describe('Album integration (application services)', () => {
     it('should persist the album item', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository();
-      const projectionFromReadRepo = new Map<string, MediaItemParent>();
+      const projectionFromReadRepo = new Map<string, MediaItemProjection>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
@@ -379,7 +381,7 @@ describe('Album integration (application services)', () => {
     it('should reject the duplicate when the aggregate disallows it', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository();
-      const projectionFromReadRepo = new Map<string, MediaItemParent>();
+      const projectionFromReadRepo = new Map<string, MediaItemProjection>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);

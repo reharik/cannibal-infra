@@ -2,10 +2,25 @@ type Album implements Node {
   id: ID!
   title: String!
   coverMedia: MediaItem
-  # members: [AlbumMember!]!
-  items: [AlbumItem!]!
+  # members: (input: ViewerAlbumItemsInput): AlbumItemCollectionPayload!
   createdAt: DateTime!
   updatedAt: DateTime!
+  items(input: ViewerAlbumItemsInput!): AlbumItemCollectionPayload!
+}
+
+input ViewerAlbumItemsInput {
+  collectionInfo: AlbumItemCollectionInput!
+}
+
+input AlbumItemCollectionInput {
+  pageInfo: PageInfoInput!
+  sortBy: AlbumItemSortBy!
+  sortDir: SortDir!
+}
+
+type AlbumItemCollectionPayload {
+  nodes: [AlbumItem!]!
+  pageInfo: PageInfo!
 }
 
 # YAGNI
@@ -29,4 +44,8 @@ type AlbumItem implements Node {
   mediaItem: MediaItem!
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+enum AlbumItemSortBy {
+  CREATED_AT @enumMeta(props: [{ name: "column", value: "created_at" }])
 }

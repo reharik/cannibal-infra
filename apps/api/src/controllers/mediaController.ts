@@ -58,7 +58,7 @@ export const buildMediaController = ({
   mediaStorage,
 }: IocGeneratedCradle): MediaController => ({
   upload: async (ctx: Context): Promise<Context> => {
-    const viewer = ctx.user;
+    const viewer = ctx.state.user;
     if (!viewer) {
       ctx.status = 401;
       ctx.body = { error: 'Authentication required' };

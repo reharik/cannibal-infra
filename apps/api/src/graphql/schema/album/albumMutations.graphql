@@ -1,6 +1,11 @@
 type Mutation {
-  createAlbum(input: CreateAlbumInput!): CreateAlbumPayload!
-  AddMediaItemToAlbum(input: AddMediaItemToAlbumInput!): AddMediaItemToAlbumPayload!
+  createAlbum(input: CreateAlbumInput!): CreateAlbumResponse!
+  AddMediaItemToAlbum(input: AddMediaItemToAlbumInput!): AddMediaItemToAlbumResponse!
+}
+
+type CreateAlbumResponse {
+  data: CreateAlbumPayload
+  errors: [ContractError!]
 }
 
 type CreateAlbumPayload {
@@ -10,6 +15,11 @@ type CreateAlbumPayload {
 input CreateAlbumInput {
   title: String!
   description: String
+}
+
+type AddMediaItemToAlbumResponse {
+  data: AddMediaItemToAlbumPayload
+  errors: [ContractError!]
 }
 
 type AddMediaItemToAlbumPayload {

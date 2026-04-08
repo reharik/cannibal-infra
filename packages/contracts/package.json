@@ -21,12 +21,12 @@
     "gen:graphql:enums": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
-    "@reharik/smart-enum": "^0.0.2",
+    "@reharik/smart-enum": "^0.3.1",
     "typia": "^9.7.2"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^6.2.1",
-    "@reharik/graphql-codegen-smart-enum": "^0.1.4",
+    "@reharik/graphql-codegen-smart-enum": "^0.2.0",
     "@types/node": "^24.9.1",
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.2.1",

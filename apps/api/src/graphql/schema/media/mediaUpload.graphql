@@ -1,6 +1,6 @@
 type Mutation {
-  createMediaUpload(input: CreateMediaUploadInput!): CreateMediaUploadPayload!
-  finalizeMediaUpload(input: FinalizeMediaUploadInput!): FinalizeMediaUploadPayload!
+  createMediaUpload(input: CreateMediaUploadInput!): CreateMediaUploadResponse!
+  finalizeMediaUpload(input: FinalizeMediaUploadInput!): FinalizeMediaUploadResponse!
 }
 
 input CreateMediaUploadInput {
@@ -19,6 +19,11 @@ type UploadHeader {
   value: String!
 }
 
+type CreateMediaUploadResponse {
+  data: CreateMediaUploadPayload
+  errors: [ContractError!]
+}
+
 type CreateMediaUploadPayload {
   mediaItemId: ID!
   status: MediaItemStatus!
@@ -27,6 +32,11 @@ type CreateMediaUploadPayload {
 
 input FinalizeMediaUploadInput {
   mediaItemId: ID!
+}
+
+type FinalizeMediaUploadResponse {
+  data: FinalizeMediaUploadPayload
+  errors: [ContractError!]
 }
 
 type FinalizeMediaUploadPayload {

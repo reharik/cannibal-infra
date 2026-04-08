@@ -42,7 +42,7 @@
     "@koa/cors": "^5.0.0",
     "@koa/router": "^13.1.0",
     "@packages/contracts": "*",
-    "@reharik/smart-enum": "^0.0.2",
+    "@reharik/smart-enum": "^0.3.1",
     "@reharik/smart-enum-knex": "^0.0.2",
     "awilix": "^12.1.1",
     "bcryptjs": "^3.0.3",

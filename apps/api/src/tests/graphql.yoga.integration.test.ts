@@ -83,11 +83,17 @@ describe('GraphQL', () => {
               createMediaUpload(
                 input: { kind: PHOTO, mimeType: "image/jpeg" }
               ) {
-                mediaItemId
-                status
-                uploadInstructions {
-                  method
-                  url
+                data {
+                  mediaItemId
+                  status
+                  uploadInstructions {
+                    method
+                    url
+                  }
+                }
+                errors {
+                  code
+                  message
                 }
               }
             }
@@ -112,10 +118,16 @@ describe('GraphQL', () => {
           query: `
             mutation {
               finalizeMediaUpload(input: { mediaItemId: "media-1" }) {
-                mediaItemId
-                status
-                kind
-                size
+                data {
+                  mediaItemId
+                  status
+                  kind
+                  size
+                }
+                errors {
+                  code
+                  message
+                }
               }
             }
           `,

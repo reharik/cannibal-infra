@@ -1,23 +1,15 @@
-import { AppErrorCollection, MediaItemStatus, MediaKind } from '@packages/contracts';
+import { AppErrorCollection, MediaItemStatus } from '@packages/contracts';
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
-import { EntityId, WriteResult } from 'apps/api/src/types/types';
+import { WriteResult } from 'apps/api/src/types/types';
 import { WriteServiceBase } from '../writeServiceBaseType';
+import {
+  FinalizeMediaItemUploadCommand,
+  FinalizeMediaItemUploadResult,
+} from './writeMediaItem.types';
 
-export type FinalizeMediaItemUploadInput = {
-  viewerId: EntityId;
-  mediaItemId: EntityId;
-};
-
-export type FinalizeMediaItemUploadResult = {
-  mediaItemId: string;
-  status: MediaItemStatus;
-  mimeType?: string;
-  size: number;
-  kind: MediaKind;
-};
 export interface FinalizeMediaItemUpload extends WriteServiceBase {
-  (input: FinalizeMediaItemUploadInput): Promise<WriteResult<FinalizeMediaItemUploadResult>>;
+  (input: FinalizeMediaItemUploadCommand): Promise<WriteResult<FinalizeMediaItemUploadResult>>;
 }
 
 export const buildFinalizeMediaItemUpload = ({
@@ -25,7 +17,7 @@ export const buildFinalizeMediaItemUpload = ({
   mediaStorage,
 }: IocGeneratedCradle): FinalizeMediaItemUpload => {
   return async (
-    input: FinalizeMediaItemUploadInput,
+    input: FinalizeMediaItemUploadCommand,
   ): Promise<WriteResult<FinalizeMediaItemUploadResult>> => {
     const { viewerId, mediaItemId } = input;
     const mediaItem = await mediaItemRepository.getById(mediaItemId);

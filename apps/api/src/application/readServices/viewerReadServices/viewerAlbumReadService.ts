@@ -1,22 +1,29 @@
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
-import {
-  AlbumItemParent,
-  AlbumParent,
-  MediaItemParent,
-} from 'apps/api/src/graphql/resolvers/parentModels';
-import { MediaItemProjection } from 'apps/api/src/repositories/readRepositories/albumReadRepository';
+
+import { StandardEnumItem } from '@reharik/smart-enum';
 import { ReadServiceFactoryBase } from '../readServiceBaseType';
+import {
+  AlbumCollectionInfo,
+  AlbumItemCollectionInfo,
+  AlbumItemListProjection,
+  AlbumListProjection,
+  NamespacedMediaItemRow,
+} from './viewerAlbumReadService.types';
+import { MediaItemProjection } from './viewerMediaItemReadService.types';
 
 export interface ViewerAlbumReadService {
-  listAlbums: () => Promise<AlbumParent[]>;
-  getAlbumItems: (args: { albumId: string }) => Promise<AlbumItemParent[]>;
+  listAlbums: (collectionInfo: AlbumCollectionInfo) => Promise<AlbumListProjection>;
+  getAlbumItems: (args: {
+    albumId: string;
+    collectionInfo: AlbumItemCollectionInfo;
+  }) => Promise<AlbumItemListProjection>;
 }
 
 export interface ViewerAlbumReadServiceFactory extends ReadServiceFactoryBase {
   (args: { viewerId: string }): ViewerAlbumReadService;
 }
 
-const mapMediaItemProjectionToParent = (mediaItem: MediaItemProjection): MediaItemParent => ({
+const mapMediaItemRowToParent = (mediaItem: NamespacedMediaItemRow): MediaItemProjection => ({
   id: mediaItem.mediaItemId ?? '',
   ownerId: mediaItem.mediaItemOwnerId ?? '',
   kind: mediaItem.mediaItemKind ?? '',
@@ -29,30 +36,57 @@ const mapMediaItemProjectionToParent = (mediaItem: MediaItemProjection): MediaIt
   title: mediaItem.mediaItemTitle,
   description: mediaItem.mediaItemDescription,
   takenAt: mediaItem.mediaItemTakenAt,
+  createdAt: mediaItem.mediaItemCreatedAt,
+  updatedAt: mediaItem.mediaItemUpdatedAt,
 });
+
+export type SortableEnum = StandardEnumItem & { column: string };
 
 export const buildViewerAlbumReadServiceFactory = ({
   albumReadRepository,
 }: IocGeneratedCradle): ViewerAlbumReadServiceFactory => {
   return ({ viewerId }: { viewerId: string }) => ({
-    listAlbums: async (): Promise<AlbumParent[]> => {
-      const albums = await albumReadRepository.listByViewerId({ viewerId });
-      return albums.map((album) => ({
+    listAlbums: async (collectionInfo: AlbumCollectionInfo): Promise<AlbumListProjection> => {
+      const albums = await albumReadRepository.listByViewerId({
+        viewerId,
+        collectionInfo,
+      });
+      const nodes = albums.map((album) => ({
         id: album.id,
         title: album.title,
-        coverMedia: mapMediaItemProjectionToParent(album),
+        createdAt: album.createdAt,
+        updatedAt: album.updatedAt,
+        coverMedia: mapMediaItemRowToParent(album),
       }));
+
+      return {
+        nodes,
+        pageInfo: collectionInfo.pageInfo,
+      };
     },
 
-    getAlbumItems: async ({ albumId }: { albumId: string }): Promise<AlbumItemParent[]> => {
+    getAlbumItems: async ({
+      albumId,
+      collectionInfo,
+    }: {
+      albumId: string;
+      collectionInfo: AlbumItemCollectionInfo;
+    }): Promise<AlbumItemListProjection> => {
       const albumItems = await albumReadRepository.getAlbumItemsForViewer({
         albumId,
         viewerId,
+        collectionInfo,
       });
-      return albumItems.map((albumItem) => ({
+      const nodes = albumItems.map((albumItem) => ({
         id: albumItem.id,
-        mediaItem: mapMediaItemProjectionToParent(albumItem),
+        mediaItem: mapMediaItemRowToParent(albumItem),
+        createdAt: albumItem.createdAt,
+        updatedAt: albumItem.updatedAt,
       }));
+      return {
+        nodes,
+        pageInfo: collectionInfo.pageInfo,
+      };
     },
   });
 };

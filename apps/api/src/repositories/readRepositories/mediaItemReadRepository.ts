@@ -1,5 +1,8 @@
+import {
+  MediaItemCollectionInfo,
+  MediaItemRow,
+} from '../../application/readServices/viewerReadServices/viewerMediaItemReadService.types';
 import type { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
-import { MediaItemParent } from '../../graphql/resolvers/parentModels';
 import { EntityId } from '../../types/types';
 
 export type MediaItemReadRepository = {
@@ -9,7 +12,11 @@ export type MediaItemReadRepository = {
   }: {
     mediaItemId: EntityId;
     viewerId: EntityId;
-  }) => Promise<MediaItemParent | undefined>;
+  }) => Promise<MediaItemRow | undefined>;
+  listForViewer(args: {
+    viewerId: EntityId;
+    collectionInfo: MediaItemCollectionInfo;
+  }): Promise<MediaItemRow[]>;
 };
 
 const mediaItemRowFields = [
@@ -41,11 +48,27 @@ export const buildMediaItemReadRepository = ({
   }: {
     mediaItemId: EntityId;
     viewerId: EntityId;
-  }): Promise<MediaItemParent | undefined> => {
-    const row = await database<MediaItemParent>('mediaItem')
+  }): Promise<MediaItemRow | undefined> => {
+    const row = await database<MediaItemRow>('mediaItem')
       .where({ id: mediaItemId, ownerId: viewerId })
-      .first<MediaItemParent>(...mediaItemRowFields);
+      .first<MediaItemRow>(...mediaItemRowFields);
 
     return row;
+  },
+  listForViewer: async ({
+    viewerId,
+    collectionInfo,
+  }: {
+    viewerId: EntityId;
+    collectionInfo: MediaItemCollectionInfo;
+  }): Promise<MediaItemRow[]> => {
+    const rows = await database<MediaItemRow>('mediaItem')
+      .where({ ownerId: viewerId })
+      .orderBy(`media_item.${collectionInfo.sortBy.column}`, collectionInfo.sortDir.value)
+      .orderBy('media_item.id', 'asc') // tie-breaker
+      .limit(collectionInfo.pageInfo.limit + 1)
+      .offset(collectionInfo.pageInfo.offset)
+      .select<MediaItemRow[]>(...mediaItemRowFields);
+    return rows;
   },
 });

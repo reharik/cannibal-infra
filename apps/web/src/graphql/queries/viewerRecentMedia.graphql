@@ -1,0 +1,29 @@
+query ViewerRecentMedia {
+  viewer {
+    id
+    mediaItems(
+      input: {
+        collectionInfo: {
+          pageInfo: { limit: 10, offset: 0 }
+          sortBy: CREATED_AT
+          sortDir: DESC
+        }
+      }
+    ) {
+      nodes {
+        id
+        kind
+        status
+        mimeType
+        title
+        createdAt
+        width
+        height
+      }
+      pageInfo {
+        limit
+        offset
+      }
+    }
+  }
+}

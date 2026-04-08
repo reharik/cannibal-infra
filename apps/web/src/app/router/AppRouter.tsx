@@ -13,7 +13,7 @@ export const AppRouter = ({ viewer }: AppRouterProps) => {
     <Routes>
       <Route element={<AppShell viewer={viewer} />}>
         <Route path="/" element={<HomeScreen />} />
-        <Route path="/albums" element={<HomeScreen />} />
+        <Route path="/media" element={<HomeScreen />} />
         <Route path="/albums/:albumId" element={<AlbumScreen />} />
       </Route>
       <Route path="/media/:mediaId" element={<MediaItemScreen />} />

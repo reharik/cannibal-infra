@@ -23,7 +23,7 @@ export const AlbumScreen = () => {
           <AlbumInfo>
             <AlbumTitle>Album Title</AlbumTitle>
             <AlbumStats>
-              <Stat>12 photos</Stat>
+              <Stat>12 media items</Stat>
               <StatDivider>•</StatDivider>
               <Stat>Shared with 3 members</Stat>
             </AlbumStats>

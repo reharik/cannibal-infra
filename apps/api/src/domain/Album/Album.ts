@@ -80,10 +80,6 @@ export class Album extends AggregateRoot<AlbumRecord> {
       return fail(AppErrorCollection.album.MemberNotAllowedToAddItem);
     }
 
-    if (this.#items.some((x) => x.mediaItemId() === mediaItemId)) {
-      return fail(AppErrorCollection.album.MediaAlreadyInAlbum);
-    }
-
     const albumItem = AlbumItem.create({ mediaItemId }, actorId);
     this.#items.push(albumItem);
     this.touch(actorId);

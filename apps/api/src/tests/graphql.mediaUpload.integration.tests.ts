@@ -1,4 +1,4 @@
-import { MediaItemStatus } from '@packages/contracts';
+import { AppErrorCollection, MediaItemStatus } from '@packages/contracts';
 import type { AwilixContainer } from 'awilix';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import type { Server } from 'node:http';
@@ -59,19 +59,28 @@ describe('GraphQL media upload integration', () => {
     it('should return pending status and upload instructions', async () => {
       const { response, json } = await executeGraphQL<{
         createMediaUpload: {
-          mediaItemId: string;
-          status: string;
-          uploadInstructions: { method: string; url: string };
+          data?: {
+            mediaItemId: string;
+            status: string;
+            uploadInstructions: { method: string; url: string };
+          };
+          errors: { code: string }[];
         };
       }>({
         query: `
           mutation {
             createMediaUpload(input: { kind: PHOTO, mimeType: "image/jpeg" }) {
-              mediaItemId
-              status
-              uploadInstructions {
-                method
-                url
+              data {
+                mediaItemId
+                status
+                uploadInstructions {
+                  method
+                  url
+                }
+              }
+              errors {
+                code
+                message
               }
             }
           }
@@ -81,12 +90,12 @@ describe('GraphQL media upload integration', () => {
 
       expect(response.status).toBe(200);
       expect(json.errors).toBeUndefined();
-      expect(json.data?.createMediaUpload.status).toBe(MediaItemStatus.pending.value);
-      expect(json.data?.createMediaUpload.uploadInstructions.method).toBe('PUT');
-      expect(json.data?.createMediaUpload.uploadInstructions.url).toMatch(
-        /\/api\/media\/uploads\//,
-      );
-      expect(json.data?.createMediaUpload.mediaItemId).toBeTruthy();
+      expect(json.data?.createMediaUpload.errors).toEqual([]);
+      const payload = json.data?.createMediaUpload.data;
+      expect(payload?.status).toBe(MediaItemStatus.pending.value);
+      expect(payload?.uploadInstructions.method).toBe('PUT');
+      expect(payload?.uploadInstructions.url).toMatch(/\/api\/media\/uploads\//);
+      expect(payload?.mediaItemId).toBeTruthy();
     });
   });
 
@@ -94,32 +103,49 @@ describe('GraphQL media upload integration', () => {
     it('should surface a client-safe failure without an unhandled exception', async () => {
       // Real clients: createMediaUpload → PUT /api/media/uploads/:mediaItemId (multipart) → finalizeMediaUpload.
       // This scenario skips the HTTP upload so storage has no object yet.
-      const created = await executeGraphQL<{ createMediaUpload: { mediaItemId: string } }>({
+      const created = await executeGraphQL<{
+        createMediaUpload: { data?: { mediaItemId: string }; errors: { code: string }[] };
+      }>({
         query: `
           mutation {
             createMediaUpload(input: { kind: PHOTO, mimeType: "image/jpeg" }) {
-              mediaItemId
+              data {
+                mediaItemId
+              }
+              errors {
+                code
+              }
             }
           }
         `,
         context: { isLoggedIn: true },
       });
       expect(created.json.errors).toBeUndefined();
-      const mediaItemId = created.json.data?.createMediaUpload.mediaItemId;
+      expect(created.json.data?.createMediaUpload.errors).toEqual([]);
+      const mediaItemId = created.json.data?.createMediaUpload.data?.mediaItemId;
       expect(mediaItemId).toBeTruthy();
       if (!mediaItemId) {
         return;
       }
 
       const { response, json } = await executeGraphQL<{
-        finalizeMediaUpload?: { mediaItemId: string; status: string; size: number };
+        finalizeMediaUpload: {
+          data?: { mediaItemId: string; status: string; size: number };
+          errors: { code: string; message: string }[];
+        };
       }>({
         query: `
           mutation ($id: ID!) {
             finalizeMediaUpload(input: { mediaItemId: $id }) {
-              mediaItemId
-              status
-              size
+              data {
+                mediaItemId
+                status
+                size
+              }
+              errors {
+                code
+                message
+              }
             }
           }
         `,
@@ -128,10 +154,14 @@ describe('GraphQL media upload integration', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(json.data?.finalizeMediaUpload).toBeFalsy();
-      expect(json.errors?.length).toBeGreaterThan(0);
-      expect(json.errors?.[0]?.message).toBe('Media bytes not found');
-      expect(json.errors?.[0]?.extensions?.code).toBe('MEDIA_BYTES_NOT_FOUND');
+      expect(json.errors).toBeUndefined();
+      expect(json.data?.finalizeMediaUpload.data).toBeFalsy();
+      expect(json.data?.finalizeMediaUpload.errors[0]?.code).toBe(
+        AppErrorCollection.mediaItem.MediaBytesNotFound.code,
+      );
+      expect(json.data?.finalizeMediaUpload.errors[0]?.message).toBe(
+        AppErrorCollection.mediaItem.MediaBytesNotFound.display,
+      );
     });
   });
 
@@ -143,18 +173,26 @@ describe('GraphQL media upload integration', () => {
         'test-viewer-1@example.test',
       );
 
-      const created = await executeGraphQL<{ createMediaUpload: { mediaItemId: string } }>({
+      const created = await executeGraphQL<{
+        createMediaUpload: { data?: { mediaItemId: string }; errors: { code: string }[] };
+      }>({
         query: `
           mutation {
             createMediaUpload(input: { kind: PHOTO, mimeType: "image/jpeg" }) {
-              mediaItemId
+              data {
+                mediaItemId
+              }
+              errors {
+                code
+              }
             }
           }
         `,
         context: { isLoggedIn: true },
       });
       expect(created.json.errors).toBeUndefined();
-      const mediaItemId = created.json.data?.createMediaUpload.mediaItemId;
+      expect(created.json.data?.createMediaUpload.errors).toEqual([]);
+      const mediaItemId = created.json.data?.createMediaUpload.data?.mediaItemId;
       expect(mediaItemId).toBeTruthy();
       if (!mediaItemId) {
         return;
@@ -170,14 +208,22 @@ describe('GraphQL media upload integration', () => {
       expect(uploadRes.status).toBe(201);
 
       const { response, json } = await executeGraphQL<{
-        finalizeMediaUpload: { mediaItemId: string; status: string; size: number };
+        finalizeMediaUpload: {
+          data?: { mediaItemId: string; status: string; size: number };
+          errors: { code: string }[];
+        };
       }>({
         query: `
           mutation ($id: ID!) {
             finalizeMediaUpload(input: { mediaItemId: $id }) {
-              mediaItemId
-              status
-              size
+              data {
+                mediaItemId
+                status
+                size
+              }
+              errors {
+                code
+              }
             }
           }
         `,
@@ -187,38 +233,56 @@ describe('GraphQL media upload integration', () => {
 
       expect(response.status).toBe(200);
       expect(json.errors).toBeUndefined();
-      expect(json.data?.finalizeMediaUpload.mediaItemId).toBe(mediaItemId);
-      expect(json.data?.finalizeMediaUpload.status).toBe(MediaItemStatus.ready.value);
-      expect(json.data?.finalizeMediaUpload.size).toBeGreaterThan(0);
+      expect(json.data?.finalizeMediaUpload.errors).toEqual([]);
+      expect(json.data?.finalizeMediaUpload.data?.mediaItemId).toBe(mediaItemId);
+      expect(json.data?.finalizeMediaUpload.data?.status).toBe(MediaItemStatus.ready.value);
+      expect(json.data?.finalizeMediaUpload.data?.size).toBeGreaterThan(0);
     });
   });
 
   describe('When finalizeMediaUpload is invoked by a different viewer than the owner', () => {
     it('should fail without transitioning the media item for the attacker', async () => {
-      const created = await executeGraphQL<{ createMediaUpload: { mediaItemId: string } }>({
+      const created = await executeGraphQL<{
+        createMediaUpload: { data?: { mediaItemId: string }; errors: { code: string }[] };
+      }>({
         query: `
           mutation {
             createMediaUpload(input: { kind: PHOTO, mimeType: "image/jpeg" }) {
-              mediaItemId
+              data {
+                mediaItemId
+              }
+              errors {
+                code
+              }
             }
           }
         `,
         context: { isLoggedIn: true },
       });
       expect(created.json.errors).toBeUndefined();
-      const mediaItemId = created.json.data?.createMediaUpload.mediaItemId;
+      expect(created.json.data?.createMediaUpload.errors).toEqual([]);
+      const mediaItemId = created.json.data?.createMediaUpload.data?.mediaItemId;
       if (!mediaItemId) {
         return;
       }
 
       const { json } = await executeGraphQL<{
-        finalizeMediaUpload?: { mediaItemId: string; status: string };
+        finalizeMediaUpload: {
+          data?: { mediaItemId: string; status: string };
+          errors: { code: string; message: string }[];
+        };
       }>({
         query: `
           mutation ($id: ID!) {
             finalizeMediaUpload(input: { mediaItemId: $id }) {
-              mediaItemId
-              status
+              data {
+                mediaItemId
+                status
+              }
+              errors {
+                code
+                message
+              }
             }
           }
         `,
@@ -234,8 +298,11 @@ describe('GraphQL media upload integration', () => {
         },
       });
 
-      expect(json.data?.finalizeMediaUpload).toBeFalsy();
-      expect(json.errors?.[0]?.message).toBeTruthy();
+      expect(json.errors).toBeUndefined();
+      expect(json.data?.finalizeMediaUpload.data).toBeFalsy();
+      expect(json.data?.finalizeMediaUpload.errors[0]?.code).toBe(
+        AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer.code,
+      );
     });
   });
 });

@@ -1,59 +1,51 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth } from '../../contexts/AuthContext';
+import { Navigation } from './Navigation';
+import { Profile } from './Profile';
 
 interface AppShellProps {
   viewer: { id: string; displayName: string };
 }
 
 export const AppShell = ({ viewer }: AppShellProps) => {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/', { replace: true });
-  };
-
   return (
-    <ShellContainer>
-      <Navigation>
-        <NavContent>
-          <NavLeft>
-            <AppTitle to="/">Family Photos</AppTitle>
-            <NavLinks>
-              <NavLink to="/">Photos</NavLink>
-              <NavLink to="/albums">Albums</NavLink>
-            </NavLinks>
-          </NavLeft>
-          <NavRight>
-            <UserInfo>{viewer.displayName}</UserInfo>
-            <LogoutButton onClick={handleLogout}>Sign Out</LogoutButton>
-          </NavRight>
-        </NavContent>
-      </Navigation>
+    <SCShellContainer>
+      <SCNavigation>
+        <SCNavContent>
+          <SCAppNavigation>
+            <SCAppTitle to="/">Family Media</SCAppTitle>
+            <Navigation
+              links={[
+                { label: 'Media', to: '/media' },
+                { label: 'Albums', to: '/albums' },
+              ]}
+            />
+          </SCAppNavigation>
+          <Profile displayName={viewer.displayName} />
+        </SCNavContent>
+      </SCNavigation>
       <MainContent>
         <Outlet />
       </MainContent>
-    </ShellContainer>
+    </SCShellContainer>
   );
 };
 
-const ShellContainer = styled.div`
+const SCShellContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: ${({ theme }) => theme.colors.bg};
 `;
 
-const Navigation = styled.nav`
+const SCNavigation = styled.nav`
   background: ${({ theme }) => theme.colors.panel};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   padding: 0 ${({ theme }) => theme.spacing(3)};
   flex-shrink: 0;
 `;
 
-const NavContent = styled.div`
+const SCNavContent = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   height: 64px;
@@ -62,19 +54,13 @@ const NavContent = styled.div`
   justify-content: space-between;
 `;
 
-const NavLeft = styled.div`
+const SCAppNavigation = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(6)};
 `;
 
-const NavRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(3)};
-`;
-
-const AppTitle = styled(Link)`
+const SCAppTitle = styled(Link)`
   font-size: 18px;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.text};
@@ -82,51 +68,6 @@ const AppTitle = styled(Link)`
   letter-spacing: -0.5px;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.text};
-  }
-`;
-
-const NavLinks = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing(1)};
-`;
-
-const NavLink = styled(Link)`
-  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(2)};
-  color: ${({ theme }) => theme.colors.subtext};
-  font-size: 14px;
-  text-decoration: none;
-  border-radius: ${({ theme }) => theme.radius.md};
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.text};
-    background: ${({ theme }) => theme.colors.bg};
-  }
-
-  &.active {
-    color: ${({ theme }) => theme.colors.text};
-    background: ${({ theme }) => theme.colors.bg};
-  }
-`;
-
-const UserInfo = styled.div`
-  color: ${({ theme }) => theme.colors.subtext};
-  font-size: 14px;
-`;
-
-const LogoutButton = styled.button`
-  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(2)};
-  background: transparent;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.subtext};
-  font-size: 14px;
-  border-radius: ${({ theme }) => theme.radius.md};
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.bg};
-    border-color: ${({ theme }) => theme.colors.accent};
     color: ${({ theme }) => theme.colors.text};
   }
 `;

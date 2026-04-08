@@ -1,0 +1,23 @@
+mutation CreateMediaUpload($input: CreateMediaUploadInput!) {
+  createMediaUpload(input: $input) {
+    mediaItemId
+    status
+    uploadInstructions {
+      method
+      url
+      headers {
+        key
+        value
+      }
+    }
+  }
+}
+
+mutation FinalizeMediaUpload($input: FinalizeMediaUploadInput!) {
+  finalizeMediaUpload(input: $input) {
+    mediaItemId
+    status
+    size
+    kind
+  }
+}

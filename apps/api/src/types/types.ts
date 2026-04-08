@@ -1,4 +1,5 @@
-import type { AlbumErrorEnum, MediaItemErrorEnum } from '@packages/contracts';
+import type { AlbumErrorEnum, MediaItemErrorEnum, SortDir } from '@packages/contracts';
+import { PageInfo } from '../graphql/generated/types.generated';
 
 export type EntityId = string;
 export type ActorId = string;
@@ -56,7 +57,14 @@ export type StripFactory<T> = {
  * Keep business failures explicit and type-safe,
  * while avoiding excessive Result plumbing in non-domain layers.
  */
+import { StandardEnumItem } from '@reharik/smart-enum';
 
 export type WriteResult<T = void, E = DomainWriteError> =
   | { success: true; value: T }
   | { success: false; error: E };
+
+export type CollectionInfo<T extends StandardEnumItem & { column: string }> = {
+  pageInfo: PageInfo;
+  sortBy: T;
+  sortDir: SortDir;
+};

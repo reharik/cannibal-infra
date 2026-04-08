@@ -114,7 +114,7 @@ export const buildAuthController = ({
 
   me: (ctx: Context): Context => {
     // This endpoint requires authentication middleware
-    const user = ctx.user;
+    const user = ctx.state.user;
 
     if (!user) {
       ctx.status = 401;
@@ -122,6 +122,7 @@ export const buildAuthController = ({
       return ctx;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _passwordHash, ...sanitized } = user as User & { passwordHash?: string };
     ctx.status = 200;
     ctx.body = { user: sanitized };

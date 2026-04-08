@@ -38,7 +38,7 @@
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' nx run-many -t test --all -- --watch"
   },
   "dependencies": {
-    "@reharik/smart-enum": "^0.0.2",
+    "@reharik/smart-enum": "^0.3.1",
     "dotenv": "^16.6.1",
     "koa": "^3.1.1",
     "parse-fetch": "^0.0.6",
@@ -53,6 +53,7 @@
     "@nx/js": "21.4.1",
     "@nx/react": "21.4.1",
     "@nx/vite": "21.4.1",
+    "@reharik/graphql-codegen-smart-enum": "^0.2.2",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

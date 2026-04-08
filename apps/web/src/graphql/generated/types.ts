@@ -33,9 +33,26 @@ export type Album = Node & {
   coverMedia?: Maybe<MediaItem>;
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
-  items: Array<AlbumItem>;
+  items: AlbumItemCollectionPayload;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+
+export type AlbumItemsArgs = {
+  input: ViewerAlbumItemsInput;
+};
+
+export type AlbumCollectionInput = {
+  pageInfo: PageInfoInput;
+  sortBy: AlbumSortBy;
+  sortDir: SortDir;
+};
+
+export type AlbumCollectionPayload = {
+  __typename?: 'AlbumCollectionPayload';
+  nodes: Array<Album>;
+  pageInfo: PageInfo;
 };
 
 export type AlbumItem = Node & {
@@ -45,6 +62,25 @@ export type AlbumItem = Node & {
   mediaItem: MediaItem;
   updatedAt: Scalars['DateTime']['output'];
 };
+
+export type AlbumItemCollectionInput = {
+  pageInfo: PageInfoInput;
+  sortBy: AlbumItemSortBy;
+  sortDir: SortDir;
+};
+
+export type AlbumItemCollectionPayload = {
+  __typename?: 'AlbumItemCollectionPayload';
+  nodes: Array<AlbumItem>;
+  pageInfo: PageInfo;
+};
+
+export type AlbumItemSortBy =
+  | 'CREATED_AT';
+
+export type AlbumSortBy =
+  | 'CREATED_AT'
+  | 'TITLE';
 
 export type CreateAlbumInput = {
   description?: InputMaybe<Scalars['String']['input']>;
@@ -66,6 +102,12 @@ export type CreateMediaUploadPayload = {
   mediaItemId: Scalars['ID']['output'];
   status: MediaItemStatus;
   uploadInstructions: UploadInstructions;
+};
+
+/** Optional metadata on enum values for SmartEnum / codegen (e.g. DB column names). */
+export type EnumMetaPropInput = {
+  name: Scalars['String']['input'];
+  value: Scalars['String']['input'];
 };
 
 export type FinalizeMediaUploadInput = {
@@ -98,6 +140,21 @@ export type MediaItem = Node & {
   updatedAt: Scalars['DateTime']['output'];
   width?: Maybe<Scalars['Int']['output']>;
 };
+
+export type MediaItemCollectionInput = {
+  pageInfo: PageInfoInput;
+  sortBy: MediaItemSortBy;
+  sortDir: SortDir;
+};
+
+export type MediaItemCollectionPayload = {
+  __typename?: 'MediaItemCollectionPayload';
+  nodes: Array<MediaItem>;
+  pageInfo: PageInfo;
+};
+
+export type MediaItemSortBy =
+  | 'CREATED_AT';
 
 export type MediaItemStatus =
   | 'FAILED'
@@ -141,10 +198,17 @@ export type Node = {
   id: Scalars['ID']['output'];
 };
 
+/** Cursor-free paging window (offset-based). Used on output types. */
 export type PageInfo = {
   __typename?: 'PageInfo';
-  endCursor?: Maybe<Scalars['String']['output']>;
-  hasNextPage: Scalars['Boolean']['output'];
+  limit: Scalars['Int']['output'];
+  offset: Scalars['Int']['output'];
+};
+
+/** Same shape as PageInfo; GraphQL requires a distinct input type for fields on input objects. */
+export type PageInfoInput = {
+  limit: Scalars['Int']['input'];
+  offset: Scalars['Int']['input'];
 };
 
 export type Query = {
@@ -225,17 +289,62 @@ export type UploadInstructions = {
 
 export type Viewer = {
   __typename?: 'Viewer';
-  albums: Array<Album>;
+  albums: AlbumCollectionPayload;
   displayName: Scalars['String']['output'];
   firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   lastName?: Maybe<Scalars['String']['output']>;
+  mediaItems: MediaItemCollectionPayload;
 };
+
+
+export type ViewerAlbumsArgs = {
+  input: ViewerAlbumsInput;
+};
+
+
+export type ViewerMediaItemsArgs = {
+  input: ViewerMediaItemsInput;
+};
+
+export type ViewerAlbumItemsInput = {
+  collectionInfo: AlbumItemCollectionInput;
+};
+
+export type ViewerAlbumsInput = {
+  collectionInfo: AlbumCollectionInput;
+};
+
+export type ViewerMediaItemsInput = {
+  collectionInfo: MediaItemCollectionInput;
+};
+
+export type CreateMediaUploadMutationVariables = Exact<{
+  input: CreateMediaUploadInput;
+}>;
+
+
+export type CreateMediaUploadMutation = { __typename?: 'Mutation', createMediaUpload: { __typename?: 'CreateMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, uploadInstructions: { __typename?: 'UploadInstructions', method: string, url: string, headers: Array<{ __typename?: 'UploadHeader', key: string, value: string }> } } };
+
+export type FinalizeMediaUploadMutationVariables = Exact<{
+  input: FinalizeMediaUploadInput;
+}>;
+
+
+export type FinalizeMediaUploadMutation = { __typename?: 'Mutation', finalizeMediaUpload: { __typename?: 'FinalizeMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, size: number, kind: MediaKind } };
 
 export type ViewerQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ViewerQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, firstName?: string | undefined, lastName?: string | undefined, displayName: string } | undefined };
 
+export type ViewerRecentMediaQueryVariables = Exact<{ [key: string]: never; }>;
 
+
+export type ViewerRecentMediaQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, mediaItems: { __typename?: 'MediaItemCollectionPayload', nodes: Array<{ __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, mimeType: string, title?: string | undefined, createdAt: any, width?: number | undefined, height?: number | undefined }>, pageInfo: { __typename?: 'PageInfo', limit: number, offset: number } } } | undefined };
+
+
+export const CreateMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"uploadInstructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"headers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateMediaUploadMutation, CreateMediaUploadMutationVariables>;
+export const FinalizeMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FinalizeMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FinalizeMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"finalizeMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}}]}}]}}]} as unknown as DocumentNode<FinalizeMediaUploadMutation, FinalizeMediaUploadMutationVariables>;
 export const ViewerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}}]}}]}}]} as unknown as DocumentNode<ViewerQuery, ViewerQueryVariables>;
+export const ViewerRecentMediaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerRecentMedia"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaItems"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"collectionInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pageInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"10"}},{"kind":"ObjectField","name":{"kind":"Name","value":"offset"},"value":{"kind":"IntValue","value":"0"}}]}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortBy"},"value":{"kind":"EnumValue","value":"CREATED_AT"}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortDir"},"value":{"kind":"EnumValue","value":"DESC"}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"offset"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerRecentMediaQuery, ViewerRecentMediaQueryVariables>;

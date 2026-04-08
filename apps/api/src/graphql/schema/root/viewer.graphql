@@ -1,0 +1,52 @@
+type Query {
+  viewer: Viewer
+  shareLink(token: String!): ShareLinkAccess
+}
+
+type Viewer {
+  id: ID!
+  firstName: String
+  lastName: String
+  displayName: String!
+  albums(input: ViewerAlbumsInput!): AlbumCollectionPayload!
+  mediaItems(input: ViewerMediaItemsInput!): MediaItemCollectionPayload!
+}
+
+input ViewerAlbumsInput {
+  collectionInfo: AlbumCollectionInput!
+}
+
+input ViewerMediaItemsInput {
+  collectionInfo: MediaItemCollectionInput!
+}
+
+input AlbumCollectionInput {
+  pageInfo: PageInfoInput!
+  sortBy: AlbumSortBy!
+  sortDir: SortDir!
+}
+
+input MediaItemCollectionInput {
+  pageInfo: PageInfoInput!
+  sortBy: MediaItemSortBy!
+  sortDir: SortDir!
+}
+
+type MediaItemCollectionPayload {
+  nodes: [MediaItem!]!
+  pageInfo: PageInfo!
+}
+
+enum MediaItemSortBy {
+  CREATED_AT @enumMeta(props: [{ name: "column", value: "created_at" }])
+}
+
+type AlbumCollectionPayload {
+  nodes: [Album!]!
+  pageInfo: PageInfo!
+}
+
+enum AlbumSortBy {
+  TITLE @enumMeta(props: [{ name: "column", value: "title" }])
+  CREATED_AT @enumMeta(props: [{ name: "column", value: "created_at" }])
+}
