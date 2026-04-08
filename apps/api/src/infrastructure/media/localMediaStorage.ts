@@ -1,6 +1,7 @@
-import { promises as fs } from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
-
+import type { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { MediaStorage, UploadTarget } from '../../application/media/MediaStorage';
 import { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
 
@@ -31,7 +32,7 @@ const getObjectFilePathForStorageKey = (storageRoot: string, storageKey: string)
 
 const readOptionalMimeSidecar = async (objectPath: string): Promise<string | undefined> => {
   try {
-    const mimeType = (await fs.readFile(`${objectPath}.mime`, 'utf8')).trim();
+    const mimeType = (await fs.promises.readFile(`${objectPath}.mime`, 'utf8')).trim();
     return mimeType.length > 0 ? mimeType : undefined;
   } catch (err: unknown) {
     const code =
@@ -64,31 +65,17 @@ export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaSto
       };
     },
 
-    writeUploadedFile: async (input: {
+    writeObject: async (input: {
       storageKey: string;
-      sourceFilePath: string;
+      body: Readable;
       mimeType?: string;
     }): Promise<void> => {
       const destinationPath = getObjectFilePathForStorageKey(storageRoot, input.storageKey);
-      await fs.mkdir(path.dirname(destinationPath), { recursive: true });
-      await fs.copyFile(input.sourceFilePath, destinationPath);
 
-      if (input.mimeType && input.mimeType.length > 0) {
-        await fs.writeFile(`${destinationPath}.mime`, input.mimeType, 'utf8');
-      }
+      await fs.promises.mkdir(path.dirname(destinationPath), { recursive: true });
 
-      try {
-        await fs.unlink(input.sourceFilePath);
-      } catch (err: unknown) {
-        const code =
-          err && typeof err === 'object' && 'code' in err
-            ? (err as NodeJS.ErrnoException).code
-            : undefined;
-
-        if (code !== 'ENOENT') {
-          throw err;
-        }
-      }
+      const writeStream = fs.createWriteStream(destinationPath);
+      await pipeline(input.body, writeStream);
     },
 
     getObjectMetadata: async (
@@ -96,7 +83,7 @@ export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaSto
     ): Promise<{ size: number; mimeType?: string } | null> => {
       const objectPath = getObjectFilePathForStorageKey(storageRoot, storageKey);
       try {
-        const stat = await fs.stat(objectPath);
+        const stat = await fs.promises.stat(objectPath);
         if (!stat.isFile()) {
           return null;
         }
@@ -125,7 +112,7 @@ export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaSto
       const objectPath = getObjectFilePathForStorageKey(storageRoot, storageKey);
 
       try {
-        const stat = await fs.stat(objectPath);
+        const stat = await fs.promises.stat(objectPath);
         return stat.isFile();
       } catch (err: unknown) {
         const code =

@@ -1,15 +1,5 @@
 import { enumeration, type Enumeration } from '@reharik/smart-enum';
-
-const errorCategoryInput = [
-  'validation', // field/form treatment
-  'domain', // show regular use-case error
-  'auth', // permission UI / login / access denied
-  'conflict', // retry/refresh/resolution behavior
-] as const;
-export type ErrorCategory = Enumeration<typeof ErrorCategory>;
-export const ErrorCategory = enumeration<typeof errorCategoryInput>('ErrorCategory', {
-  input: errorCategoryInput,
-});
+import { ErrorCategory } from './graphqlSmartEnums';
 
 const errorAreaInput = ['album', 'mediaItem', 'membership', 'viewer', 'auth'] as const;
 

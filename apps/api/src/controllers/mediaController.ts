@@ -7,52 +7,6 @@ export interface MediaController {
   upload: (ctx: Context) => Promise<Context>;
 }
 
-interface UploadedFileLike {
-  filepath: string;
-  mimetype?: string;
-  size: number;
-  originalFilename?: string | null;
-}
-
-const isUploadedFileLike = (value: unknown): value is UploadedFileLike => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  const candidate = value as Record<string, unknown>;
-
-  return (
-    typeof candidate.filepath === 'string' &&
-    typeof candidate.size === 'number' &&
-    (typeof candidate.mimetype === 'string' || typeof candidate.mimetype === 'undefined')
-  );
-};
-
-const resolveUploadedFile = (files: unknown): UploadedFileLike | null => {
-  if (typeof files !== 'object' || files === null) {
-    return null;
-  }
-
-  const values = Object.values(files as Record<string, unknown>);
-
-  for (const value of values) {
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (isUploadedFileLike(item)) {
-          return item;
-        }
-      }
-      continue;
-    }
-
-    if (isUploadedFileLike(value)) {
-      return value;
-    }
-  }
-
-  return null;
-};
-
 export const buildMediaController = ({
   mediaItemRepository,
   mediaStorage,
@@ -91,24 +45,16 @@ export const buildMediaController = ({
       return ctx;
     }
 
-    const uploadedFile = resolveUploadedFile(ctx.request.files);
-    if (!uploadedFile) {
-      ctx.status = 400;
-      ctx.body = { error: 'No file uploaded.' };
-      return ctx;
-    }
-
-    await mediaStorage.writeUploadedFile({
+    await mediaStorage.writeObject({
       storageKey: mediaItem.storageKey(),
-      sourceFilePath: uploadedFile.filepath,
-      mimeType: uploadedFile.mimetype,
+      body: ctx.req,
+      mimeType: mediaItem.mimeType(),
     });
 
     ctx.status = 201;
     ctx.body = {
       mediaItemId: mediaItem.id(),
-      size: uploadedFile.size,
-      mimeType: uploadedFile.mimetype,
+      mimeType: mediaItem.mimeType(),
     };
 
     return ctx;

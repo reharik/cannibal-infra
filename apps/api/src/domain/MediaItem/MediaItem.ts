@@ -126,6 +126,18 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     return this.props.kind;
   }
 
+  mimeType(): string {
+    return this.props.mimeType;
+  }
+
+  sizeBytes(): number {
+    return this.props.sizeBytes ?? 0;
+  }
+
+  width(): number | undefined {
+    return this.props.width;
+  }
+
   finalizeStatus(status: MediaItemStatus, actorId: ActorId): WriteResult {
     if (this.props.status !== MediaItemStatus.pending) {
       return fail(AppErrorCollection.mediaItem.StatusNotPending);

@@ -3,23 +3,10 @@ import type { ApolloClient } from '@apollo/client';
 import {
   CreateMediaUploadDocument,
   FinalizeMediaUploadDocument,
-  type CreateMediaUploadMutation,
   type CreateMediaUploadMutationVariables,
-  type FinalizeMediaUploadMutation,
-  type FinalizeMediaUploadMutationVariables,
 } from '../../graphql/generated/types';
-
-type MediaUploadErrorCode =
-  | 'UNSUPPORTED_MEDIA_TYPE'
-  | 'CREATE_FAILED'
-  | 'UPLOAD_FAILED'
-  | 'FINALIZE_FAILED'
-  | 'NETWORK_ERROR'
-  | 'INVALID_RESPONSE';
-
-export type MediaUploadResult =
-  | { success: true; mediaItemId: string }
-  | { success: false; code: MediaUploadErrorCode; message: string };
+import { fail, ok, type AppResult } from '../errors/types';
+import { executeMutation } from '../graphql/executeMutation';
 
 const resolveMediaKind = (
   file: File,
@@ -30,110 +17,167 @@ const resolveMediaKind = (
 };
 
 const buildUploadBody = (file: File, method: string): BodyInit => {
-  if (method.toUpperCase() === 'PUT') {
-    return file;
-  }
+  if (method.toUpperCase() === 'PUT') return file;
 
   const formData = new FormData();
   formData.append('file', file);
   return formData;
 };
 
+const createMediaUpload = async (
+  client: ApolloClient,
+  file: File,
+): Promise<
+  AppResult<{
+    mediaItemId: string;
+    uploadInstructions: {
+      url: string;
+      method: string;
+      headers: Array<{ key: string; value: string }>;
+    };
+  }>
+> => {
+  const kind = resolveMediaKind(file);
+  if (!kind) {
+    // TODO: add these to FrontendErrorEnum
+    return fail([
+      {
+        code: 'UNSUPPORTED_MEDIA_TYPE',
+        message: 'Only image and video uploads are supported.',
+        category: 'VALIDATION',
+        retryable: false,
+        source: 'frontend',
+      },
+    ]);
+  }
+
+  const mimeType = file.type || 'application/octet-stream';
+
+  const result = await executeMutation(
+    client,
+    {
+      mutation: CreateMediaUploadDocument,
+      variables: { input: { kind, mimeType } },
+    },
+    (data) => data.createMediaUpload,
+  );
+
+  if (!result.success) {
+    return result;
+  }
+
+  const payload = result.data;
+  if (!payload?.mediaItemId || !payload.uploadInstructions?.url) {
+    return fail([
+      {
+        code: 'INVALID_RESPONSE',
+        message: 'Create media upload returned an invalid payload.',
+        category: 'VALIDATION',
+        retryable: false,
+        source: 'frontend',
+      },
+    ]);
+  }
+
+  return ok({
+    mediaItemId: payload.mediaItemId,
+    uploadInstructions: payload.uploadInstructions,
+  });
+};
+
+const uploadBinary = async (
+  file: File,
+  uploadInstructions: {
+    url: string;
+    method: string;
+    headers: Array<{ key: string; value: string }>;
+  },
+): Promise<AppResult<void>> => {
+  const token = localStorage.getItem('authToken');
+
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  for (const h of uploadInstructions.headers) {
+    headers[h.key] = h.value;
+  }
+
+  const response = await fetch(uploadInstructions.url, {
+    method: uploadInstructions.method,
+    headers,
+    body: buildUploadBody(file, uploadInstructions.method),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    return fail([
+      {
+        code: 'UPLOAD_FAILED',
+        message: text || `Upload failed with status ${response.status}.`,
+        category: 'VALIDATION',
+        retryable: false,
+        source: 'frontend',
+      },
+    ]);
+  }
+
+  return ok(undefined);
+};
+
+const finalizeMediaUpload = async (
+  client: ApolloClient,
+  mediaItemId: string,
+): Promise<AppResult<{ mediaItemId: string }>> => {
+  const result = await executeMutation(
+    client,
+    {
+      mutation: FinalizeMediaUploadDocument,
+      variables: { input: { mediaItemId } },
+    },
+    (data) => data.finalizeMediaUpload,
+  );
+
+  if (!result.success) {
+    return result;
+  }
+
+  const payload = result.data;
+  if (!payload?.mediaItemId) {
+    return fail([
+      {
+        code: 'FINALIZE_FAILED',
+        message: 'Finalize media upload returned an invalid payload.',
+        category: 'VALIDATION',
+        retryable: false,
+        source: 'frontend',
+      },
+    ]);
+  }
+
+  return ok({ mediaItemId: payload.mediaItemId });
+};
+
 export const mediaUploadWorkflow = async (
   client: ApolloClient,
   file: File,
-): Promise<MediaUploadResult> => {
+): Promise<AppResult<{ mediaItemId: string }>> => {
   try {
-    const kind = resolveMediaKind(file);
-    if (!kind) {
-      return {
-        success: false,
-        code: 'UNSUPPORTED_MEDIA_TYPE',
-        message: 'Only image and video uploads are supported.',
-      };
-    }
+    const created = await createMediaUpload(client, file);
+    if (!created.success) return created;
+    const uploaded = await uploadBinary(file, created.data.uploadInstructions);
+    if (!uploaded.success) return uploaded;
 
-    const mimeType = file.type || 'application/octet-stream';
-
-    const created = await client.mutate<
-      CreateMediaUploadMutation,
-      CreateMediaUploadMutationVariables
-    >({
-      mutation: CreateMediaUploadDocument,
-      variables: { input: { kind, mimeType } },
-    });
-
-    if (created.error) {
-      return {
-        success: false,
-        code: 'CREATE_FAILED',
-        message: created.error.message,
-      };
-    }
-
-    const payload = created.data?.createMediaUpload;
-    if (!payload?.mediaItemId || !payload.uploadInstructions?.url) {
-      return {
-        success: false,
-        code: 'INVALID_RESPONSE',
-        message: 'Create media upload returned an invalid payload.',
-      };
-    }
-
-    const headers: Record<string, string> = {
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-    };
-
-    for (const h of payload.uploadInstructions.headers) {
-      headers[h.key] = h.value;
-    }
-
-    const uploadRes = await fetch(payload.uploadInstructions.url, {
-      method: payload.uploadInstructions.method,
-      headers,
-      body: buildUploadBody(file, payload.uploadInstructions.method),
-    });
-
-    if (!uploadRes.ok) {
-      const text = await uploadRes.text().catch(() => '');
-      return {
-        success: false,
-        code: 'UPLOAD_FAILED',
-        message: text || `Upload failed with status ${uploadRes.status}.`,
-      };
-    }
-
-    const finalized = await client.mutate<
-      FinalizeMediaUploadMutation,
-      FinalizeMediaUploadMutationVariables
-    >({
-      mutation: FinalizeMediaUploadDocument,
-      variables: { input: { mediaItemId: payload.mediaItemId } },
-    });
-
-    if (finalized.error) {
-      return {
-        success: false,
-        code: 'FINALIZE_FAILED',
-        message: finalized.error.message,
-      };
-    }
-
-    const mediaItemId = finalized.data?.finalizeMediaUpload?.mediaItemId;
-    if (!mediaItemId) {
-      return {
-        success: false,
-        code: 'INVALID_RESPONSE',
-        message: 'Finalize media upload returned no media item id.',
-      };
-    }
-
-    return { success: true, mediaItemId };
+    return await finalizeMediaUpload(client, created.data.mediaItemId);
   } catch (error) {
-    return {
-      success: false,
-      code: 'NETWORK_ERROR',
-      message: error instanceof Error ? error.message : 'Unexpected error',
-    };
+    return fail([
+      {
+        code: 'NETWORK_ERROR',
+        message: error instanceof Error ? error.message : 'Unexpected error',
+        category: 'SYSTEM',
+        retryable: false,
+        source: 'frontend',
+      },
+    ]);
   }
 };

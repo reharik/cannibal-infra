@@ -5,12 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { mediaUploadWorkflow } from '../application/media/mediaUploadWorkflow';
 import { ViewerRecentMediaDocument } from '../graphql/generated/types';
+interface AppError {
+  // TODO: define fields
+}
 
 export const HomeScreen = () => {
   const navigate = useNavigate();
   const client = useApolloClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadError, setUploadError] = useState<string | undefined>();
+  const [appErrors, setAppErrors] = useState<AppError[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const { data, loading, error, refetch } = useQuery(ViewerRecentMediaDocument);
@@ -19,7 +22,7 @@ export const HomeScreen = () => {
   const hasItems = nodes.length > 0;
 
   const startUploadPick = () => {
-    setUploadError(undefined);
+    setAppErrors([]);
     fileInputRef.current?.click();
   };
 
@@ -31,19 +34,19 @@ export const HomeScreen = () => {
     }
 
     setIsUploading(true);
-    setUploadError(undefined);
+    setAppErrors([]);
 
     const result = await mediaUploadWorkflow(client, file);
 
     setIsUploading(false);
 
     if (!result.success) {
-      setUploadError(result.message);
+      setAppErrors(result.errors);
       return;
     }
 
     await refetch();
-    navigate(`/media/${result.mediaItemId}`);
+    navigate(`/media/${result.data.mediaItemId}`);
   };
 
   const formatCreatedAt = (value: unknown): string => {
@@ -85,7 +88,9 @@ export const HomeScreen = () => {
         </HeaderActions>
       </Header>
 
-      {uploadError ? <InlineNotice role="alert">{uploadError}</InlineNotice> : null}
+      {appErrors
+        ? appErrors.map((err) => <InlineNotice role="alert">{err.message}</InlineNotice>)
+        : null}
 
       <Content>
         {loading ? (

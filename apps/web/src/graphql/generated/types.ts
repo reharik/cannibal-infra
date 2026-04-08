@@ -28,6 +28,12 @@ export type AddMediaItemToAlbumPayload = {
   albumItemId: Scalars['ID']['output'];
 };
 
+export type AddMediaItemToAlbumResponse = {
+  __typename?: 'AddMediaItemToAlbumResponse';
+  data?: Maybe<AddMediaItemToAlbumPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
 export type Album = Node & {
   __typename?: 'Album';
   coverMedia?: Maybe<MediaItem>;
@@ -82,6 +88,15 @@ export type AlbumSortBy =
   | 'CREATED_AT'
   | 'TITLE';
 
+export type ContractError = {
+  __typename?: 'ContractError';
+  category: ErrorCategory;
+  code: Scalars['String']['output'];
+  field?: Maybe<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  retryable: Scalars['Boolean']['output'];
+};
+
 export type CreateAlbumInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
@@ -90,6 +105,12 @@ export type CreateAlbumInput = {
 export type CreateAlbumPayload = {
   __typename?: 'CreateAlbumPayload';
   albumId: Scalars['ID']['output'];
+};
+
+export type CreateAlbumResponse = {
+  __typename?: 'CreateAlbumResponse';
+  data?: Maybe<CreateAlbumPayload>;
+  errors?: Maybe<Array<ContractError>>;
 };
 
 export type CreateMediaUploadInput = {
@@ -104,11 +125,24 @@ export type CreateMediaUploadPayload = {
   uploadInstructions: UploadInstructions;
 };
 
+export type CreateMediaUploadResponse = {
+  __typename?: 'CreateMediaUploadResponse';
+  data?: Maybe<CreateMediaUploadPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
 /** Optional metadata on enum values for SmartEnum / codegen (e.g. DB column names). */
 export type EnumMetaPropInput = {
   name: Scalars['String']['input'];
   value: Scalars['String']['input'];
 };
+
+export type ErrorCategory =
+  | 'auth'
+  | 'conflict'
+  | 'domain'
+  | 'system'
+  | 'validation';
 
 export type FinalizeMediaUploadInput = {
   mediaItemId: Scalars['ID']['input'];
@@ -121,6 +155,12 @@ export type FinalizeMediaUploadPayload = {
   mimeType?: Maybe<Scalars['String']['output']>;
   size: Scalars['Int']['output'];
   status: MediaItemStatus;
+};
+
+export type FinalizeMediaUploadResponse = {
+  __typename?: 'FinalizeMediaUploadResponse';
+  data?: Maybe<FinalizeMediaUploadPayload>;
+  errors?: Maybe<Array<ContractError>>;
 };
 
 export type MediaItem = Node & {
@@ -167,10 +207,10 @@ export type MediaKind =
 
 export type Mutation = {
   __typename?: 'Mutation';
-  AddMediaItemToAlbum: AddMediaItemToAlbumPayload;
-  createAlbum: CreateAlbumPayload;
-  createMediaUpload: CreateMediaUploadPayload;
-  finalizeMediaUpload: FinalizeMediaUploadPayload;
+  AddMediaItemToAlbum: AddMediaItemToAlbumResponse;
+  createAlbum: CreateAlbumResponse;
+  createMediaUpload: CreateMediaUploadResponse;
+  finalizeMediaUpload: FinalizeMediaUploadResponse;
 };
 
 
@@ -324,14 +364,14 @@ export type CreateMediaUploadMutationVariables = Exact<{
 }>;
 
 
-export type CreateMediaUploadMutation = { __typename?: 'Mutation', createMediaUpload: { __typename?: 'CreateMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, uploadInstructions: { __typename?: 'UploadInstructions', method: string, url: string, headers: Array<{ __typename?: 'UploadHeader', key: string, value: string }> } } };
+export type CreateMediaUploadMutation = { __typename?: 'Mutation', createMediaUpload: { __typename?: 'CreateMediaUploadResponse', data?: { __typename?: 'CreateMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, uploadInstructions: { __typename?: 'UploadInstructions', method: string, url: string, headers: Array<{ __typename?: 'UploadHeader', key: string, value: string }> } } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
 
 export type FinalizeMediaUploadMutationVariables = Exact<{
   input: FinalizeMediaUploadInput;
 }>;
 
 
-export type FinalizeMediaUploadMutation = { __typename?: 'Mutation', finalizeMediaUpload: { __typename?: 'FinalizeMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, size: number, kind: MediaKind } };
+export type FinalizeMediaUploadMutation = { __typename?: 'Mutation', finalizeMediaUpload: { __typename?: 'FinalizeMediaUploadResponse', data?: { __typename?: 'FinalizeMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, size: number, kind: MediaKind } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
 
 export type ViewerQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -344,7 +384,7 @@ export type ViewerRecentMediaQueryVariables = Exact<{ [key: string]: never; }>;
 export type ViewerRecentMediaQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, mediaItems: { __typename?: 'MediaItemCollectionPayload', nodes: Array<{ __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, mimeType: string, title?: string | undefined, createdAt: any, width?: number | undefined, height?: number | undefined }>, pageInfo: { __typename?: 'PageInfo', limit: number, offset: number } } } | undefined };
 
 
-export const CreateMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"uploadInstructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"headers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateMediaUploadMutation, CreateMediaUploadMutationVariables>;
-export const FinalizeMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FinalizeMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FinalizeMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"finalizeMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}}]}}]}}]} as unknown as DocumentNode<FinalizeMediaUploadMutation, FinalizeMediaUploadMutationVariables>;
+export const CreateMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"uploadInstructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"headers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<CreateMediaUploadMutation, CreateMediaUploadMutationVariables>;
+export const FinalizeMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FinalizeMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FinalizeMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"finalizeMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<FinalizeMediaUploadMutation, FinalizeMediaUploadMutationVariables>;
 export const ViewerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}}]}}]}}]} as unknown as DocumentNode<ViewerQuery, ViewerQueryVariables>;
 export const ViewerRecentMediaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerRecentMedia"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaItems"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"collectionInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pageInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"10"}},{"kind":"ObjectField","name":{"kind":"Name","value":"offset"},"value":{"kind":"IntValue","value":"0"}}]}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortBy"},"value":{"kind":"EnumValue","value":"CREATED_AT"}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortDir"},"value":{"kind":"EnumValue","value":"DESC"}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"offset"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerRecentMediaQuery, ViewerRecentMediaQueryVariables>;

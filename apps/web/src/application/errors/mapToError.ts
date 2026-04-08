@@ -28,28 +28,24 @@ export const mapContractError = (input: ContractErrorPayload): AppError => {
 };
 
 export const mapFrontendError = (input: FrontendErrorInput): AppError => {
-  return mapToAppError(input.code, input, 'frontend');
+  return mapToAppError(FrontendError.fromValue(input.code), input, 'frontend');
 };
 
-// export const mapUnknownSystemError = (error: unknown): AppError => {
-//     return {
-//       code: 'UNKNOWN_SYSTEM_ERROR',
-//       message: error instanceof Error ? error.message : 'Unexpected error',
-//       source: 'system',
-//       category: 'system',
-//       retryable: true,
-//     };
-//   };
-// export const mapSystemError = (
-//     code: string,
-//     message: string,
-//     retryable = true,
-//   ): AppError => {
-//     return {
-//       code,
-//       message,
-//       source: 'system',
-//       category: 'system',
-//       retryable,
-//     };
-//   };
+export const mapUnknownSystemError = (error: unknown): AppError => {
+  return {
+    code: 'UNKNOWN_SYSTEM_ERROR',
+    message: error instanceof Error ? error.message : 'Unexpected error',
+    source: 'system',
+    category: 'SYSTEM',
+    retryable: true,
+  };
+};
+export const mapSystemError = (code: string, message: string, retryable = true): AppError => {
+  return {
+    code,
+    message,
+    source: 'system',
+    category: 'SYSTEM',
+    retryable,
+  };
+};

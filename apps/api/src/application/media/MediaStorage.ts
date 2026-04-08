@@ -1,3 +1,5 @@
+import type { Readable } from 'node:stream';
+
 export type UploadTarget = {
   method: 'PUT';
   url: string;
@@ -10,15 +12,9 @@ type UploadTargetRequest = {
   mimeType: string;
 };
 
-type WriteUploadedFileInput = {
-  storageKey: string;
-  sourceFilePath: string;
-  mimeType?: string;
-};
-
 export interface MediaStorage {
   getUploadTarget(input: UploadTargetRequest): Promise<UploadTarget>;
-  writeUploadedFile(input: WriteUploadedFileInput): Promise<void>;
+  writeObject(input: { storageKey: string; body: Readable; mimeType?: string }): Promise<void>;
   getObjectMetadata(storageKey: string): Promise<{ size: number; mimeType?: string } | null>;
   verifyExistence(storageKey: string): Promise<boolean>;
 }
