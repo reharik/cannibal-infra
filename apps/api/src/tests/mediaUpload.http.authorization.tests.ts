@@ -86,6 +86,8 @@ const buildApiWithMediaUpload = (rootDir: string): http.Server => {
   return http.createServer(app.callback());
 };
 
+const jpegStub = Buffer.from([0xff, 0xd8, 0xff]);
+
 describe('Media byte upload (HTTP)', () => {
   let previousCwd: string;
   let tempRoot: string;
@@ -106,10 +108,8 @@ describe('Media byte upload (HTTP)', () => {
       const server = buildApiWithMediaUpload(tempRoot);
       const res = await request(server)
         .put('/api/media/uploads/item-1')
-        .attach('file', Buffer.from([0xff, 0xd8, 0xff]), {
-          filename: 'x.jpg',
-          contentType: 'image/jpeg',
-        });
+        .set('Content-Type', 'image/jpeg')
+        .send(jpegStub);
       expect(res.status).toBe(401);
       server.close();
     });
@@ -119,10 +119,8 @@ describe('Media byte upload (HTTP)', () => {
       const res = await request(server)
         .put('/api/media/uploads/item-1')
         .set('X-Authenticated-User', TEST_VIEWER_B_ID)
-        .attach('file', Buffer.from([0xff, 0xd8, 0xff]), {
-          filename: 'x.jpg',
-          contentType: 'image/jpeg',
-        });
+        .set('Content-Type', 'image/jpeg')
+        .send(jpegStub);
       expect(res.status).toBe(403);
       server.close();
     });
@@ -132,14 +130,14 @@ describe('Media byte upload (HTTP)', () => {
       const res = await request(server)
         .put('/api/media/uploads/item-1')
         .set('X-Authenticated-User', TEST_VIEWER_A_ID)
-        .attach('file', Buffer.from([0xff, 0xd8, 0xff]), {
-          filename: 'x.jpg',
-          contentType: 'image/jpeg',
-        });
+        .set('Content-Type', 'image/jpeg')
+        .send(jpegStub);
       expect(res.status).toBe(201);
-      expect((res.body as { size: number }).size).toBeGreaterThan(0);
+      expect((res.body as { mediaItemId?: string; mimeType?: string }).mediaItemId).toBe('item-1');
+      expect((res.body as { mimeType?: string }).mimeType).toBe('image/jpeg');
       const storedPath = path.join(tempRoot, 'media', TEST_VIEWER_A_ID, 'photo', 'item-1');
-      await expect(fs.stat(storedPath)).resolves.toBeDefined();
+      const stat = await fs.stat(storedPath);
+      expect(stat.size).toBe(jpegStub.length);
       server.close();
     });
   });
@@ -149,10 +147,8 @@ describe('Media byte upload (HTTP)', () => {
       const server = buildApiWithMediaUpload(tempRoot);
       const res = await request(server)
         .put('/api/media/uploads/item-raw-1')
-        .attach('file', Buffer.from([0xff, 0xd8, 0xff]), {
-          filename: 'x.jpg',
-          contentType: 'image/jpeg',
-        });
+        .set('Content-Type', 'image/jpeg')
+        .send(jpegStub);
       expect(res.status).toBe(401);
       server.close();
     });
@@ -162,10 +158,8 @@ describe('Media byte upload (HTTP)', () => {
       const res = await request(server)
         .put('/api/media/uploads/item-raw-2')
         .set('X-Authenticated-User', TEST_VIEWER_B_ID)
-        .attach('file', Buffer.from([0xff, 0xd8, 0xff]), {
-          filename: 'x.jpg',
-          contentType: 'image/jpeg',
-        });
+        .set('Content-Type', 'image/jpeg')
+        .send(jpegStub);
       expect(res.status).toBe(403);
       server.close();
     });

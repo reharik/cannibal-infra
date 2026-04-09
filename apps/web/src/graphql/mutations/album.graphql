@@ -1,0 +1,30 @@
+mutation CreateAlbum($input: CreateAlbumInput!) {
+  createAlbum(input: $input) {
+    data {
+      albumId
+    }
+    errors {
+      code
+      message
+      field
+      category
+      retryable
+    }
+  }
+}
+
+mutation AddMediaItemToAlbum($input: AddMediaItemToAlbumInput!) {
+  AddMediaItemToAlbum(input: $input) {
+    data {
+      albumId
+      albumItemId
+    }
+    errors {
+      code
+      message
+      field
+      category
+      retryable
+    }
+  }
+}

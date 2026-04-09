@@ -77,6 +77,58 @@ describe('ViewerAlbumReadService (collection paging)', () => {
     });
   });
 
+  describe('When listAlbums returns albums without cover media', () => {
+    it('should omit coverMedia on each node', async () => {
+      const albumWithoutCover: AlbumWithCoverRow = {
+        id: 'album-no-cover',
+        title: 'No Cover',
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-02'),
+        mediaItemId: null,
+        mediaItemOwnerId: null,
+        mediaItemKind: null,
+        mediaItemStatus: null,
+        mediaItemStorageKey: null,
+        mediaItemMimeType: null,
+        mediaItemSizeBytes: null,
+        mediaItemWidth: null,
+        mediaItemHeight: null,
+        mediaItemDurationSeconds: null,
+        mediaItemTitle: null,
+        mediaItemDescription: null,
+        mediaItemTakenAt: null,
+        mediaItemCreatedAt: null,
+        mediaItemUpdatedAt: null,
+      };
+
+      const listByViewerId = jest.fn(
+        async (_params: {
+          viewerId: string;
+          collectionInfo: CollectionInfo<AlbumSortBy>;
+        }): Promise<AlbumWithCoverRow[]> => [albumWithoutCover],
+      );
+      const albumReadRepository: Pick<AlbumReadRepository, 'listByViewerId'> = {
+        listByViewerId,
+      };
+
+      const factory = buildViewerAlbumReadServiceFactory({
+        albumReadRepository,
+      } as never);
+      const service = factory({ viewerId });
+
+      const gqlCollection: AlbumCollectionInfo = {
+        pageInfo: { limit: 10, offset: 0 },
+        sortBy: AlbumSortBy.title,
+        sortDir: SortDir.asc,
+      };
+
+      const result = await service.listAlbums(gqlCollection);
+
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0]?.coverMedia).toBeUndefined();
+    });
+  });
+
   describe('When getAlbumItems is called with no collectionInfo fields', () => {
     it('should pass default paging and sort to the repository and echo pageInfo in the projection', async () => {
       const getAlbumItemsForViewer = jest.fn(

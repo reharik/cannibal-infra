@@ -1,0 +1,21 @@
+query ViewerMediaPicker {
+  viewer {
+    id
+    mediaItems(
+      input: {
+        collectionInfo: {
+          pageInfo: { limit: 40, offset: 0 }
+          sortBy: CREATED_AT
+          sortDir: DESC
+        }
+      }
+    ) {
+      nodes {
+        id
+        kind
+        status
+        title
+      }
+    }
+  }
+}

@@ -5,9 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { mediaUploadWorkflow } from '../application/media/mediaUploadWorkflow';
 import { ViewerRecentMediaDocument } from '../graphql/generated/types';
-interface AppError {
-  // TODO: define fields
-}
+import { AppError } from '../application/errors/types';
 
 export const HomeScreen = () => {
   const navigate = useNavigate();

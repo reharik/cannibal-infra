@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { AlbumScreen } from '../../screens/AlbumScreen';
+import { AlbumsListScreen } from '../../screens/AlbumsListScreen';
 import { HomeScreen } from '../../screens/HomeScreen';
 import { MediaItemScreen } from '../../screens/MediaItemScreen';
 import { AppShell } from '../../shared/components/AppShell';
@@ -14,6 +15,7 @@ export const AppRouter = ({ viewer }: AppRouterProps) => {
       <Route element={<AppShell viewer={viewer} />}>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/media" element={<HomeScreen />} />
+        <Route path="/albums" element={<AlbumsListScreen />} />
         <Route path="/albums/:albumId" element={<AlbumScreen />} />
       </Route>
       <Route path="/media/:mediaId" element={<MediaItemScreen />} />

@@ -462,4 +462,86 @@ describe('addAlbumItem', () => {
       );
     });
   });
+
+  describe('When viewer.album is queried', () => {
+    const viewerAlbumByIdQuery = `
+      query ViewerAlbumById($albumId: ID!) {
+        viewer {
+          id
+          album(id: $albumId) {
+            id
+            title
+            items(input: { ${listCollection} }) {
+              nodes {
+                id
+                mediaItem {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    it('should return the album id, title, and item list for a viewer album', async () => {
+      const albumTitle = `viewer-album-by-id-${randomUUID()}`;
+      const albumResult = await executeGraphQL<{
+        createAlbum: WriteMutationResponse<{ albumId: string }>;
+      }>({
+        query: createAlbumMutation,
+        variables: { title: albumTitle },
+        context: loggedInViewer1,
+      });
+      const albumId = albumResult.json.data?.createAlbum.data?.albumId;
+      expect(albumId).toBeTruthy();
+      if (!albumId) {
+        return;
+      }
+
+      const mediaItemId = await createReadyMediaItemViaGraphQL({
+        executeGraphQL,
+        database,
+        mediaStorageRoot,
+        context: loggedInViewer1,
+      });
+
+      await executeGraphQL<AddMediaItemToAlbumMutationData>({
+        query: addMediaToAlbumMutation,
+        variables: { albumId, mediaItemId },
+        context: loggedInViewer1,
+      });
+
+      const q = await executeGraphQL<{
+        viewer?: {
+          album?: {
+            id: string;
+            title: string;
+            items: { nodes: Array<{ id: string; mediaItem: { id: string } }> };
+          } | null;
+        };
+      }>({
+        query: viewerAlbumByIdQuery,
+        variables: { albumId },
+        context: loggedInViewer1,
+      });
+      expect(q.json.errors).toBeUndefined();
+      expect(q.json.data?.viewer?.album?.id).toBe(albumId);
+      expect(q.json.data?.viewer?.album?.title).toBe(albumTitle);
+      expect(q.json.data?.viewer?.album?.items.nodes).toHaveLength(1);
+      expect(q.json.data?.viewer?.album?.items.nodes[0]?.mediaItem.id).toBe(mediaItemId);
+    });
+
+    it('should return null when the album is not visible to the viewer', async () => {
+      const q = await executeGraphQL<{
+        viewer?: { album?: { id: string } | null };
+      }>({
+        query: viewerAlbumByIdQuery,
+        variables: { albumId: missingAlbumId },
+        context: loggedInViewer1,
+      });
+      expect(q.json.errors).toBeUndefined();
+      expect(q.json.data?.viewer?.album).toBeNull();
+    });
+  });
 });

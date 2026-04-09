@@ -16,6 +16,9 @@ const viewerResolvers: Pick<Resolvers, 'Query' | 'Viewer'> = {
       const collectionInfo = standardizeCollectionInput(input.collectionInfo, AlbumSortBy);
       return (await ctx.readServices.viewerAlbumReadService.listAlbums(collectionInfo)) || null;
     }),
+    album: authenticatedResolver(async (_parent, { id }, ctx) => {
+      return await ctx.readServices.viewerAlbumReadService.getAlbum(id);
+    }),
     mediaItems: authenticatedResolver(async (_parent, { input }, ctx) => {
       const collectionInfo = standardizeCollectionInput(input.collectionInfo, MediaItemSortBy);
       return (

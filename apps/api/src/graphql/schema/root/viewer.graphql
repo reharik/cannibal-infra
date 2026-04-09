@@ -9,6 +9,7 @@ type Viewer {
   lastName: String
   displayName: String!
   albums(input: ViewerAlbumsInput!): AlbumCollectionPayload!
+  album(id: ID!): Album
   mediaItems(input: ViewerMediaItemsInput!): MediaItemCollectionPayload!
 }
 

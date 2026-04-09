@@ -101,7 +101,7 @@ describe('GraphQL media upload integration', () => {
 
   describe('When finalizeMediaUpload runs before the Koa upload has persisted bytes', () => {
     it('should surface a client-safe failure without an unhandled exception', async () => {
-      // Real clients: createMediaUpload → PUT /api/media/uploads/:mediaItemId (multipart) → finalizeMediaUpload.
+      // Real clients: createMediaUpload → PUT /api/media/uploads/:mediaItemId (raw body, Content-Type = mime) → finalizeMediaUpload.
       // This scenario skips the HTTP upload so storage has no object yet.
       const created = await executeGraphQL<{
         createMediaUpload: { data?: { mediaItemId: string }; errors: { code: string }[] };
@@ -201,10 +201,8 @@ describe('GraphQL media upload integration', () => {
       const uploadRes = await request(koaServer)
         .put(`/api/media/uploads/${mediaItemId}`)
         .set('Authorization', `Bearer ${token}`)
-        .attach('file', Buffer.from([0xff, 0xd8, 0xff]), {
-          filename: 'x.jpg',
-          contentType: 'image/jpeg',
-        });
+        .set('Content-Type', 'image/jpeg')
+        .send(Buffer.from([0xff, 0xd8, 0xff]));
       expect(uploadRes.status).toBe(201);
 
       const { response, json } = await executeGraphQL<{

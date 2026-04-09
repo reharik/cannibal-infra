@@ -7,12 +7,14 @@ import {
   AlbumItemCollectionInfo,
   AlbumItemListProjection,
   AlbumListProjection,
+  AlbumProjection,
   NamespacedMediaItemRow,
 } from './viewerAlbumReadService.types';
 import { MediaItemProjection } from './viewerMediaItemReadService.types';
 
 export interface ViewerAlbumReadService {
   listAlbums: (collectionInfo: AlbumCollectionInfo) => Promise<AlbumListProjection>;
+  getAlbum: (albumId: string) => Promise<AlbumProjection | undefined>;
   getAlbumItems: (args: {
     albumId: string;
     collectionInfo: AlbumItemCollectionInfo;
@@ -51,17 +53,34 @@ export const buildViewerAlbumReadServiceFactory = ({
         viewerId,
         collectionInfo,
       });
+      console.log(`************albums************`);
+      console.log(JSON.stringify(albums, null, 4));
+      console.log(`********END albums************`);
       const nodes = albums.map((album) => ({
         id: album.id,
         title: album.title,
         createdAt: album.createdAt,
         updatedAt: album.updatedAt,
-        coverMedia: mapMediaItemRowToParent(album),
+        coverMedia: album.mediaItemId != null ? mapMediaItemRowToParent(album) : undefined,
       }));
 
       return {
         nodes,
         pageInfo: collectionInfo.pageInfo,
+      };
+    },
+
+    getAlbum: async (albumId: string): Promise<AlbumProjection | undefined> => {
+      const row = await albumReadRepository.getAlbumForViewer({ albumId, viewerId });
+      if (!row) {
+        return undefined;
+      }
+      return {
+        id: row.id,
+        title: row.title,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        coverMedia: row.mediaItemId != null ? mapMediaItemRowToParent(row) : undefined,
       };
     },
 

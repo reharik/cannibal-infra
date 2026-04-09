@@ -53,6 +53,8 @@ const mediaItemSelectColumns = [
 const albumWithCoverSelectColumns = [
   'album.id as id',
   'album.title as title',
+  'album.createdAt as createdAt',
+  'album.updatedAt as updatedAt',
   ...mediaItemSelectColumns,
 ];
 
