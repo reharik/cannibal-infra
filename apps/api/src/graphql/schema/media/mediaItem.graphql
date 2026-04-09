@@ -2,7 +2,8 @@ type MediaItem implements Node {
   id: ID!
   kind: MediaKind!
   status: MediaItemStatus!
-  storageKey: String!
+  asset(kind: MediaAssetKind!): MediaAsset
+  assets: [MediaAsset!]!
   mimeType: String!
   sizeBytes: Int!
   width: Int
@@ -22,6 +23,7 @@ enum MediaKind {
 
 enum MediaItemStatus {
   PENDING
+  PROCESSING
   READY
   FAILED
 }

@@ -10,6 +10,7 @@ type Viewer {
   displayName: String!
   albums(input: ViewerAlbumsInput!): AlbumCollectionPayload!
   album(id: ID!): Album
+  mediaItem(id: ID!): MediaItem
   mediaItems(input: ViewerMediaItemsInput!): MediaItemCollectionPayload!
 }
 

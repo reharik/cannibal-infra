@@ -52,10 +52,22 @@ describe('AlbumReadRepository (Knex collection paging)', () => {
     await database('mediaItem').insert({
       id: params.id,
       ownerId: viewerId,
+      storageKey: `media/${viewerId}/${params.id}`,
       kind: 'photo',
-      storageKey: `paging-int/${params.id}`,
       mimeType: 'image/jpeg',
       sizeBytes: 1,
+      status: 'ready',
+      createdAt: params.createdAt,
+      updatedAt: params.updatedAt,
+      createdBy: viewerId,
+      updatedBy: viewerId,
+    });
+    await database('mediaAsset').insert({
+      id: randomUUID(),
+      mediaItemId: params.id,
+      kind: 'display',
+      mimeType: 'image/jpeg',
+      fileSizeBytes: 1,
       status: 'ready',
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,

@@ -7,14 +7,25 @@ export type MediaItemListProjection = {
   pageInfo: PageInfo;
 };
 
-export type MediaItemProjection = MediaItemRow;
+export type MediaAssetProjection = {
+  id: EntityId;
+  kind: string;
+  url: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  fileSizeBytes?: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export type MediaItemRow = {
   id: EntityId;
   ownerId: EntityId;
+  storageKey: string;
   kind: string;
   status: string;
-  storageKey: string;
   mimeType?: string;
   sizeBytes?: number;
   width?: number;
@@ -25,6 +36,10 @@ export type MediaItemRow = {
   takenAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type MediaItemProjection = MediaItemRow & {
+  assets?: MediaAssetProjection[];
 };
 
 export interface MediaItemCollectionInfo extends CollectionInfo<MediaItemSortBy> {

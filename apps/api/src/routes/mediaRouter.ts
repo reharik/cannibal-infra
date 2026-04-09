@@ -6,6 +6,7 @@ export const buildMediaRouter = ({ mediaController }: IocGeneratedCradle): Route
   const router = new Router({ prefix: '/media' });
 
   router.put('/uploads/:mediaItemId', koaBody({ multipart: true }), mediaController.upload);
+  router.get('/objects/:encodedStorageKey', mediaController.getObject);
 
   return router;
 };

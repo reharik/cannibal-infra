@@ -25,11 +25,13 @@ import * as ioc_middleware_errorHandler from '../../middleware/errorHandler.js';
 import * as ioc_middleware_requestLogger from '../../middleware/requestLogger.js';
 import * as ioc_repositories_domainRepositories_albumRepository from '../../repositories/domainRepositories/albumRepository.js';
 import * as ioc_repositories_domainRepositories_commentRepository from '../../repositories/domainRepositories/commentRepository.js';
+import * as ioc_repositories_domainRepositories_mediaAssetRepository from '../../repositories/domainRepositories/mediaAssetRepository.js';
 import * as ioc_repositories_domainRepositories_mediaItemRepository from '../../repositories/domainRepositories/mediaItemRepository.js';
 import * as ioc_repositories_domainRepositories_notificationRepository from '../../repositories/domainRepositories/notificationRepository.js';
 import * as ioc_repositories_domainRepositories_shareLinkRepository from '../../repositories/domainRepositories/shareLinkRepository.js';
 import * as ioc_repositories_domainRepositories_userRepository from '../../repositories/domainRepositories/userRepository.js';
 import * as ioc_repositories_readRepositories_albumReadRepository from '../../repositories/readRepositories/albumReadRepository.js';
+import * as ioc_repositories_readRepositories_mediaAssetReadRepository from '../../repositories/readRepositories/mediaAssetReadRepository.js';
 import * as ioc_repositories_readRepositories_mediaItemReadRepository from '../../repositories/readRepositories/mediaItemReadRepository.js';
 import * as ioc_routes_apiRouter from '../../routes/apiRouter.js';
 import * as ioc_routes_authRouter from '../../routes/authRouter.js';
@@ -91,11 +93,13 @@ export const iocManifest = {
     ioc_middleware_requestLogger,
     ioc_repositories_domainRepositories_albumRepository,
     ioc_repositories_domainRepositories_commentRepository,
+    ioc_repositories_domainRepositories_mediaAssetRepository,
     ioc_repositories_domainRepositories_mediaItemRepository,
     ioc_repositories_domainRepositories_notificationRepository,
     ioc_repositories_domainRepositories_shareLinkRepository,
     ioc_repositories_domainRepositories_userRepository,
     ioc_repositories_readRepositories_albumReadRepository,
+    ioc_repositories_readRepositories_mediaAssetReadRepository,
     ioc_repositories_readRepositories_mediaItemReadRepository,
     ioc_routes_apiRouter,
     ioc_routes_authRouter,
@@ -129,7 +133,7 @@ export const iocManifest = {
         contractName: 'AlbumReadRepository',
         implementationName: 'albumReadRepository',
         lifetime: 'scoped',
-        moduleIndex: 25,
+        moduleIndex: 26,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -204,7 +208,7 @@ export const iocManifest = {
         contractName: 'AuthService',
         implementationName: 'authService',
         lifetime: 'singleton',
-        moduleIndex: 31,
+        moduleIndex: 33,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config', 'Knex', 'Logger'],
@@ -296,7 +300,7 @@ export const iocManifest = {
         moduleIndex: 5,
         default: true,
         discoveredBy: 'naming',
-        dependencyContractNames: ['MediaItemRepository', 'MediaStorage'],
+        dependencyContractNames: ['MediaAssetRepository', 'MediaItemRepository', 'MediaStorage'],
       },
     },
     GraphQLContextFactory: {
@@ -399,6 +403,38 @@ export const iocManifest = {
         dependencyContractNames: ['Config'],
       },
     },
+    MediaAssetReadRepository: {
+      mediaAssetReadRepository: {
+        exportName: 'buildMediaAssetReadRepository',
+        registrationKey: 'mediaAssetReadRepository',
+        modulePath: 'repositories/readRepositories/mediaAssetReadRepository.ts',
+        relImport: '../../repositories/readRepositories/mediaAssetReadRepository.js',
+        contractName: 'MediaAssetReadRepository',
+        implementationName: 'mediaAssetReadRepository',
+        lifetime: 'scoped',
+        moduleIndex: 27,
+        default: true,
+        discoveredBy: 'naming',
+        configOverridesApplied: ['lifetime'],
+        dependencyContractNames: ['Knex'],
+      },
+    },
+    MediaAssetRepository: {
+      mediaAssetRepository: {
+        exportName: 'buildMediaAssetRepository',
+        registrationKey: 'mediaAssetRepository',
+        modulePath: 'repositories/domainRepositories/mediaAssetRepository.ts',
+        relImport: '../../repositories/domainRepositories/mediaAssetRepository.js',
+        contractName: 'MediaAssetRepository',
+        implementationName: 'mediaAssetRepository',
+        lifetime: 'scoped',
+        moduleIndex: 21,
+        default: true,
+        discoveredBy: 'naming',
+        configOverridesApplied: ['lifetime'],
+        dependencyContractNames: ['Knex'],
+      },
+    },
     MediaController: {
       mediaController: {
         exportName: 'buildMediaController',
@@ -411,7 +447,7 @@ export const iocManifest = {
         moduleIndex: 8,
         default: true,
         discoveredBy: 'naming',
-        dependencyContractNames: ['MediaItemRepository', 'MediaStorage'],
+        dependencyContractNames: ['MediaAssetRepository', 'MediaItemRepository', 'MediaStorage'],
       },
     },
     MediaItemReadRepository: {
@@ -423,7 +459,7 @@ export const iocManifest = {
         contractName: 'MediaItemReadRepository',
         implementationName: 'mediaItemReadRepository',
         lifetime: 'scoped',
-        moduleIndex: 26,
+        moduleIndex: 28,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -439,7 +475,7 @@ export const iocManifest = {
         contractName: 'MediaItemRepository',
         implementationName: 'mediaItemRepository',
         lifetime: 'singleton',
-        moduleIndex: 21,
+        moduleIndex: 22,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -470,7 +506,7 @@ export const iocManifest = {
         contractName: 'NotificationRepository',
         implementationName: 'notificationRepository',
         lifetime: 'singleton',
-        moduleIndex: 22,
+        moduleIndex: 23,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -500,7 +536,7 @@ export const iocManifest = {
         contractName: 'RootRouter',
         implementationName: 'apiRoutes',
         lifetime: 'singleton',
-        moduleIndex: 27,
+        moduleIndex: 29,
         default: true,
         discoveredBy: 'naming',
       },
@@ -514,7 +550,7 @@ export const iocManifest = {
         contractName: 'Router',
         implementationName: 'mediaRouter',
         lifetime: 'singleton',
-        moduleIndex: 29,
+        moduleIndex: 31,
         discoveredBy: 'naming',
         dependencyContractNames: ['MediaController'],
       },
@@ -526,7 +562,7 @@ export const iocManifest = {
         contractName: 'Router',
         implementationName: 'router',
         lifetime: 'singleton',
-        moduleIndex: 28,
+        moduleIndex: 30,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AuthController'],
@@ -541,7 +577,7 @@ export const iocManifest = {
         contractName: 'Server',
         implementationName: 'server',
         lifetime: 'singleton',
-        moduleIndex: 30,
+        moduleIndex: 32,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config', 'KoaServer', 'Logger'],
@@ -556,7 +592,7 @@ export const iocManifest = {
         contractName: 'ShareLinkRepository',
         implementationName: 'shareLinkRepository',
         lifetime: 'singleton',
-        moduleIndex: 23,
+        moduleIndex: 24,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -571,7 +607,7 @@ export const iocManifest = {
         contractName: 'UserRepository',
         implementationName: 'userRepository',
         lifetime: 'singleton',
-        moduleIndex: 24,
+        moduleIndex: 25,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -607,7 +643,7 @@ export const iocManifest = {
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
-        dependencyContractNames: ['MediaItemReadRepository'],
+        dependencyContractNames: ['MediaAssetReadRepository', 'MediaItemReadRepository'],
       },
     },
     YogaApp: {

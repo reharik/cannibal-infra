@@ -11,6 +11,11 @@ query ViewerAlbumDetail($albumId: ID!) {
         kind
         status
         title
+        asset(kind: THUMBNAIL) {
+          kind
+          url
+          status
+        }
       }
       items(
         input: {
@@ -27,6 +32,11 @@ query ViewerAlbumDetail($albumId: ID!) {
             id
             kind
             status
+            asset(kind: THUMBNAIL) {
+              kind
+              url
+              status
+            }
             title
             createdAt
             width

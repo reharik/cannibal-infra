@@ -19,6 +19,11 @@ query ViewerAlbums {
           id
           kind
           status
+          asset(kind: THUMBNAIL) {
+            kind
+            url
+            status
+          }
         }
       }
       pageInfo {

@@ -127,5 +127,36 @@ export const buildLocalMediaStorage = ({ config }: IocGeneratedCradle): MediaSto
         throw err;
       }
     },
+
+    getObjectUrl: (storageKey: string): string => {
+      const encodedStorageKey = encodeURIComponent(storageKey);
+      return `${config.serverUrl}/api/media/objects/${encodedStorageKey}`;
+    },
+
+    getObjectStream: async (
+      storageKey: string,
+    ): Promise<{ body: Readable; mimeType?: string } | null> => {
+      const objectPath = getObjectFilePathForStorageKey(storageRoot, storageKey);
+      try {
+        const stat = await fs.promises.stat(objectPath);
+        if (!stat.isFile()) {
+          return null;
+        }
+        const mimeType = await readOptionalMimeSidecar(objectPath);
+        return {
+          body: fs.createReadStream(objectPath),
+          mimeType,
+        };
+      } catch (err: unknown) {
+        const code =
+          err && typeof err === 'object' && 'code' in err
+            ? (err as NodeJS.ErrnoException).code
+            : undefined;
+        if (code === 'ENOENT') {
+          return null;
+        }
+        throw err;
+      }
+    },
   };
 };

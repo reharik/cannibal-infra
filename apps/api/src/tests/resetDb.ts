@@ -46,6 +46,7 @@ export const resetDb = async (db: Knex): Promise<void> => {
       "comment",
       notification,
       album,
+      media_asset,
       media_item,
       "user"
     RESTART IDENTITY CASCADE;

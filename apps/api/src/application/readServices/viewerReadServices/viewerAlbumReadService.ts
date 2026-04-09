@@ -25,22 +25,26 @@ export interface ViewerAlbumReadServiceFactory extends ReadServiceFactoryBase {
   (args: { viewerId: string }): ViewerAlbumReadService;
 }
 
-const mapMediaItemRowToParent = (mediaItem: NamespacedMediaItemRow): MediaItemProjection => ({
-  id: mediaItem.mediaItemId ?? '',
-  ownerId: mediaItem.mediaItemOwnerId ?? '',
-  kind: mediaItem.mediaItemKind ?? '',
-  status: mediaItem.mediaItemStatus ?? '',
-  storageKey: mediaItem.mediaItemStorageKey ?? '',
-  mimeType: mediaItem.mediaItemMimeType ?? '',
-  sizeBytes: mediaItem.mediaItemSizeBytes ?? 0,
-  width: mediaItem.mediaItemWidth,
-  height: mediaItem.mediaItemHeight,
-  title: mediaItem.mediaItemTitle,
-  description: mediaItem.mediaItemDescription,
-  takenAt: mediaItem.mediaItemTakenAt,
-  createdAt: mediaItem.mediaItemCreatedAt,
-  updatedAt: mediaItem.mediaItemUpdatedAt,
-});
+const mapMediaItemRowToParent = (mediaItem: NamespacedMediaItemRow): MediaItemProjection => {
+  const id = mediaItem.mediaItemId ?? '';
+  return {
+    id,
+    ownerId: mediaItem.mediaItemOwnerId ?? '',
+    storageKey: mediaItem.mediaItemStorageKey ?? '',
+    kind: mediaItem.mediaItemKind ?? '',
+    status: mediaItem.mediaItemStatus ?? '',
+    mimeType: mediaItem.mediaItemMimeType ?? '',
+    sizeBytes: mediaItem.mediaItemSizeBytes ?? 0,
+    width: mediaItem.mediaItemWidth,
+    height: mediaItem.mediaItemHeight,
+    durationSeconds: mediaItem.mediaItemDurationSeconds,
+    title: mediaItem.mediaItemTitle,
+    description: mediaItem.mediaItemDescription,
+    takenAt: mediaItem.mediaItemTakenAt,
+    createdAt: mediaItem.mediaItemCreatedAt ?? new Date(),
+    updatedAt: mediaItem.mediaItemUpdatedAt ?? new Date(),
+  };
+};
 
 export type SortableEnum = StandardEnumItem & { column: string };
 
@@ -53,9 +57,6 @@ export const buildViewerAlbumReadServiceFactory = ({
         viewerId,
         collectionInfo,
       });
-      console.log(`************albums************`);
-      console.log(JSON.stringify(albums, null, 4));
-      console.log(`********END albums************`);
       const nodes = albums.map((album) => ({
         id: album.id,
         title: album.title,

@@ -104,7 +104,11 @@ export const HomeScreen = () => {
                 onClick={() => navigate(`/media/${item.id}`)}
               >
                 <MediaThumb>
-                  <ThumbIcon aria-hidden>{item.kind === 'VIDEO' ? '🎬' : '🖼️'}</ThumbIcon>
+                  {item.asset?.url ? (
+                    <ThumbImage src={item.asset.url} alt={item.title?.trim() || kindLabel(item.kind)} />
+                  ) : (
+                    <ThumbIcon aria-hidden>{item.kind === 'VIDEO' ? '🎬' : '🖼️'}</ThumbIcon>
+                  )}
                   {item.status === 'PENDING' ? <StatusPill>Processing</StatusPill> : null}
                   {item.status === 'FAILED' ? <StatusPill $fail>Failed</StatusPill> : null}
                 </MediaThumb>
@@ -260,6 +264,12 @@ const MediaThumb = styled.div`
 const ThumbIcon = styled.div`
   font-size: 48px;
   opacity: 0.35;
+`;
+
+const ThumbImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const StatusPill = styled.span<{ $fail?: boolean }>`

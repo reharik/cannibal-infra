@@ -130,9 +130,13 @@ export const AlbumScreen = () => {
             <AlbumMeta>
               <AlbumCover>
                 {album.coverMedia ? (
-                  <CoverIcon aria-hidden>
-                    {album.coverMedia.kind === 'VIDEO' ? '🎬' : '🖼️'}
-                  </CoverIcon>
+                  album.coverMedia.asset?.url ? (
+                    <CoverImage src={album.coverMedia.asset.url} alt={album.title} />
+                  ) : (
+                    <CoverIcon aria-hidden>
+                      {album.coverMedia.kind === 'VIDEO' ? '🎬' : '🖼️'}
+                    </CoverIcon>
+                  )
                 ) : (
                   <CoverPlaceholder aria-hidden>📷</CoverPlaceholder>
                 )}
@@ -157,9 +161,16 @@ export const AlbumScreen = () => {
                       onClick={() => navigate(`/media/${node.mediaItem.id}`)}
                     >
                       <PhotoThumb>
-                        <ThumbIcon aria-hidden>
-                          {node.mediaItem.kind === 'VIDEO' ? '🎬' : '🖼️'}
-                        </ThumbIcon>
+                        {node.mediaItem.asset?.url ? (
+                          <ThumbImage
+                            src={node.mediaItem.asset.url}
+                            alt={node.mediaItem.title?.trim() || kindLabel(node.mediaItem.kind)}
+                          />
+                        ) : (
+                          <ThumbIcon aria-hidden>
+                            {node.mediaItem.kind === 'VIDEO' ? '🎬' : '🖼️'}
+                          </ThumbIcon>
+                        )}
                         {node.mediaItem.status === 'PENDING' ? (
                           <StatusPill>Processing</StatusPill>
                         ) : null}
@@ -386,6 +397,12 @@ const CoverIcon = styled.div`
   opacity: 0.35;
 `;
 
+const CoverImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const AlbumInfo = styled.div`
   display: flex;
   flex-direction: column;
@@ -463,6 +480,12 @@ const PhotoThumb = styled.div`
 const ThumbIcon = styled.div`
   font-size: 48px;
   opacity: 0.35;
+`;
+
+const ThumbImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const StatusPill = styled.span<{ $fail?: boolean }>`

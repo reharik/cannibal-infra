@@ -100,9 +100,13 @@ export const AlbumsListScreen = () => {
             {nodes.map((album) => (
               <AlbumCard key={album.id} to={`/albums/${album.id}`}>
                 <AlbumThumb>
-                  <ThumbIcon aria-hidden>
-                    {album.coverMedia?.kind === 'VIDEO' ? '🎬' : '🖼️'}
-                  </ThumbIcon>
+                  {album.coverMedia?.asset?.url ? (
+                    <ThumbImage src={album.coverMedia.asset.url} alt={album.title} />
+                  ) : (
+                    <ThumbIcon aria-hidden>
+                      {album.coverMedia?.kind === 'VIDEO' ? '🎬' : '🖼️'}
+                    </ThumbIcon>
+                  )}
                 </AlbumThumb>
                 <AlbumInfo>
                   <AlbumName>{album.title}</AlbumName>
@@ -294,6 +298,12 @@ const AlbumThumb = styled.div`
 const ThumbIcon = styled.div`
   font-size: 48px;
   opacity: 0.35;
+`;
+
+const ThumbImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const AlbumInfo = styled.div`

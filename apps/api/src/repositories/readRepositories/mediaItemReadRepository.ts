@@ -22,9 +22,9 @@ export type MediaItemReadRepository = {
 const mediaItemRowFields = [
   'media_item.id',
   'media_item.ownerId',
+  'media_item.storageKey',
   'media_item.kind',
   'media_item.status',
-  'media_item.storageKey',
   'media_item.mimeType',
   'media_item.sizeBytes',
   'media_item.width',

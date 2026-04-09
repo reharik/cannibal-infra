@@ -4,12 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 
 import Router from '@koa/router';
-import { MediaItemStatus, MediaKind } from '@packages/contracts';
+import { MediaAssetKind, MediaAssetStatus, MediaItemStatus, MediaKind } from '@packages/contracts';
 import Koa from 'koa';
 import request from 'supertest';
 
 import { buildMediaController } from '../controllers/mediaController';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
+import { MediaAsset } from '../domain/MediaAsset/MediaAsset';
+import type { MediaAssetRepository } from '../domain/MediaAsset/MediaAssetRepository';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
 import { buildLocalMediaStorage } from '../infrastructure/media/localMediaStorage';
@@ -20,15 +22,28 @@ const seedPendingItem = (id: string, ownerId: string): MediaItem =>
   MediaItem.rehydrate({
     id,
     ownerId,
+    storageKey: `media/${ownerId}/${id}`,
     kind: MediaKind.photo,
     status: MediaItemStatus.pending,
-    storageKey: `${ownerId}/photo/${id}`,
     mimeType: 'image/jpeg',
     comments: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     createdBy: ownerId,
     updatedBy: ownerId,
+  });
+
+const seedInitialAsset = (mediaItemId: string, actorId: string): MediaAsset =>
+  MediaAsset.rehydrate({
+    id: `asset-${mediaItemId}`,
+    mediaItemId,
+    kind: MediaAssetKind.original,
+    mimeType: 'image/jpeg',
+    status: MediaAssetStatus.pending,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    createdBy: actorId,
+    updatedBy: actorId,
   });
 
 const createMediaItemRepository = (items: MediaItem[]): MediaItemRepository => {
@@ -38,8 +53,18 @@ const createMediaItemRepository = (items: MediaItem[]): MediaItemRepository => {
     save: async (item: MediaItem) => {
       byId.set(item.id(), item);
     },
+    saveNewWithInitialAsset: async () => {
+      throw new Error('saveNewWithInitialAsset not used in HTTP upload tests');
+    },
   };
 };
+
+const createMediaAssetRepository = (assetsByMediaItemId: Map<string, MediaAsset>): MediaAssetRepository => ({
+  getFirstByMediaItemId: async (mediaItemId: string) => assetsByMediaItemId.get(mediaItemId),
+  save: async (asset: MediaAsset) => {
+    assetsByMediaItemId.set(asset.mediaItemId(), asset);
+  },
+});
 
 const testUserFromHeader: Koa.Middleware = async (ctx, next) => {
   const id = ctx.get('X-Authenticated-User');
@@ -68,6 +93,13 @@ const buildApiWithMediaUpload = (rootDir: string): http.Server => {
     seedPendingItem('item-raw-2', TEST_VIEWER_A_ID),
   ]);
 
+  const assetsByMediaItemId = new Map<string, MediaAsset>([
+    ['item-1', seedInitialAsset('item-1', TEST_VIEWER_A_ID)],
+    ['item-raw-1', seedInitialAsset('item-raw-1', TEST_VIEWER_A_ID)],
+    ['item-raw-2', seedInitialAsset('item-raw-2', TEST_VIEWER_A_ID)],
+  ]);
+  const mediaAssetRepository = createMediaAssetRepository(assetsByMediaItemId);
+
   const config = {
     serverUrl: 'http://localhost:3001',
     mediaStorageRoot: path.join(rootDir, 'media'),
@@ -75,6 +107,7 @@ const buildApiWithMediaUpload = (rootDir: string): http.Server => {
   const mediaStorage = buildLocalMediaStorage({ config } as IocGeneratedCradle);
   const mediaController = buildMediaController({
     mediaItemRepository,
+    mediaAssetRepository,
     mediaStorage,
   } as IocGeneratedCradle);
   const mediaRouter = buildMediaRouter({ mediaController } as IocGeneratedCradle);
@@ -135,7 +168,14 @@ describe('Media byte upload (HTTP)', () => {
       expect(res.status).toBe(201);
       expect((res.body as { mediaItemId?: string; mimeType?: string }).mediaItemId).toBe('item-1');
       expect((res.body as { mimeType?: string }).mimeType).toBe('image/jpeg');
-      const storedPath = path.join(tempRoot, 'media', TEST_VIEWER_A_ID, 'photo', 'item-1');
+      const storedPath = path.join(
+        tempRoot,
+        'media',
+        'media',
+        TEST_VIEWER_A_ID,
+        'item-1',
+        'original',
+      );
       const stat = await fs.stat(storedPath);
       expect(stat.size).toBe(jpegStub.length);
       server.close();

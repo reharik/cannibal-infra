@@ -1,5 +1,8 @@
+import { MediaAssetKind } from '@packages/contracts';
 import { ok } from 'apps/api/src/domain/utilities/writeResponse';
+import { buildMediaAssetStorageKey } from '../../media/MediaStorage';
 import { IocGeneratedCradle } from '../../../di/generated/ioc-registry.types';
+import { MediaAsset } from '../../../domain/MediaAsset/MediaAsset';
 import { MediaItem } from '../../../domain/MediaItem/MediaItem';
 import { WriteResult } from '../../../types/types';
 import { WriteServiceBase } from '../writeServiceBaseType';
@@ -23,13 +26,22 @@ export const buildCreateMediaItemUpload = ({
       viewerId,
     );
 
+    const initialAsset = MediaAsset.create(
+      {
+        mediaItemId: mediaItem.id(),
+        kind: MediaAssetKind.original,
+        mimeType,
+      },
+      viewerId,
+    );
+
     const uploadTarget = await mediaStorage.getUploadTarget({
       mediaItemId: mediaItem.id(),
-      storageKey: mediaItem.storageKey(),
+      storageKey: buildMediaAssetStorageKey(mediaItem.storageKey(), MediaAssetKind.original),
       mimeType,
     });
 
-    await mediaItemRepository.save(mediaItem);
+    await mediaItemRepository.saveNewWithInitialAsset(mediaItem, initialAsset);
 
     return ok({
       mediaItemId: mediaItem.id(),

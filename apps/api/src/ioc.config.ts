@@ -23,6 +23,12 @@ export default defineIocConfig({
     MediaItemReadRepository: {
       mediaItemReadRepository: { lifetime: 'scoped' },
     },
+    MediaAssetReadRepository: {
+      mediaAssetReadRepository: { lifetime: 'scoped' },
+    },
+    MediaAssetRepository: {
+      mediaAssetRepository: { lifetime: 'scoped' },
+    },
     ViewerMediaItemReadServiceFactory: {
       viewerMediaItemReadServiceFactory: { lifetime: 'scoped' },
     },

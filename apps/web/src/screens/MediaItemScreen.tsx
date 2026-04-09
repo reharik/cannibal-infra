@@ -1,8 +1,15 @@
+import { useQuery } from '@apollo/client/react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { ViewerMediaItemDetailDocument } from '../graphql/generated/types';
 
 export const MediaItemScreen = () => {
   const { mediaId } = useParams<{ mediaId: string }>();
+  const { data } = useQuery(ViewerMediaItemDetailDocument, {
+    variables: { mediaItemId: mediaId ?? '' },
+    skip: !mediaId,
+  });
+  const mediaItem = data?.viewer?.mediaItem;
 
   return (
     <Container>
@@ -10,8 +17,14 @@ export const MediaItemScreen = () => {
 
       <MediaViewer>
         <MediaPlaceholder>
-          <PlaceholderIcon>🖼️</PlaceholderIcon>
-          <PlaceholderText>Media viewer will appear here</PlaceholderText>
+          {mediaItem?.asset?.url ? (
+            <ViewerImage src={mediaItem.asset.url} alt={mediaItem.title ?? 'Media item'} />
+          ) : (
+            <>
+              <PlaceholderIcon>🖼️</PlaceholderIcon>
+              <PlaceholderText>Media viewer will appear here</PlaceholderText>
+            </>
+          )}
         </MediaPlaceholder>
       </MediaViewer>
 
@@ -28,11 +41,13 @@ export const MediaItemScreen = () => {
           </MetadataItem>
           <MetadataItem>
             <MetadataLabel>Size</MetadataLabel>
-            <MetadataValue>2.4 MB</MetadataValue>
+            <MetadataValue>{mediaItem?.sizeBytes ? `${mediaItem.sizeBytes} bytes` : '—'}</MetadataValue>
           </MetadataItem>
           <MetadataItem>
             <MetadataLabel>Dimensions</MetadataLabel>
-            <MetadataValue>1920 × 1080</MetadataValue>
+            <MetadataValue>
+              {mediaItem?.width && mediaItem?.height ? `${mediaItem.width} × ${mediaItem.height}` : '—'}
+            </MetadataValue>
           </MetadataItem>
         </MetadataSection>
 
@@ -108,6 +123,12 @@ const PlaceholderIcon = styled.div`
 const PlaceholderText = styled.div`
   font-size: 18px;
   color: ${({ theme }) => theme.colors.subtext};
+`;
+
+const ViewerImage = styled.img`
+  width: 100%;
+  max-height: calc(100vh - 120px);
+  object-fit: contain;
 `;
 
 const MetadataPanel = styled.aside`

@@ -1,0 +1,21 @@
+query ViewerMediaItemDetail($mediaItemId: ID!) {
+  viewer {
+    id
+    mediaItem(id: $mediaItemId) {
+      id
+      kind
+      status
+      mimeType
+      title
+      createdAt
+      width
+      height
+      sizeBytes
+      asset(kind: DISPLAY) {
+        kind
+        url
+        status
+      }
+    }
+  }
+}

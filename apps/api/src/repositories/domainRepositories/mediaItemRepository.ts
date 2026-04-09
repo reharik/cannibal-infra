@@ -3,6 +3,7 @@ import { withEnumRevival } from '@reharik/smart-enum-knex';
 import type { Knex } from 'knex';
 import { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
 import type { CommentRecord } from '../../domain/Comment/Comment';
+import type { MediaAsset } from '../../domain/MediaAsset/MediaAsset';
 import { MediaItem, type MediaItemRecord } from '../../domain/MediaItem/MediaItem';
 import type { MediaItemRepository as DomainMediaItemRepository } from '../../domain/MediaItem/MediaItemRepository';
 import type { EntityId } from '../../types/types';
@@ -60,8 +61,32 @@ export const buildMediaItemRepository = ({ database }: IocGeneratedCradle): Medi
     });
   };
 
+  const saveNewWithInitialAsset = async (
+    mediaItem: MediaItem,
+    initialAsset: MediaAsset,
+  ): Promise<void> => {
+    const itemRecord = mediaItem.toPersistence();
+    const { comments, ...mediaItemRow } = itemRecord;
+    const assetRecord = initialAsset.toPersistence();
+
+    await database.transaction(async (trx: Knex.Transaction) => {
+      await trx('mediaItem').insert(mediaItemRow);
+      await trx('mediaAsset').insert(assetRecord);
+      if (comments.length > 0) {
+        await trx('comment').insert(
+          comments.map((comment) => ({
+            ...comment,
+            resourceType: 'mediaItem',
+            resourceId: itemRecord.id,
+          })),
+        );
+      }
+    });
+  };
+
   return {
     getById,
     save,
+    saveNewWithInitialAsset,
   };
 };

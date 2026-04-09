@@ -35,9 +35,9 @@ export type AlbumReadRepository = {
 const mediaItemSelectColumns = [
   'mediaItem.id as mediaItemId',
   'mediaItem.ownerId as mediaItemOwnerId',
+  'mediaItem.storageKey as mediaItemStorageKey',
   'mediaItem.kind as mediaItemKind',
   'mediaItem.status as mediaItemStatus',
-  'mediaItem.storageKey as mediaItemStorageKey',
   'mediaItem.mimeType as mediaItemMimeType',
   'mediaItem.sizeBytes as mediaItemSizeBytes',
   'mediaItem.width as mediaItemWidth',

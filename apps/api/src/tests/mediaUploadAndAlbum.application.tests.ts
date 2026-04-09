@@ -1,25 +1,46 @@
 import { AppErrorCollection, MediaItemStatus, MediaKind } from '@packages/contracts';
+import { MediaAssetKind } from '@packages/contracts';
+import { Readable } from 'node:stream';
 import type { MediaStorage } from '../application/media/MediaStorage';
+import { buildMediaAssetStorageKey } from '../application/media/MediaStorage';
+import type { MediaItemRow } from '../application/readServices/viewerReadServices/viewerMediaItemReadService.types';
 import { buildAddAlbumItem } from '../application/writeServices/album/addAlbumItem';
 import { buildCreateAlbum } from '../application/writeServices/album/createAlbum';
 import { buildCreateMediaItemUpload } from '../application/writeServices/mediaItem/createMediaItemUpload';
 import { buildFinalizeMediaItemUpload } from '../application/writeServices/mediaItem/finalizeMediaItemUpload';
 import { Album } from '../domain/Album/Album';
 import type { AlbumRepository } from '../domain/Album/AlbumRepository';
+import { MediaAsset } from '../domain/MediaAsset/MediaAsset';
+import type { MediaAssetRepository } from '../domain/MediaAsset/MediaAssetRepository';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
-import { MediaItemProjection } from '../application/readServices/viewerReadServices/viewerMediaItemReadService.types';
 import { EntityId } from '../types/types';
 import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID } from './testViewerIds';
 
 type ObjectState = { size: number; mimeType?: string };
 
-const createInMemoryMediaItemRepository = (): MediaItemRepository => {
+const createInMemoryMediaAssetRepository = (): MediaAssetRepository => {
+  const assetsByMediaItemId = new Map<string, MediaAsset>();
+  return {
+    getFirstByMediaItemId: async (mediaItemId: string) => assetsByMediaItemId.get(mediaItemId),
+    save: async (asset) => {
+      assetsByMediaItemId.set(asset.mediaItemId(), asset);
+    },
+  };
+};
+
+const createInMemoryMediaItemRepository = (
+  mediaAssetRepository: MediaAssetRepository,
+): MediaItemRepository => {
   const byId = new Map<string, MediaItem>();
   return {
     getById: async (id: string) => byId.get(id),
     save: async (item: MediaItem) => {
       byId.set(item.id(), item);
+    },
+    saveNewWithInitialAsset: async (item, uploadAsset) => {
+      byId.set(item.id(), item);
+      await mediaAssetRepository.save(uploadAsset);
     },
   };
 };
@@ -45,29 +66,42 @@ const createTrackingMediaStorage = (
       url: `${serverUrl}/api/media/uploads/${mediaItemId}?mimeType=${encodeURIComponent(mimeType)}`,
       headers: {},
     }),
-    writeUploadedFile: async () => {
-      // Application tests record storage state via `objects` when simulating uploaded bytes.
-    },
     getObjectMetadata: async (storageKey: string) => {
       const o = objects.get(storageKey);
       return o ?? null;
     },
     verifyExistence: async (storageKey: string) => objects.has(storageKey),
+    getObjectUrl: (storageKey: string) =>
+      `${serverUrl}/api/media/objects/${encodeURIComponent(storageKey)}`,
+    getObjectStream: async (storageKey: string) => {
+      const object = objects.get(storageKey);
+      if (!object) {
+        return null;
+      }
+      return {
+        body: Readable.from(Buffer.alloc(object.size)),
+        mimeType: object.mimeType,
+      };
+    },
+    writeObject: async () => {
+      return;
+    },
   };
 };
 
-const projectionFromAggregate = (item: MediaItem): MediaItemProjection => {
+const projectionFromAggregate = (item: MediaItem): MediaItemRow => {
   const p = item.toPersistence();
   return {
     id: item.id(),
     ownerId: item.ownerId(),
+    storageKey: item.storageKey(),
     kind: item.kind().value,
     status: item.status().value,
-    storageKey: item.storageKey(),
     mimeType: p.mimeType,
     sizeBytes: p.sizeBytes ?? 0,
     width: p.width,
     height: p.height,
+    durationSeconds: p.durationSeconds,
     title: p.title,
     description: p.description,
     takenAt: p.takenAt,
@@ -83,7 +117,8 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When createMediaUpload runs', () => {
     it('should persist a pending media item and return upload instructions', async () => {
-      const mediaItemRepository = createInMemoryMediaItemRepository();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -112,7 +147,8 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When bytes are recorded in storage then finalize runs', () => {
     it('should transition the item to ready and return confirmed size and mime type', async () => {
-      const mediaItemRepository = createInMemoryMediaItemRepository();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -120,6 +156,7 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
+        mediaAssetRepository,
         mediaStorage,
       } as never);
 
@@ -137,8 +174,18 @@ describe('Media upload pipeline (application services)', () => {
       if (!item) {
         return;
       }
-      const key = item.storageKey();
-      mediaStorage.objects.set(key, { size: 2048, mimeType: 'image/jpeg' });
+      const asset = await mediaAssetRepository.getFirstByMediaItemId(created.value.mediaItemId);
+      expect(asset).toBeDefined();
+      if (!asset) {
+        return;
+      }
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: 2048,
+          mimeType: 'image/jpeg',
+        },
+      );
 
       const finalized = await finalize({
         viewerId: viewerA,
@@ -159,7 +206,8 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When finalize runs before any object exists in storage', () => {
     it('should fail and leave the media item pending', async () => {
-      const mediaItemRepository = createInMemoryMediaItemRepository();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -167,6 +215,7 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
+        mediaAssetRepository,
         mediaStorage,
       } as never);
 
@@ -193,7 +242,8 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When a different viewer tries to finalize another user media', () => {
     it('should fail with not owned by viewer', async () => {
-      const mediaItemRepository = createInMemoryMediaItemRepository();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -201,6 +251,7 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
+        mediaAssetRepository,
         mediaStorage,
       } as never);
 
@@ -217,7 +268,14 @@ describe('Media upload pipeline (application services)', () => {
       if (!item) {
         return;
       }
-      mediaStorage.objects.set(item.storageKey(), { size: 10, mimeType: 'image/jpeg' });
+      const asset = await mediaAssetRepository.getFirstByMediaItemId(item.id());
+      if (!asset) {
+        return;
+      }
+      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
+        size: 10,
+        mimeType: 'image/jpeg',
+      });
 
       const finalized = await finalize({
         viewerId: viewerB,
@@ -253,8 +311,9 @@ describe('Album integration (application services)', () => {
   describe('When addAlbumItem is called for pending media', () => {
     it('should fail with media not ready', async () => {
       const albumRepository = createInMemoryAlbumRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository();
-      const projectionFromReadRepo = new Map<string, MediaItemProjection>();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const projectionFromReadRepo = new Map<string, MediaItemRow>();
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
       const albumResult = await createAlbum({ viewerId, title: 'Summer' });
@@ -307,8 +366,9 @@ describe('Album integration (application services)', () => {
   describe('When addAlbumItem is called for ready media', () => {
     it('should persist the album item', async () => {
       const albumRepository = createInMemoryAlbumRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository();
-      const projectionFromReadRepo = new Map<string, MediaItemProjection>();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const projectionFromReadRepo = new Map<string, MediaItemRow>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
@@ -324,6 +384,7 @@ describe('Album integration (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
+        mediaAssetRepository,
         mediaStorage,
       } as never);
 
@@ -340,7 +401,14 @@ describe('Album integration (application services)', () => {
       if (!item) {
         return;
       }
-      mediaStorage.objects.set(item.storageKey(), { size: 100, mimeType: 'image/jpeg' });
+      const asset = await mediaAssetRepository.getFirstByMediaItemId(item.id());
+      if (!asset) {
+        return;
+      }
+      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
+        size: 100,
+        mimeType: 'image/jpeg',
+      });
       const fin = await finalize({ viewerId, mediaItemId: item.id() });
       expect(fin.success).toBe(true);
       if (!fin.success) {
@@ -380,8 +448,9 @@ describe('Album integration (application services)', () => {
   describe('When addAlbumItem is called twice for the same media', () => {
     it('should reject the duplicate when the aggregate disallows it', async () => {
       const albumRepository = createInMemoryAlbumRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository();
-      const projectionFromReadRepo = new Map<string, MediaItemProjection>();
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const projectionFromReadRepo = new Map<string, MediaItemRow>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
@@ -397,6 +466,7 @@ describe('Album integration (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
+        mediaAssetRepository,
         mediaStorage,
       } as never);
 
@@ -413,7 +483,14 @@ describe('Album integration (application services)', () => {
       if (!item) {
         return;
       }
-      mediaStorage.objects.set(item.storageKey(), { size: 50, mimeType: 'image/jpeg' });
+      const asset = await mediaAssetRepository.getFirstByMediaItemId(item.id());
+      if (!asset) {
+        return;
+      }
+      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
+        size: 50,
+        mimeType: 'image/jpeg',
+      });
       await finalize({ viewerId, mediaItemId: item.id() });
       const readyItem = await mediaItemRepository.getById(item.id());
       if (!readyItem) {

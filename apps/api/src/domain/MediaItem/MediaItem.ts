@@ -13,9 +13,9 @@ import { fail, ok } from '../utilities/writeResponse';
 
 export type MediaItemProps = {
   ownerId: EntityId;
+  storageKey: string;
   kind: MediaKind;
   status: MediaItemStatus;
-  storageKey: string;
   mimeType: string;
   sizeBytes?: number;
   width?: number;
@@ -29,9 +29,9 @@ export type MediaItemProps = {
 export type MediaItemRecord = {
   id: EntityId;
   ownerId: EntityId;
+  storageKey: string;
   kind: MediaKind;
   status: MediaItemStatus;
-  storageKey: string;
   mimeType: string;
   sizeBytes?: number;
   width?: number;
@@ -70,12 +70,13 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
 
   static create(input: CreateMediaItemInput, actorId: ActorId): MediaItem {
     const mediaItemId = crypto.randomUUID();
+    const storageKey = `media/${actorId}/${mediaItemId}`;
     return new MediaItem(mediaItemId, actorId, {
       ...input,
       sizeBytes: input.sizeBytes ?? 0,
-      storageKey: `${actorId}/${input.kind.key}/${mediaItemId}`,
       status: MediaItemStatus.pending,
       ownerId: actorId,
+      storageKey,
     });
   }
 
@@ -110,16 +111,16 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     this.touch(actorId);
   }
 
-  storageKey(): string {
-    return this.props.storageKey;
-  }
-
   ownerId(): EntityId {
     return this.props.ownerId;
   }
 
   status(): MediaItemStatus {
     return this.props.status;
+  }
+
+  storageKey(): string {
+    return this.props.storageKey;
   }
 
   kind(): MediaKind {
