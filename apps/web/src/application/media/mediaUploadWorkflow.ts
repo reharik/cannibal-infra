@@ -57,7 +57,13 @@ const createMediaUpload = async (
     client,
     {
       mutation: CreateMediaUploadDocument,
-      variables: { input: { kind, mimeType } },
+      variables: {
+        input: {
+          kind,
+          mimeType,
+          originalFileName: file.name.trim() !== '' ? file.name : undefined,
+        },
+      },
     },
     (data) => data.createMediaUpload,
   );
@@ -94,9 +100,11 @@ const uploadBinary = async (
   },
 ): Promise<AppResult<void>> => {
   const token = localStorage.getItem('authToken');
+  const uploadUrl = new URL(uploadInstructions.url, window.location.origin);
+  const sameOrigin = uploadUrl.origin === window.location.origin;
 
   const headers: Record<string, string> = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(sameOrigin && token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   for (const h of uploadInstructions.headers) {

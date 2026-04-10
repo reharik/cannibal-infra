@@ -94,6 +94,20 @@ const contractErrorInput = {
     area: ErrorArea.mediaItem,
     retryable: false,
   },
+  MediaDimensionsNotAvailable: {
+    code: 'MEDIA_DIMENSIONS_NOT_AVAILABLE',
+    display: 'Could not read media width and height from the uploaded file',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: true,
+  },
+  InvalidMediaDimensions: {
+    code: 'MEDIA_ITEM_INVALID_DIMENSIONS',
+    display: 'Media dimensions must be positive integers',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: false,
+  },
 } as const;
 
 export type ContractError = Enumeration<typeof ContractError>;

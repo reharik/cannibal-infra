@@ -9,6 +9,7 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
         viewerId: ctx.viewer.id,
         kind: MediaKind.fromValue(args.input.kind),
         mimeType: args.input.mimeType,
+        originalFileName: args.input.originalFileName ?? undefined,
       });
 
       return {
@@ -19,12 +20,10 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
               uploadInstructions: {
                 method: result.value.uploadTarget.method,
                 url: result.value.uploadTarget.url,
-                headers: Object.entries(result.value.uploadTarget.headers ?? {}).map(
-                  ([key, value]) => ({
-                    key,
-                    value,
-                  }),
-                ),
+                headers: (result.value.uploadTarget.headers ?? []).map((h) => ({
+                  key: h.name,
+                  value: h.value,
+                })),
               },
             }
           : undefined,

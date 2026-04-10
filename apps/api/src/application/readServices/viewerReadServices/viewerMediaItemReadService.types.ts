@@ -28,6 +28,7 @@ export type MediaItemRow = {
   status: string;
   mimeType?: string;
   sizeBytes?: number;
+  originalFileName?: string;
   width?: number;
   height?: number;
   durationSeconds?: number;

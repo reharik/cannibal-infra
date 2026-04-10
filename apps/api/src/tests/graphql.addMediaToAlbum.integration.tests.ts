@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 
-import { AlbumMemberRoleEnum, AppErrorCollection } from '@packages/contracts';
+import { AlbumMemberRoleEnum, AppErrorCollection, MediaItemStatus } from '@packages/contracts';
 import type { AwilixContainer } from 'awilix';
 import type { Knex } from 'knex';
 
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
-import { writeLocalMediaObjectBytesForIntegrationTest } from './integrationMediaObjectTestHelper';
+import { MINIMAL_PNG_1X1, seedIntegrationTestUploadedObject } from './integrationMediaObjectTestHelper';
+import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 import { resetIntegrationTestDb } from './resetDb';
 import { TEST_VIEWER_1_ID, TEST_VIEWER_A_ID } from './testViewerIds';
 
@@ -42,7 +43,7 @@ const createAlbumMutation = `
 
 const createMediaUploadMutation = `
   mutation {
-    createMediaUpload(input: { kind: PHOTO, mimeType: "image/jpeg" }) {
+    createMediaUpload(input: { kind: PHOTO, mimeType: "image/png" }) {
       data {
         mediaItemId
       }
@@ -144,13 +145,18 @@ const insertViewerRoleMember = async (
   });
 };
 
-const createReadyMediaItemViaGraphQL = async (params: {
+const createUploadedMediaItemViaGraphQL = async (params: {
   executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
   database: Knex;
-  mediaStorageRoot: string;
+  integrationTestMediaStorage: IntegrationTestMediaStorage;
   context?: Record<string, unknown>;
 }): Promise<string> => {
-  const { executeGraphQL, database, mediaStorageRoot, context = loggedInViewer1 } = params;
+  const {
+    executeGraphQL,
+    database,
+    integrationTestMediaStorage,
+    context = loggedInViewer1,
+  } = params;
 
   const created = await executeGraphQL<{
     createMediaUpload: WriteMutationResponse<{ mediaItemId: string }>;
@@ -166,12 +172,7 @@ const createReadyMediaItemViaGraphQL = async (params: {
     throw new Error('expected mediaItemId');
   }
 
-  await writeLocalMediaObjectBytesForIntegrationTest(
-    database,
-    mediaStorageRoot,
-    mediaItemId,
-    Buffer.from('jpeg-bytes'),
-  );
+  await seedIntegrationTestUploadedObject(database, integrationTestMediaStorage, mediaItemId, MINIMAL_PNG_1X1);
 
   const finalized = await executeGraphQL<{
     finalizeMediaUpload: WriteMutationResponse<{ mediaItemId: string; status: string }>;
@@ -182,7 +183,7 @@ const createReadyMediaItemViaGraphQL = async (params: {
   });
   expect(finalized.json.errors).toBeUndefined();
   expect(finalized.json.data?.finalizeMediaUpload.errors).toEqual([]);
-  expect(finalized.json.data?.finalizeMediaUpload.data?.status).toBe('READY');
+  expect(finalized.json.data?.finalizeMediaUpload.data?.status).toBe(MediaItemStatus.uploaded.value);
 
   return mediaItemId;
 };
@@ -191,21 +192,21 @@ describe('addAlbumItem', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
   let container: AwilixContainer<IocGeneratedCradle>;
   let database: Knex;
-  let mediaStorageRoot: string;
+  let integrationTestMediaStorage: IntegrationTestMediaStorage;
 
   beforeAll(async () => {
     const setup = await setupGraphqlIntegrationTests();
     container = setup.container;
     executeGraphQL = setup.executeGraphQL;
     database = container.resolve('database');
-    mediaStorageRoot = container.resolve('config').mediaStorageRoot;
+    integrationTestMediaStorage = setup.integrationTestMediaStorage;
   });
 
   afterEach(async () => {
-    await resetIntegrationTestDb(database, mediaStorageRoot);
+    await resetIntegrationTestDb(database, undefined, () => integrationTestMediaStorage.clear());
   });
 
-  describe('When the viewer is the album owner and owns a ready media item', () => {
+  describe('When the viewer is the album owner and owns an uploaded media item', () => {
     it('should add the media item to the album and return it from a follow-up viewer albums query', async () => {
       const albumTitle = `integration-album-${randomUUID()}`;
 
@@ -224,10 +225,10 @@ describe('addAlbumItem', () => {
         return;
       }
 
-      const mediaItemId = await createReadyMediaItemViaGraphQL({
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
         executeGraphQL,
         database,
-        mediaStorageRoot,
+        integrationTestMediaStorage,
         context: loggedInViewer1,
       });
 
@@ -250,7 +251,7 @@ describe('addAlbumItem', () => {
       expect(albumItems).toHaveLength(1);
 
       const mediaItemRow = await database('mediaItem').where({ id: mediaItemId }).first();
-      expect(String(mediaItemRow?.status ?? '').toUpperCase()).toBe('READY');
+      expect(String(mediaItemRow?.status ?? '').toUpperCase()).toBe('UPLOADED');
     });
   });
 
@@ -269,10 +270,10 @@ describe('addAlbumItem', () => {
         return;
       }
 
-      const mediaItemId = await createReadyMediaItemViaGraphQL({
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
         executeGraphQL,
         database,
-        mediaStorageRoot,
+        integrationTestMediaStorage,
       });
 
       const first = await executeGraphQL<AddMediaItemToAlbumMutationData>({
@@ -357,10 +358,10 @@ describe('addAlbumItem', () => {
         return;
       }
 
-      const otherUsersMediaId = await createReadyMediaItemViaGraphQL({
+      const otherUsersMediaId = await createUploadedMediaItemViaGraphQL({
         executeGraphQL,
         database,
-        mediaStorageRoot,
+        integrationTestMediaStorage,
         context: loggedInViewerA,
       });
 
@@ -394,10 +395,10 @@ describe('addAlbumItem', () => {
 
       await insertViewerRoleMember(database, albumId, TEST_VIEWER_1_ID);
 
-      const mediaItemId = await createReadyMediaItemViaGraphQL({
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
         executeGraphQL,
         database,
-        mediaStorageRoot,
+        integrationTestMediaStorage,
         context: loggedInViewer1,
       });
 
@@ -416,10 +417,10 @@ describe('addAlbumItem', () => {
 
   describe('When the album id does not exist', () => {
     it('should reject the add with album not found', async () => {
-      const mediaItemId = await createReadyMediaItemViaGraphQL({
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
         executeGraphQL,
         database,
-        mediaStorageRoot,
+        integrationTestMediaStorage,
       });
 
       const add = await executeGraphQL<AddMediaItemToAlbumMutationData>({
@@ -499,10 +500,10 @@ describe('addAlbumItem', () => {
         return;
       }
 
-      const mediaItemId = await createReadyMediaItemViaGraphQL({
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
         executeGraphQL,
         database,
-        mediaStorageRoot,
+        integrationTestMediaStorage,
         context: loggedInViewer1,
       });
 

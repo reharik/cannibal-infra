@@ -32,6 +32,8 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' nx test api --runInBand --detectOpenHandles"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1028.0",
+    "@aws-sdk/s3-request-presigner": "^3.1028.0",
     "@graphql-tools/code-file-loader": "^8.1.28",
     "@graphql-tools/graphql-file-loader": "^8.1.12",
     "@graphql-tools/load": "^8.1.8",

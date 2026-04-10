@@ -4,7 +4,7 @@
  */
 
 import type { ResourceTypeEnum } from '@packages/contracts';
-import { AppErrorCollection, MediaItemStatus, MediaKind } from '@packages/contracts';
+import { AppErrorCollection, ContractError, MediaItemStatus, MediaKind } from '@packages/contracts';
 import type { ActorId, EntityId, WriteResult } from '../../types/types';
 import { AggregateRoot } from '../AggregateRoot';
 import { Comment, CommentRecord } from '../Comment/Comment';
@@ -21,6 +21,7 @@ export type MediaItemProps = {
   width?: number;
   height?: number;
   durationSeconds?: number;
+  originalFileName?: string;
   title?: string;
   description?: string;
   takenAt?: Date;
@@ -37,6 +38,7 @@ export type MediaItemRecord = {
   width?: number;
   height?: number;
   durationSeconds?: number;
+  originalFileName?: string;
   title?: string;
   description?: string;
   takenAt?: Date;
@@ -51,6 +53,7 @@ export type CreateMediaItemInput = {
   width?: number;
   height?: number;
   durationSeconds?: number;
+  originalFileName?: string;
   title?: string;
   description?: string;
   takenAt?: Date;
@@ -139,11 +142,53 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     return this.props.width;
   }
 
-  finalizeStatus(status: MediaItemStatus, actorId: ActorId): WriteResult {
+  height(): number | undefined {
+    return this.props.height;
+  }
+
+  /**
+   * After object exists in storage: persist size (and optional mime), pending → uploaded.
+   * Used when bytes land via direct upload (e.g. S3) without derivative processing.
+   */
+  completeUploadedWithMetadata(
+    input: { sizeBytes: number; mimeType?: string },
+    actorId: ActorId,
+  ): WriteResult {
     if (this.props.status !== MediaItemStatus.pending) {
       return fail(AppErrorCollection.mediaItem.StatusNotPending);
     }
-    this.props.status = status;
+    this.props.sizeBytes = input.sizeBytes;
+    if (input.mimeType !== undefined && input.mimeType.length > 0) {
+      this.props.mimeType = input.mimeType;
+    }
+    this.props.status = MediaItemStatus.uploaded;
+    this.touch(actorId);
+    return ok(undefined);
+  }
+
+  /**
+   * After upload bytes exist: persist size, pixel dimensions, and transition pending → ready.
+   * Does not infer title from original file name.
+   */
+  completeReadyWithMetadata(
+    input: { sizeBytes: number; width: number; height: number; mimeType?: string },
+    actorId: ActorId,
+  ): WriteResult {
+    if (this.props.status !== MediaItemStatus.pending) {
+      return fail(AppErrorCollection.mediaItem.StatusNotPending);
+    }
+    const w = Math.round(input.width);
+    const h = Math.round(input.height);
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+      return fail(ContractError.InvalidMediaDimensions);
+    }
+    this.props.sizeBytes = input.sizeBytes;
+    this.props.width = w;
+    this.props.height = h;
+    if (input.mimeType !== undefined && input.mimeType.length > 0) {
+      this.props.mimeType = input.mimeType;
+    }
+    this.props.status = MediaItemStatus.ready;
     this.touch(actorId);
     return ok(undefined);
   }

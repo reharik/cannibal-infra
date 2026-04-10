@@ -12,16 +12,28 @@ export interface CreateMediaUpload extends WriteServiceBase {
   (input: CreateMediaUploadCommand): Promise<WriteResult<CreateMediaUploadResult>>;
 }
 
+const sanitizeOriginalFileName = (value: string | undefined): string | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  const t = value.trim();
+  if (t.length === 0) {
+    return undefined;
+  }
+  return t.length > 1024 ? t.slice(0, 1024) : t;
+};
+
 export const buildCreateMediaItemUpload = ({
   mediaItemRepository,
   mediaStorage,
 }: IocGeneratedCradle): CreateMediaUpload => {
   return async (input: CreateMediaUploadCommand): Promise<WriteResult<CreateMediaUploadResult>> => {
-    const { viewerId, kind, mimeType } = input;
+    const { viewerId, kind, mimeType, originalFileName } = input;
     const mediaItem = MediaItem.create(
       {
         kind,
         mimeType,
+        originalFileName: sanitizeOriginalFileName(originalFileName),
       },
       viewerId,
     );
@@ -36,7 +48,6 @@ export const buildCreateMediaItemUpload = ({
     );
 
     const uploadTarget = await mediaStorage.getUploadTarget({
-      mediaItemId: mediaItem.id(),
       storageKey: buildMediaAssetStorageKey(mediaItem.storageKey(), MediaAssetKind.original),
       mimeType,
     });

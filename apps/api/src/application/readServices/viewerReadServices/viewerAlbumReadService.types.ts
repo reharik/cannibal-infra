@@ -31,21 +31,22 @@ export type AlbumItemProjection = {
 };
 
 export type NamespacedMediaItemRow = {
-  mediaItemId: EntityId | null;
-  mediaItemOwnerId: EntityId | null;
-  mediaItemStorageKey: string | null;
-  mediaItemKind: string | null;
-  mediaItemStatus: string | null;
-  mediaItemMimeType?: string | null;
-  mediaItemSizeBytes?: number | null;
-  mediaItemWidth?: number | null;
-  mediaItemHeight?: number | null;
-  mediaItemDurationSeconds?: number | null;
-  mediaItemTitle?: string | null;
-  mediaItemDescription?: string | null;
-  mediaItemTakenAt?: Date | null;
-  mediaItemCreatedAt: Date | null;
-  mediaItemUpdatedAt: Date | null;
+  mediaItemId: EntityId;
+  mediaItemOwnerId: EntityId;
+  mediaItemStorageKey: string;
+  mediaItemKind: string;
+  mediaItemStatus: string;
+  mediaItemMimeType?: string;
+  mediaItemSizeBytes?: number;
+  mediaItemOriginalFileName?: string;
+  mediaItemWidth?: number;
+  mediaItemHeight?: number;
+  mediaItemDurationSeconds?: number;
+  mediaItemTitle?: string;
+  mediaItemDescription?: string;
+  mediaItemTakenAt?: Date;
+  mediaItemCreatedAt: Date;
+  mediaItemUpdatedAt: Date;
 };
 
 export type AlbumWithCoverRow = {

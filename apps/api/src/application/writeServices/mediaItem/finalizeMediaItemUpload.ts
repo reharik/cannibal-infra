@@ -1,8 +1,8 @@
-import { AppErrorCollection, MediaAssetKind, MediaItemStatus } from '@packages/contracts';
-import { buildMediaAssetStorageKey } from '../../media/MediaStorage';
+import { AppErrorCollection, MediaAssetKind } from '@packages/contracts';
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
 import { WriteResult } from 'apps/api/src/types/types';
+import { buildMediaAssetStorageKey } from '../../media/MediaStorage';
 import { WriteServiceBase } from '../writeServiceBaseType';
 import {
   FinalizeMediaItemUploadCommand,
@@ -41,6 +41,7 @@ export const buildFinalizeMediaItemUpload = ({
     if (!objectMetadata) {
       return fail(AppErrorCollection.mediaItem.MediaBytesNotFound);
     }
+
     uploadAsset.applyUploadedObjectMetadata(
       {
         sizeBytes: objectMetadata.size,
@@ -48,7 +49,14 @@ export const buildFinalizeMediaItemUpload = ({
       },
       viewerId,
     );
-    const finalized = mediaItem.finalizeStatus(MediaItemStatus.ready, viewerId);
+
+    const finalized = mediaItem.completeUploadedWithMetadata(
+      {
+        sizeBytes: objectMetadata.size,
+        mimeType: objectMetadata.mimeType,
+      },
+      viewerId,
+    );
     if (!finalized.success) {
       return finalized;
     }
@@ -58,7 +66,7 @@ export const buildFinalizeMediaItemUpload = ({
     return ok({
       mediaItemId: mediaItem.id(),
       status: mediaItem.status(),
-      mimeType: objectMetadata.mimeType,
+      mimeType: objectMetadata.mimeType ?? mediaItem.mimeType(),
       size: objectMetadata.size,
       kind: mediaItem.kind(),
     });

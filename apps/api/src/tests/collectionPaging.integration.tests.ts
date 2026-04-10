@@ -8,6 +8,7 @@ import type { AlbumReadRepository } from '../repositories/readRepositories/album
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { CollectionInfo } from '../types/types';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
+import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 import { resetIntegrationTestDb } from './resetDb';
 import { TEST_VIEWER_1_ID } from './testViewerIds';
 
@@ -17,6 +18,7 @@ describe('AlbumReadRepository (Knex collection paging)', () => {
   let container: AwilixContainer<IocGeneratedCradle>;
   let database: Knex;
   let albumReadRepository: AlbumReadRepository;
+  let integrationTestMediaStorage: IntegrationTestMediaStorage;
 
   const insertAlbumWithMember = async (params: {
     id: string;
@@ -56,6 +58,8 @@ describe('AlbumReadRepository (Knex collection paging)', () => {
       kind: 'photo',
       mimeType: 'image/jpeg',
       sizeBytes: 1,
+      width: 1,
+      height: 1,
       status: 'ready',
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
@@ -109,10 +113,11 @@ describe('AlbumReadRepository (Knex collection paging)', () => {
     container = setup.container;
     database = container.resolve('database');
     albumReadRepository = container.resolve('albumReadRepository');
+    integrationTestMediaStorage = setup.integrationTestMediaStorage;
   });
 
   afterEach(async () => {
-    await resetIntegrationTestDb(database);
+    await resetIntegrationTestDb(database, undefined, () => integrationTestMediaStorage.clear());
   });
 
   describe('When listByViewerId runs with title sort', () => {

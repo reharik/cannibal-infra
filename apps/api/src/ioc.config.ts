@@ -17,7 +17,7 @@ export default defineIocConfig({
   },
   registrations: {
     MediaStorage: {
-      localMediaStorage: { default: true },
+      s3MediaStorage: { default: true },
     },
 
     MediaItemReadRepository: {

@@ -17,7 +17,15 @@ import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepositor
 import { EntityId } from '../types/types';
 import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID } from './testViewerIds';
 
-type ObjectState = { size: number; mimeType?: string };
+/** 1×1 PNG — used so finalize can read width/height from uploaded bytes. */
+const MINIMAL_PNG_1X1 = Buffer.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00,
+  0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00,
+  0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01,
+  0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+]);
+
+type ObjectState = { size: number; mimeType?: string; body?: Buffer };
 
 const createInMemoryMediaAssetRepository = (): MediaAssetRepository => {
   const assetsByMediaItemId = new Map<string, MediaAsset>();
@@ -61,30 +69,43 @@ const createTrackingMediaStorage = (
   const objects = new Map<string, ObjectState>();
   return {
     objects,
-    getUploadTarget: async ({ mediaItemId, mimeType }) => ({
+    getUploadTarget: async ({ storageKey, mimeType }) => ({
       method: 'PUT' as const,
-      url: `${serverUrl}/api/media/uploads/${mediaItemId}?mimeType=${encodeURIComponent(mimeType)}`,
-      headers: {},
+      url: `${serverUrl}/presigned?key=${encodeURIComponent(storageKey)}`,
+      headers: mimeType ? [{ name: 'Content-Type', value: mimeType }] : [],
     }),
+    writeObject: async () => {
+      return;
+    },
     getObjectMetadata: async (storageKey: string) => {
       const o = objects.get(storageKey);
-      return o ?? null;
+      if (!o) {
+        return null;
+      }
+      const size = o.body !== undefined ? o.body.length : o.size;
+      return { size, mimeType: o.mimeType };
     },
     verifyExistence: async (storageKey: string) => objects.has(storageKey),
-    getObjectUrl: (storageKey: string) =>
+    getObjectAccessUrl: async ({ storageKey }) =>
       `${serverUrl}/api/media/objects/${encodeURIComponent(storageKey)}`,
     getObjectStream: async (storageKey: string) => {
       const object = objects.get(storageKey);
       if (!object) {
         return null;
       }
+      const buf = object.body ?? Buffer.alloc(object.size);
       return {
-        body: Readable.from(Buffer.alloc(object.size)),
+        body: Readable.from(buf),
         mimeType: object.mimeType,
       };
     },
-    writeObject: async () => {
-      return;
+    getObjectBuffer: async (storageKey: string, maxBytes: number) => {
+      const object = objects.get(storageKey);
+      if (!object) {
+        return null;
+      }
+      const raw = object.body ?? Buffer.alloc(object.size);
+      return raw.subarray(0, Math.min(raw.length, maxBytes));
     },
   };
 };
@@ -103,6 +124,7 @@ const projectionFromAggregate = (item: MediaItem): MediaItemRow => {
     height: p.height,
     durationSeconds: p.durationSeconds,
     title: p.title,
+    originalFileName: p.originalFileName,
     description: p.description,
     takenAt: p.takenAt,
     createdAt: p.createdAt,
@@ -129,6 +151,7 @@ describe('Media upload pipeline (application services)', () => {
         viewerId: viewerA,
         kind: MediaKind.photo,
         mimeType: 'image/jpeg',
+        originalFileName: '  vacation.jpg ',
       });
 
       expect(result.success).toBe(true);
@@ -137,16 +160,19 @@ describe('Media upload pipeline (application services)', () => {
       }
       expect(result.value.status).toBe(MediaItemStatus.pending);
       expect(result.value.uploadTarget.method).toBe('PUT');
-      expect(result.value.uploadTarget.url).toContain('/api/media/');
+      expect(result.value.uploadTarget.url).toContain('/presigned?');
 
       const stored = await mediaItemRepository.getById(result.value.mediaItemId);
       expect(stored).toBeDefined();
       expect(stored?.status()).toBe(MediaItemStatus.pending);
+      const persisted = stored?.toPersistence();
+      expect(persisted?.originalFileName).toBe('vacation.jpg');
+      expect(persisted?.title).toBeUndefined();
     });
   });
 
   describe('When bytes are recorded in storage then finalize runs', () => {
-    it('should transition the item to ready and return confirmed size and mime type', async () => {
+    it('should transition the item to uploaded and return confirmed size and mime type', async () => {
       const mediaAssetRepository = createInMemoryMediaAssetRepository();
       const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
       const mediaStorage = createTrackingMediaStorage(serverUrl);
@@ -163,7 +189,7 @@ describe('Media upload pipeline (application services)', () => {
       const created = await createUpload({
         viewerId: viewerA,
         kind: MediaKind.photo,
-        mimeType: 'image/jpeg',
+        mimeType: 'image/png',
       });
       expect(created.success).toBe(true);
       if (!created.success) {
@@ -182,8 +208,9 @@ describe('Media upload pipeline (application services)', () => {
       mediaStorage.objects.set(
         buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
         {
-          size: 2048,
-          mimeType: 'image/jpeg',
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
         },
       );
 
@@ -195,12 +222,14 @@ describe('Media upload pipeline (application services)', () => {
       if (!finalized.success) {
         return;
       }
-      expect(finalized.value.status).toBe(MediaItemStatus.ready);
-      expect(finalized.value.size).toBe(2048);
-      expect(finalized.value.mimeType).toBe('image/jpeg');
+      expect(finalized.value.status).toBe(MediaItemStatus.uploaded);
+      expect(finalized.value.size).toBe(MINIMAL_PNG_1X1.length);
+      expect(finalized.value.mimeType).toBe('image/png');
 
       const after = await mediaItemRepository.getById(created.value.mediaItemId);
-      expect(after?.status()).toBe(MediaItemStatus.ready);
+      expect(after?.status()).toBe(MediaItemStatus.uploaded);
+      expect(after?.width()).toBeUndefined();
+      expect(after?.height()).toBeUndefined();
     });
   });
 
@@ -273,8 +302,9 @@ describe('Media upload pipeline (application services)', () => {
         return;
       }
       mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: 10,
-        mimeType: 'image/jpeg',
+        size: MINIMAL_PNG_1X1.length,
+        mimeType: 'image/png',
+        body: MINIMAL_PNG_1X1,
       });
 
       const finalized = await finalize({
@@ -363,7 +393,7 @@ describe('Album integration (application services)', () => {
     });
   });
 
-  describe('When addAlbumItem is called for ready media', () => {
+  describe('When addAlbumItem is called for uploaded media', () => {
     it('should persist the album item', async () => {
       const albumRepository = createInMemoryAlbumRepository();
       const mediaAssetRepository = createInMemoryMediaAssetRepository();
@@ -406,8 +436,9 @@ describe('Album integration (application services)', () => {
         return;
       }
       mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: 100,
-        mimeType: 'image/jpeg',
+        size: MINIMAL_PNG_1X1.length,
+        mimeType: 'image/png',
+        body: MINIMAL_PNG_1X1,
       });
       const fin = await finalize({ viewerId, mediaItemId: item.id() });
       expect(fin.success).toBe(true);
@@ -488,8 +519,9 @@ describe('Album integration (application services)', () => {
         return;
       }
       mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: 50,
-        mimeType: 'image/jpeg',
+        size: MINIMAL_PNG_1X1.length,
+        mimeType: 'image/png',
+        body: MINIMAL_PNG_1X1,
       });
       await finalize({ viewerId, mediaItemId: item.id() });
       const readyItem = await mediaItemRepository.getById(item.id());

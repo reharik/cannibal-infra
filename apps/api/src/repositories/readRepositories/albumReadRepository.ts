@@ -40,6 +40,7 @@ const mediaItemSelectColumns = [
   'mediaItem.status as mediaItemStatus',
   'mediaItem.mimeType as mediaItemMimeType',
   'mediaItem.sizeBytes as mediaItemSizeBytes',
+  'mediaItem.originalFileName as mediaItemOriginalFileName',
   'mediaItem.width as mediaItemWidth',
   'mediaItem.height as mediaItemHeight',
   'mediaItem.durationSeconds as mediaItemDurationSeconds',

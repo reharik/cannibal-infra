@@ -1,58 +1,31 @@
 import { AppErrorCollection, MediaItemStatus } from '@packages/contracts';
 import type { AwilixContainer } from 'awilix';
-import jwt, { type SignOptions } from 'jsonwebtoken';
-import type { Server } from 'node:http';
-import request from 'supertest';
+import type { Knex } from 'knex';
 
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
+import { MINIMAL_PNG_1X1, seedIntegrationTestUploadedObject } from './integrationMediaObjectTestHelper';
 import { resetIntegrationTestDb } from './resetDb';
-import { TEST_VIEWER_1_ID, TEST_VIEWER_B_ID } from './testViewerIds';
-
-const issueBearerForTestUser = (
-  container: AwilixContainer<IocGeneratedCradle>,
-  userId: string,
-  email: string,
-): string => {
-  const { jwtSecret, jwtExpiresIn } = container.resolve('config');
-  return jwt.sign({ userId, email, role: 'kid' }, jwtSecret, {
-    expiresIn: jwtExpiresIn,
-  } as SignOptions);
-};
+import { TEST_VIEWER_B_ID } from './testViewerIds';
+import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 
 describe('GraphQL media upload integration', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
   let container: AwilixContainer<IocGeneratedCradle>;
-  let koaServer: Server;
-  let mediaStorageRoot: string;
+  let database: Knex;
+  let integrationTestMediaStorage: IntegrationTestMediaStorage;
 
   beforeAll(async () => {
     const setup = await setupGraphqlIntegrationTests();
     container = setup.container;
     executeGraphQL = setup.executeGraphQL;
-    koaServer = setup.container.resolve('koaServer');
-    mediaStorageRoot = container.resolve('config').mediaStorageRoot;
-  });
-
-  afterAll(async () => {
-    await new Promise<void>((resolve, reject) => {
-      if (!koaServer.listening) {
-        resolve();
-        return;
-      }
-      koaServer.close((err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve();
-      });
-    });
+    database = container.resolve('database');
+    integrationTestMediaStorage = setup.integrationTestMediaStorage;
   });
 
   afterEach(async () => {
-    await resetIntegrationTestDb(container.resolve('database'), mediaStorageRoot);
+    await resetIntegrationTestDb(database, undefined, () => integrationTestMediaStorage.clear());
   });
 
   describe('When createMediaUpload runs for an authenticated viewer', () => {
@@ -94,15 +67,13 @@ describe('GraphQL media upload integration', () => {
       const payload = json.data?.createMediaUpload.data;
       expect(payload?.status).toBe(MediaItemStatus.pending.value);
       expect(payload?.uploadInstructions.method).toBe('PUT');
-      expect(payload?.uploadInstructions.url).toMatch(/\/api\/media\/uploads\//);
+      expect(payload?.uploadInstructions.url).toMatch(/^https:\/\/integration-test\.invalid\//);
       expect(payload?.mediaItemId).toBeTruthy();
     });
   });
 
-  describe('When finalizeMediaUpload runs before the Koa upload has persisted bytes', () => {
+  describe('When finalizeMediaUpload runs before the object exists in storage', () => {
     it('should surface a client-safe failure without an unhandled exception', async () => {
-      // Real clients: createMediaUpload → PUT /api/media/uploads/:mediaItemId (raw body, Content-Type = mime) → finalizeMediaUpload.
-      // This scenario skips the HTTP upload so storage has no object yet.
       const created = await executeGraphQL<{
         createMediaUpload: { data?: { mediaItemId: string }; errors: { code: string }[] };
       }>({
@@ -165,14 +136,8 @@ describe('GraphQL media upload integration', () => {
     });
   });
 
-  describe('When the viewer uploads bytes via the Koa API then calls finalizeMediaUpload', () => {
-    it('should transition the media item to ready', async () => {
-      const token = issueBearerForTestUser(
-        container,
-        TEST_VIEWER_1_ID,
-        'test-viewer-1@example.test',
-      );
-
+  describe('When bytes exist in storage then finalizeMediaUpload runs', () => {
+    it('should transition the media item to uploaded', async () => {
       const created = await executeGraphQL<{
         createMediaUpload: { data?: { mediaItemId: string }; errors: { code: string }[] };
       }>({
@@ -198,12 +163,7 @@ describe('GraphQL media upload integration', () => {
         return;
       }
 
-      const uploadRes = await request(koaServer)
-        .put(`/api/media/uploads/${mediaItemId}`)
-        .set('Authorization', `Bearer ${token}`)
-        .set('Content-Type', 'image/jpeg')
-        .send(Buffer.from([0xff, 0xd8, 0xff]));
-      expect(uploadRes.status).toBe(201);
+      await seedIntegrationTestUploadedObject(database, integrationTestMediaStorage, mediaItemId, MINIMAL_PNG_1X1);
 
       const { response, json } = await executeGraphQL<{
         finalizeMediaUpload: {
@@ -233,7 +193,7 @@ describe('GraphQL media upload integration', () => {
       expect(json.errors).toBeUndefined();
       expect(json.data?.finalizeMediaUpload.errors).toEqual([]);
       expect(json.data?.finalizeMediaUpload.data?.mediaItemId).toBe(mediaItemId);
-      expect(json.data?.finalizeMediaUpload.data?.status).toBe(MediaItemStatus.ready.value);
+      expect(json.data?.finalizeMediaUpload.data?.status).toBe(MediaItemStatus.uploaded.value);
       expect(json.data?.finalizeMediaUpload.data?.size).toBeGreaterThan(0);
     });
   });

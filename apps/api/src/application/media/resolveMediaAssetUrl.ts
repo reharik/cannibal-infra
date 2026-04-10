@@ -27,16 +27,22 @@ export const resolvePreferredAssetKind = (
   return hasReadyAssetKind(assets, requestedKind) ? requestedKind : MediaAssetKind.original;
 };
 
-export const resolveMediaAssetUrl = (input: {
+export const resolveMediaAssetUrl = async (input: {
   mediaStorage: MediaStorage;
   baseStorageKey: string;
   requestedKind: MediaAssetKind;
   assets: AssetStatusSource[];
-}): { url: string; storageKey: string; resolvedKind: MediaAssetKind; fallbackToOriginal: boolean } => {
+}): Promise<{
+  url: string;
+  storageKey: string;
+  resolvedKind: MediaAssetKind;
+  fallbackToOriginal: boolean;
+}> => {
   const resolvedKind = resolvePreferredAssetKind(input.assets, input.requestedKind);
   const storageKey = buildMediaAssetStorageKey(input.baseStorageKey, resolvedKind);
+  const url = await input.mediaStorage.getObjectAccessUrl({ storageKey });
   return {
-    url: input.mediaStorage.getObjectUrl(storageKey),
+    url,
     storageKey,
     resolvedKind,
     fallbackToOriginal: resolvedKind !== input.requestedKind,

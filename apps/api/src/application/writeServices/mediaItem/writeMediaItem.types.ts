@@ -19,6 +19,7 @@ export type CreateMediaUploadCommand = {
   viewerId: string;
   kind: MediaKind;
   mimeType: string;
+  originalFileName?: string;
 };
 
 export type CreateMediaUploadResult = {

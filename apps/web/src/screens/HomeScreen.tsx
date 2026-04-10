@@ -1,8 +1,9 @@
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { DateTime } from 'luxon';
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { mediaItemDetailPath } from '../app/paths';
 import { mediaUploadWorkflow } from '../application/media/mediaUploadWorkflow';
 import { ViewerRecentMediaDocument } from '../graphql/generated/types';
 import { AppError } from '../application/errors/types';
@@ -44,7 +45,7 @@ export const HomeScreen = () => {
     }
 
     await refetch();
-    navigate(`/media/${result.data.mediaItemId}`);
+    navigate(mediaItemDetailPath(result.data.mediaItemId));
   };
 
   const formatCreatedAt = (value: unknown): string => {
@@ -98,11 +99,7 @@ export const HomeScreen = () => {
         ) : hasItems ? (
           <MediaGrid>
             {nodes.map((item) => (
-              <MediaGridItem
-                key={item.id}
-                type="button"
-                onClick={() => navigate(`/media/${item.id}`)}
-              >
+              <MediaGridItem key={item.id} to={mediaItemDetailPath(item.id)}>
                 <MediaThumb>
                   {item.asset?.url ? (
                     <ThumbImage src={item.asset.url} alt={item.title?.trim() || kindLabel(item.kind)} />
@@ -232,13 +229,14 @@ const MediaGrid = styled.div`
   }
 `;
 
-const MediaGridItem = styled.button`
+const MediaGridItem = styled(Link)`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(1)};
   cursor: pointer;
   transition: transform 0.2s ease;
   text-align: left;
+  text-decoration: none;
   background: none;
   border: none;
   padding: 0;

@@ -1,66 +1,214 @@
 import { useQuery } from '@apollo/client/react';
+import { DateTime } from 'luxon';
+import type { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { ViewerMediaItemDetailDocument } from '../graphql/generated/types';
+import { MediaViewer } from '../shared/components/media/MediaViewer';
+
+const kindLabel = (kind: string): string => {
+  if (kind === 'VIDEO') {
+    return 'Video';
+  }
+  if (kind === 'PHOTO') {
+    return 'Photo';
+  }
+  return 'Media';
+};
+
+const formatCreatedAt = (value: unknown): string => {
+  if (typeof value === 'string') {
+    const dt = DateTime.fromISO(value);
+    if (dt.isValid) {
+      return dt.toLocaleString(DateTime.DATE_MED);
+    }
+  }
+  return '—';
+};
+
+const isNonEmptyDisplayUrl = (url: string | undefined): url is string => {
+  return typeof url === 'string' && url.trim().length > 0;
+};
+
+const displayNameForPanel = (input: {
+  title?: string | null;
+  originalFileName?: string | null;
+}): string => {
+  const t = input.title?.trim();
+  if (t) {
+    return t;
+  }
+  const f = input.originalFileName?.trim();
+  if (f) {
+    return f;
+  }
+  return 'Untitled';
+};
 
 export const MediaItemScreen = () => {
   const { mediaId } = useParams<{ mediaId: string }>();
-  const { data } = useQuery(ViewerMediaItemDetailDocument, {
+  const { data, loading, error } = useQuery(ViewerMediaItemDetailDocument, {
     variables: { mediaItemId: mediaId ?? '' },
     skip: !mediaId,
   });
-  const mediaItem = data?.viewer?.mediaItem;
+
+  const mediaItem = data?.viewer?.mediaItem ?? null;
+  const displayAsset = mediaItem?.displayAsset ?? null;
+  const originalAsset = mediaItem?.originalAsset ?? null;
+
+  const displayUrl =
+    displayAsset != null && isNonEmptyDisplayUrl(displayAsset.url)
+      ? displayAsset.url.trim()
+      : null;
+
+  const mimeForViewer =
+    originalAsset?.mimeType != null && originalAsset.mimeType.trim().length > 0
+      ? originalAsset.mimeType.trim()
+      : (mediaItem?.mimeType ?? '');
+
+  const viewerChrome = (children: ReactNode) => (
+    <ViewerShell>
+      <ViewerCard>{children}</ViewerCard>
+    </ViewerShell>
+  );
+
+  const viewerPane = (() => {
+    if (!mediaId) {
+      return viewerChrome(<StateText role="alert">Missing media id.</StateText>);
+    }
+    if (loading) {
+      return viewerChrome(<StateText>Loading media…</StateText>);
+    }
+    if (error) {
+      return viewerChrome(
+        <StateText role="alert">Could not load media. {error.message}</StateText>,
+      );
+    }
+    if (mediaItem == null) {
+      return viewerChrome(
+        <StateText>This media was not found or you do not have access.</StateText>,
+      );
+    }
+    if (displayAsset === null || displayUrl === null) {
+      return viewerChrome(
+        <>
+          <PlaceholderIcon aria-hidden>🖼️</PlaceholderIcon>
+          <StateText>No display asset is available for this item yet.</StateText>
+          <HintText>Check back after processing finishes.</HintText>
+        </>,
+      );
+    }
+    return (
+      <MediaViewer
+        kind={mediaItem.kind}
+        mimeType={mimeForViewer}
+        displayUrl={displayUrl}
+        imageAlt={
+          mediaItem.title?.trim() ||
+          mediaItem.originalFileName?.trim() ||
+          kindLabel(mediaItem.kind)
+        }
+      />
+    );
+  })();
+
+  const sizeLabel =
+    originalAsset?.fileSizeBytes != null ? `${originalAsset.fileSizeBytes} bytes` : '—';
+  const dimensionsLabel =
+    originalAsset?.width != null && originalAsset?.height != null
+      ? `${originalAsset.width} × ${originalAsset.height}`
+      : '—';
 
   return (
     <Container>
-      <CloseButton onClick={() => window.history.back()}>✕</CloseButton>
+      <CloseButton type="button" onClick={() => window.history.back()} aria-label="Close">
+        ✕
+      </CloseButton>
 
-      <MediaViewer>
-        <MediaPlaceholder>
-          {mediaItem?.asset?.url ? (
-            <ViewerImage src={mediaItem.asset.url} alt={mediaItem.title ?? 'Media item'} />
-          ) : (
-            <>
-              <PlaceholderIcon>🖼️</PlaceholderIcon>
-              <PlaceholderText>Media viewer will appear here</PlaceholderText>
-            </>
-          )}
-        </MediaPlaceholder>
-      </MediaViewer>
+      {viewerPane}
 
       <MetadataPanel>
         <MetadataSection>
           <SectionTitle>Details</SectionTitle>
           <MetadataItem>
-            <MetadataLabel>Filename</MetadataLabel>
-            <MetadataValue>media-{mediaId}</MetadataValue>
+            <MetadataLabel>Name</MetadataLabel>
+            <MetadataValue>
+              {mediaItem != null
+                ? displayNameForPanel({
+                    title: mediaItem.title,
+                    originalFileName: mediaItem.originalFileName,
+                  })
+                : '—'}
+            </MetadataValue>
           </MetadataItem>
+          {mediaItem?.description?.trim() ? (
+            <MetadataItem>
+              <MetadataLabel>Description</MetadataLabel>
+              <MetadataValue>{mediaItem.description.trim()}</MetadataValue>
+            </MetadataItem>
+          ) : null}
           <MetadataItem>
             <MetadataLabel>Date</MetadataLabel>
-            <MetadataValue>March 17, 2026</MetadataValue>
+            <MetadataValue>{formatCreatedAt(mediaItem?.createdAt)}</MetadataValue>
+          </MetadataItem>
+          <MetadataItem>
+            <MetadataLabel>Taken</MetadataLabel>
+            <MetadataValue>{formatCreatedAt(mediaItem?.takenAt)}</MetadataValue>
           </MetadataItem>
           <MetadataItem>
             <MetadataLabel>Size</MetadataLabel>
-            <MetadataValue>{mediaItem?.sizeBytes ? `${mediaItem.sizeBytes} bytes` : '—'}</MetadataValue>
+            <MetadataValue>{sizeLabel}</MetadataValue>
           </MetadataItem>
           <MetadataItem>
             <MetadataLabel>Dimensions</MetadataLabel>
-            <MetadataValue>
-              {mediaItem?.width && mediaItem?.height ? `${mediaItem.width} × ${mediaItem.height}` : '—'}
-            </MetadataValue>
+            <MetadataValue>{dimensionsLabel}</MetadataValue>
           </MetadataItem>
-        </MetadataSection>
-
-        <MetadataSection>
-          <SectionTitle>Actions</SectionTitle>
-          <ActionButton>Download</ActionButton>
-          <ActionButton>Share</ActionButton>
-          <ActionButton danger>Delete</ActionButton>
         </MetadataSection>
       </MetadataPanel>
     </Container>
   );
 };
+
+const ViewerShell = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: ${({ theme }) => theme.spacing(4)};
+`;
+
+const ViewerCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing(3)};
+  padding: ${({ theme }) => theme.spacing(8)};
+  background: ${({ theme }) => theme.colors.panel};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.xl};
+  max-width: min(600px, 100%);
+  width: 100%;
+  min-height: 200px;
+`;
+
+const PlaceholderIcon = styled.div`
+  font-size: 80px;
+  opacity: 0.3;
+`;
+
+const StateText = styled.div`
+  font-size: 16px;
+  color: ${({ theme }) => theme.colors.subtext};
+  text-align: center;
+`;
+
+const HintText = styled.div`
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.subtext};
+  text-align: center;
+  opacity: 0.9;
+`;
 
 const Container = styled.div`
   position: fixed;
@@ -92,43 +240,6 @@ const CloseButton = styled.button`
     border-color: ${({ theme }) => theme.colors.accent};
     color: ${({ theme }) => theme.colors.text};
   }
-`;
-
-const MediaViewer = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: ${({ theme }) => theme.spacing(4)};
-`;
-
-const MediaPlaceholder = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing(3)};
-  padding: ${({ theme }) => theme.spacing(8)};
-  background: ${({ theme }) => theme.colors.panel};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.radius.xl};
-  max-width: 600px;
-  width: 100%;
-`;
-
-const PlaceholderIcon = styled.div`
-  font-size: 80px;
-  opacity: 0.3;
-`;
-
-const PlaceholderText = styled.div`
-  font-size: 18px;
-  color: ${({ theme }) => theme.colors.subtext};
-`;
-
-const ViewerImage = styled.img`
-  width: 100%;
-  max-height: calc(100vh - 120px);
-  object-fit: contain;
 `;
 
 const MetadataPanel = styled.aside`
@@ -178,19 +289,4 @@ const MetadataLabel = styled.div`
 const MetadataValue = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
-`;
-
-const ActionButton = styled.button<{ danger?: boolean }>`
-  padding: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(2)};
-  background: transparent;
-  border: 1px solid ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.border)};
-  color: ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.subtext)};
-  border-radius: ${({ theme }) => theme.radius.md};
-  font-size: 14px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${({ theme, danger }) => (danger ? 'rgba(217, 140, 126, 0.1)' : theme.colors.bg)};
-    color: ${({ theme, danger }) => (danger ? theme.colors.danger : theme.colors.text)};
-  }
 `;

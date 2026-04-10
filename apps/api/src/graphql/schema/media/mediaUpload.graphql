@@ -6,6 +6,7 @@ type Mutation {
 input CreateMediaUploadInput {
   kind: MediaKind!
   mimeType: String!
+  originalFileName: String
 }
 
 type UploadInstructions {

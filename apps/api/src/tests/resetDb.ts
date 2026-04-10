@@ -56,9 +56,13 @@ export const resetDb = async (db: Knex): Promise<void> => {
 export const resetIntegrationTestDb = async (
   db: Knex,
   mediaStorageRoot?: string,
+  clearIntegrationTestMedia?: () => void,
 ): Promise<void> => {
   await resetDb(db);
   await ensureTestViewerUsers(db);
+  if (clearIntegrationTestMedia !== undefined) {
+    clearIntegrationTestMedia();
+  }
   if (mediaStorageRoot !== undefined) {
     await cleanMediaStorageRoot(mediaStorageRoot);
   }

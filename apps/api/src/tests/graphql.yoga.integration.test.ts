@@ -3,6 +3,7 @@ import type { AwilixContainer } from 'awilix';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
+import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 import { resetIntegrationTestDb } from './resetDb';
 import { TEST_VIEWER_1_ID } from './testViewerIds';
 
@@ -12,17 +13,21 @@ const authRequiredMutationErrorMessages = ['Unexpected error.', 'Not authenticat
 describe('GraphQL', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
   let container: AwilixContainer<IocGeneratedCradle>;
-  let mediaStorageRoot: string;
+  let integrationTestMediaStorage: IntegrationTestMediaStorage;
 
   beforeAll(async () => {
     const setup = await setupGraphqlIntegrationTests();
     container = setup.container;
     executeGraphQL = setup.executeGraphQL;
-    mediaStorageRoot = container.resolve('config').mediaStorageRoot;
+    integrationTestMediaStorage = setup.integrationTestMediaStorage;
   });
 
   afterEach(async () => {
-    await resetIntegrationTestDb(container.resolve('database'), mediaStorageRoot);
+    await resetIntegrationTestDb(
+      container.resolve('database'),
+      undefined,
+      () => integrationTestMediaStorage.clear(),
+    );
   });
 
   describe('viewer', () => {

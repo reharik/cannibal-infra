@@ -30,6 +30,8 @@ export interface ViewerMediaItemReadServiceFactory extends ReadServiceFactoryBas
   (args: { viewerId: string }): ViewerMediaItemReadService;
 }
 
+const normalizeAssetKind = (kind: string): string => kind.trim().toLowerCase();
+
 export const buildViewerMediaItemReadServiceFactory = ({
   mediaItemReadRepository,
   mediaAssetReadRepository,
@@ -55,19 +57,21 @@ export const buildViewerMediaItemReadServiceFactory = ({
   }): Promise<MediaAssetProjection[]> => {
     const assetsByMediaItemId = await mediaAssetReadRepository.listByMediaItemIds([mediaItemId]);
     const assets = assetsByMediaItemId.get(mediaItemId) ?? [];
-    return assets.map((asset) => {
-      const resolution = resolveMediaAssetUrl({
-        mediaStorage,
-        baseStorageKey: mediaItemStorageKey,
-        requestedKind: parseAssetKind(asset.kind),
-        assets,
-      });
-      return {
-        ...asset,
-        kind: resolution.resolvedKind.value,
-        url: resolution.url,
-      };
-    });
+    return Promise.all(
+      assets.map(async (asset) => {
+        const resolution = await resolveMediaAssetUrl({
+          mediaStorage,
+          baseStorageKey: mediaItemStorageKey,
+          requestedKind: parseAssetKind(asset.kind),
+          assets,
+        });
+        return {
+          ...asset,
+          kind: resolution.resolvedKind.value,
+          url: resolution.url,
+        };
+      }),
+    );
   };
 
   return ({ viewerId }: { viewerId: string }) => ({
@@ -97,32 +101,40 @@ export const buildViewerMediaItemReadServiceFactory = ({
       mediaItemStorageKey: string;
       requestedKind: MediaAssetKind;
     }): Promise<MediaAssetProjection | null> => {
-      const assets = await getAssetsForMediaItem({ mediaItemId, mediaItemStorageKey });
-      const resolution = resolveMediaAssetUrl({
+      const assetsByMediaItemId = await mediaAssetReadRepository.listByMediaItemIds([mediaItemId]);
+      const rawAssets = assetsByMediaItemId.get(mediaItemId) ?? [];
+      if (rawAssets.length === 0) {
+        return null;
+      }
+
+      const resolution = await resolveMediaAssetUrl({
         mediaStorage,
         baseStorageKey: mediaItemStorageKey,
         requestedKind,
-        assets,
+        assets: rawAssets,
       });
-      const resolvedStorageKey = resolution.storageKey;
-      const objectExists = await mediaStorage.verifyExistence(resolvedStorageKey);
+      const objectExists = await mediaStorage.verifyExistence(resolution.storageKey);
       if (!objectExists) {
         return null;
       }
-      const selectedAsset = assets.find(
-        (asset) => asset.kind.toLowerCase() === resolution.resolvedKind.value.toLowerCase(),
-      );
+
+      const resolvedNorm = normalizeAssetKind(resolution.resolvedKind.value);
+      const matchedRow = rawAssets.find((a) => normalizeAssetKind(a.kind) === resolvedNorm);
+      if (!matchedRow) {
+        return null;
+      }
+
       return {
-        id: selectedAsset?.id ?? mediaItemId,
+        id: matchedRow.id,
         kind: resolution.resolvedKind.value,
         url: resolution.url,
-        mimeType: selectedAsset?.mimeType ?? 'application/octet-stream',
-        width: selectedAsset?.width,
-        height: selectedAsset?.height,
-        fileSizeBytes: selectedAsset?.fileSizeBytes,
-        status: selectedAsset?.status ?? 'PENDING',
-        createdAt: selectedAsset?.createdAt ?? new Date(),
-        updatedAt: selectedAsset?.updatedAt ?? new Date(),
+        mimeType: matchedRow.mimeType,
+        width: matchedRow.width,
+        height: matchedRow.height,
+        fileSizeBytes: matchedRow.fileSizeBytes,
+        status: matchedRow.status,
+        createdAt: matchedRow.createdAt,
+        updatedAt: matchedRow.updatedAt,
       };
     },
   });

@@ -81,12 +81,18 @@ export class MediaAsset extends Entity<MediaAssetRecord> {
   }
 
   applyUploadedObjectMetadata(
-    input: { sizeBytes: number; mimeType?: string },
+    input: { sizeBytes: number; mimeType?: string; width?: number; height?: number },
     actorId: ActorId,
   ): void {
     this.props.fileSizeBytes = input.sizeBytes;
     if (input.mimeType !== undefined && input.mimeType.length > 0) {
       this.props.mimeType = input.mimeType;
+    }
+    if (input.width !== undefined) {
+      this.props.width = input.width;
+    }
+    if (input.height !== undefined) {
+      this.props.height = input.height;
     }
     this.props.status = MediaAssetStatus.ready;
     this.touch(actorId);

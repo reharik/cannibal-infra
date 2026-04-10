@@ -8,6 +8,9 @@ const __dirname = path.dirname(__filename);
 const nodeEnvs = ['development', 'test', 'production', 'prod'] as const;
 type NodeEnv = (typeof nodeEnvs)[number];
 
+const DEFAULT_UPLOAD_URL_TTL_SECONDS = 15 * 60;
+const DEFAULT_DOWNLOAD_URL_TTL_SECONDS = 15 * 60;
+
 export type Config = {
   nodeEnv: NodeEnv;
   mediaStorageRoot: string;
@@ -24,6 +27,12 @@ export type Config = {
   logLevel: 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug';
   warnings?: string[];
   logJsonFilePath?: string;
+  awsRegion: string;
+  awsAccessKeyId?: string;
+  awsSecretAccessKey?: string;
+  s3Bucket: string;
+  s3UploadUrlTtlSeconds: number;
+  s3DownloadUrlTtlSeconds: number;
 };
 
 const getValidValue = <T extends string>(value: string, allowedValues: readonly T[]): T => {
@@ -75,6 +84,16 @@ const createConfigFromEnv = (): Config => {
       (isProduction ? 'info' : 'debug'),
     ...(warnings.length > 0 ? { warnings } : {}),
     logJsonFilePath: process.env.LOG_JSON_FILE_PATH || undefined,
+    awsRegion: process.env.AWS_REGION || 'us-east-2',
+    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || undefined,
+    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || undefined,
+    s3Bucket: process.env.S3_BUCKET || 'photoshare-dev',
+    s3UploadUrlTtlSeconds: process.env.S3_UPLOAD_URL_TTL_SECONDS
+      ? Number(process.env.S3_UPLOAD_URL_TTL_SECONDS)
+      : DEFAULT_UPLOAD_URL_TTL_SECONDS,
+    s3DownloadUrlTtlSeconds: process.env.S3_DOWNLOAD_URL_TTL_SECONDS
+      ? Number(process.env.S3_DOWNLOAD_URL_TTL_SECONDS)
+      : DEFAULT_DOWNLOAD_URL_TTL_SECONDS,
   };
 };
 

@@ -44,6 +44,10 @@
 - Repository implementations belong in infrastructure
 - Repositories load and save entities but do not implement business rules
 
+# Database Rules
+
+- Use string/varchar columns for enum-like fields. Do NOT use Postgres enum types.
+
 # DTO / Mapping Rules
 
 - Use DTOs at external boundaries such as HTTP input/output

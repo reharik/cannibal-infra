@@ -6,6 +6,7 @@ type MediaItem implements Node {
   assets: [MediaAsset!]!
   mimeType: String!
   sizeBytes: Int!
+  originalFileName: String
   width: Int
   height: Int
   durationSeconds: Int
@@ -23,6 +24,7 @@ enum MediaKind {
 
 enum MediaItemStatus {
   PENDING
+  UPLOADED
   PROCESSING
   READY
   FAILED

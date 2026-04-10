@@ -1,8 +1,9 @@
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { mediaItemDetailPath } from '../app/paths';
 import type { AppError } from '../application/errors/types';
 import { executeMutation } from '../application/graphql/executeMutation';
 import {
@@ -14,7 +15,6 @@ import {
 
 export const AlbumScreen = () => {
   const { albumId } = useParams<{ albumId: string }>();
-  const navigate = useNavigate();
   const client = useApolloClient();
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [appErrors, setAppErrors] = useState<AppError[]>([]);
@@ -156,10 +156,7 @@ export const AlbumScreen = () => {
               <PhotoGrid>
                 {itemNodes.map((node) => (
                   <PhotoItem key={node.id}>
-                    <PhotoButton
-                      type="button"
-                      onClick={() => navigate(`/media/${node.mediaItem.id}`)}
-                    >
+                    <PhotoButton to={mediaItemDetailPath(node.mediaItem.id)}>
                       <PhotoThumb>
                         {node.mediaItem.asset?.url ? (
                           <ThumbImage
@@ -212,18 +209,18 @@ export const AlbumScreen = () => {
             ) : (
               <PickerList>
                 {(pickerData?.viewer?.mediaItems.nodes ?? []).map((m) => {
-                  const ready = m.status === 'READY';
+                  const canAdd = m.status === 'READY' || m.status === 'UPLOADED';
                   const busy = addingMediaId === m.id;
                   return (
                     <PickerRow key={m.id}>
                       <PickerButton
                         type="button"
-                        disabled={!ready || busy}
+                        disabled={!canAdd || busy}
                         onClick={() => void addMediaToAlbum(m.id)}
                       >
                         <span>
                           {m.title?.trim() || kindLabel(m.kind)}
-                          {!ready ? ` · ${m.status === 'PENDING' ? 'Processing' : m.status}` : ''}
+                          {!canAdd ? ` · ${m.status === 'PENDING' ? 'Processing' : m.status}` : ''}
                         </span>
                         {busy ? <span>Adding…</span> : null}
                       </PickerButton>
@@ -447,7 +444,7 @@ const PhotoGrid = styled.div`
 
 const PhotoItem = styled.div``;
 
-const PhotoButton = styled.button`
+const PhotoButton = styled(Link)`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(1)};
@@ -455,6 +452,7 @@ const PhotoButton = styled.button`
   cursor: pointer;
   transition: transform 0.2s ease;
   text-align: left;
+  text-decoration: none;
   background: none;
   border: none;
   padding: 0;

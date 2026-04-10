@@ -1,16 +1,11 @@
-import {
-  AlbumErrorEnum,
-  AppErrorCollection,
-  MediaItemErrorEnum,
-  MediaItemStatus,
-} from '@packages/contracts';
+import { AppErrorCollection, ContractError, MediaItemStatus } from '@packages/contracts';
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { Album, AlbumRepository } from 'apps/api/src/domain';
 import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
 import { MediaItemReadRepository } from 'apps/api/src/repositories/readRepositories/mediaItemReadRepository';
 import { EntityId, WriteResult } from 'apps/api/src/types/types';
-import { WriteServiceBase } from '../writeServiceBaseType';
 import { MediaItemRow } from '../../readServices/viewerReadServices/viewerMediaItemReadService.types';
+import { WriteServiceBase } from '../writeServiceBaseType';
 import { AddAlbumItemCommand, AddAlbumItemResult } from './writeAlbum.types';
 
 export interface AddAlbumItem extends WriteServiceBase {
@@ -60,7 +55,7 @@ export const buildAddAlbumItem = ({
 const getAlbumOrFailure = async (
   albumId: EntityId,
   albumRepository: AlbumRepository,
-): Promise<WriteResult<Album, AlbumErrorEnum>> => {
+): Promise<WriteResult<Album, ContractError>> => {
   const album = await albumRepository.getById(albumId);
   return album ? ok(album) : fail(AppErrorCollection.album.AlbumNotFound);
 };
@@ -69,7 +64,7 @@ const getMediaItemOrFailure = async (
   mediaItemId: EntityId,
   viewerId: EntityId,
   mediaItemReadRepository: MediaItemReadRepository,
-): Promise<WriteResult<MediaItemRow, MediaItemErrorEnum>> => {
+): Promise<WriteResult<MediaItemRow, ContractError>> => {
   const mediaItem = await mediaItemReadRepository.getForViewer({ mediaItemId, viewerId });
   return mediaItem ? ok(mediaItem) : fail(AppErrorCollection.mediaItem.MediaItemNotFound);
 };
@@ -80,6 +75,7 @@ const ensureMediaItemOwnedByViewer = (item: MediaItemRow, viewerId: EntityId) =>
     : fail(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer);
 
 const ensureMediaItemInReadyState = (mediaItem: MediaItemRow) =>
-  mediaItem.status === MediaItemStatus.ready.value
+  mediaItem.status === MediaItemStatus.ready.value ||
+  mediaItem.status === MediaItemStatus.uploaded.value
     ? ok(undefined)
     : fail(AppErrorCollection.mediaItem.MediaItemNotReady);

@@ -12,7 +12,6 @@ import type { CreateMediaUpload } from '../../application/writeServices/mediaIte
 import type { FinalizeMediaItemUpload } from '../../application/writeServices/mediaItem/finalizeMediaItemUpload.js';
 import type { Config } from '../../config.js';
 import type { AuthController } from '../../controllers/authController.js';
-import type { MediaController } from '../../controllers/mediaController.js';
 import type { GraphQLContextFactory } from '../../graphql/context/types.js';
 import type { GraphQLServer, YogaApp } from '../../graphql/server/createGraphQLServer.js';
 import type { KnexConfig } from '../../knexfile.js';
@@ -57,7 +56,6 @@ export interface IocGeneratedTypes {
   logger: Logger;
   mediaAssetReadRepository: MediaAssetReadRepository;
   mediaAssetRepository: MediaAssetRepository;
-  mediaController: MediaController;
   mediaItemReadRepository: MediaItemReadRepository;
   mediaItemRepository: MediaItemRepository;
   mediaStorage: MediaStorage;
@@ -65,7 +63,6 @@ export interface IocGeneratedTypes {
   requestLogger: RequestLogger;
   rootRouter: RootRouter;
   router: Router;
-  routers: ReadonlyArray<Router>;
   server: Server;
   shareLinkRepository: ShareLinkRepository;
   userRepository: UserRepository;

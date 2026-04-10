@@ -17,22 +17,41 @@ describe('MediaItem (domain)', () => {
     });
   });
 
-  describe('When finalizeStatus is called from pending to ready', () => {
-    it('should transition to ready', () => {
+  describe('When completeUploadedWithMetadata is called from pending', () => {
+    it('should transition to uploaded without dimensions', () => {
       const ownerId = TEST_USER_A_ID;
       const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
-      const result = item.finalizeStatus(MediaItemStatus.ready, ownerId);
+      const result = item.completeUploadedWithMetadata({ sizeBytes: 100, mimeType: 'image/png' }, ownerId);
       expect(result.success).toBe(true);
-      expect(item.status()).toBe(MediaItemStatus.ready);
+      expect(item.status()).toBe(MediaItemStatus.uploaded);
+      expect(item.sizeBytes()).toBe(100);
+      expect(item.mimeType()).toBe('image/png');
+      expect(item.width()).toBeUndefined();
+      expect(item.height()).toBeUndefined();
     });
   });
 
-  describe('When finalizeStatus is called but the item is already ready', () => {
+  describe('When completeReadyWithMetadata is called from pending with dimensions', () => {
+    it('should transition to ready', () => {
+      const ownerId = TEST_USER_A_ID;
+      const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
+      const result = item.completeReadyWithMetadata(
+        { sizeBytes: 100, width: 800, height: 600 },
+        ownerId,
+      );
+      expect(result.success).toBe(true);
+      expect(item.status()).toBe(MediaItemStatus.ready);
+      expect(item.width()).toBe(800);
+      expect(item.height()).toBe(600);
+    });
+  });
+
+  describe('When completeReadyWithMetadata is called but the item is already ready', () => {
     it('should fail with status not pending', () => {
       const ownerId = TEST_USER_A_ID;
       const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
-      item.finalizeStatus(MediaItemStatus.ready, ownerId);
-      const result = item.finalizeStatus(MediaItemStatus.ready, ownerId);
+      item.completeReadyWithMetadata({ sizeBytes: 1, width: 1, height: 1 }, ownerId);
+      const result = item.completeReadyWithMetadata({ sizeBytes: 1, width: 2, height: 2 }, ownerId);
       expect(result.success).toBe(false);
       let code = '';
       if (!result.success) {

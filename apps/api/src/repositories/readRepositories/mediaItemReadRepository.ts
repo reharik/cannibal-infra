@@ -27,6 +27,7 @@ const mediaItemRowFields = [
   'media_item.status',
   'media_item.mimeType',
   'media_item.sizeBytes',
+  'media_item.originalFileName',
   'media_item.width',
   'media_item.height',
   'media_item.durationSeconds',

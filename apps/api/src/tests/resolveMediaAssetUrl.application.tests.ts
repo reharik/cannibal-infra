@@ -3,12 +3,13 @@ import { resolveMediaAssetUrl } from '../application/media/resolveMediaAssetUrl'
 
 describe('resolveMediaAssetUrl', () => {
   const mediaStorage = {
-    getObjectUrl: (storageKey: string): string => `https://cdn.test/${storageKey}`,
+    getObjectAccessUrl: async (input: { storageKey: string }): Promise<string> =>
+      `https://cdn.test/${input.storageKey}`,
   } as never;
 
   describe('When the requested asset kind is ready', () => {
-    it('should return the requested asset url', () => {
-      const result = resolveMediaAssetUrl({
+    it('should return the requested asset url', async () => {
+      const result = await resolveMediaAssetUrl({
         mediaStorage,
         baseStorageKey: 'media/viewer-1/item-1',
         requestedKind: MediaAssetKind.thumbnail,
@@ -25,8 +26,8 @@ describe('resolveMediaAssetUrl', () => {
   });
 
   describe('When the requested asset kind is not ready', () => {
-    it('should fallback to original asset url', () => {
-      const result = resolveMediaAssetUrl({
+    it('should fallback to original asset url', async () => {
+      const result = await resolveMediaAssetUrl({
         mediaStorage,
         baseStorageKey: 'media/viewer-1/item-1',
         requestedKind: MediaAssetKind.display,

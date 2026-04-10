@@ -7,11 +7,8 @@ const mountRouter = (parent: Router, child: Router) => {
   parent.use(child.allowedMethods());
 };
 
-export const buildApiRoutes = ({ routers }: IocGeneratedCradle): RootRouter => {
-  const router = new Router({ prefix: '/api' });
-  routers.forEach((route) => {
-    mountRouter(router, route);
-  });
-
-  return router;
+export const buildApiRoutes = ({ router: authRouter }: IocGeneratedCradle): RootRouter => {
+  const apiRouter = new Router({ prefix: '/api' });
+  mountRouter(apiRouter, authRouter);
+  return apiRouter;
 };

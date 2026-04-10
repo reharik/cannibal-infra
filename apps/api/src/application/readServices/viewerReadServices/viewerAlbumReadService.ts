@@ -35,6 +35,7 @@ const mapMediaItemRowToParent = (mediaItem: NamespacedMediaItemRow): MediaItemPr
     status: mediaItem.mediaItemStatus ?? '',
     mimeType: mediaItem.mediaItemMimeType ?? '',
     sizeBytes: mediaItem.mediaItemSizeBytes ?? 0,
+    originalFileName: mediaItem.mediaItemOriginalFileName ?? undefined,
     width: mediaItem.mediaItemWidth,
     height: mediaItem.mediaItemHeight,
     durationSeconds: mediaItem.mediaItemDurationSeconds,
