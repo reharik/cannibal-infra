@@ -4,6 +4,7 @@
   "type": "module",
   "workspaces": [
     "apps/api",
+    "apps/media-worker",
     "apps/web",
     "packages/contracts"
   ],

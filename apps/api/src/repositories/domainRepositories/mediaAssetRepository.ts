@@ -21,6 +21,21 @@ export const buildMediaAssetRepository = ({ database }: IocGeneratedCradle): Med
     return MediaAsset.rehydrate(row);
   };
 
+  const getByMediaItemIdAndKind = async (
+    mediaItemId: EntityId,
+    kind: MediaAssetKind,
+  ): Promise<MediaAsset | undefined> => {
+    const row = await withEnumRevival(
+      database<MediaAssetRecord>('mediaAsset').where({ mediaItemId, kind: kind.value }).first(),
+      { kind: MediaAssetKind, status: MediaAssetStatus },
+      { strict: true },
+    );
+    if (!row) {
+      return;
+    }
+    return MediaAsset.rehydrate(row);
+  };
+
   const save = async (asset: MediaAsset): Promise<void> => {
     const row = asset.toPersistence();
     const existing = await database<Pick<MediaAssetRecord, 'id'>>('mediaAsset').where({ id: row.id }).first();
@@ -36,6 +51,7 @@ export const buildMediaAssetRepository = ({ database }: IocGeneratedCradle): Med
 
   return {
     getFirstByMediaItemId,
+    getByMediaItemIdAndKind,
     save,
   };
 };

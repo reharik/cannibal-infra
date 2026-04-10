@@ -193,6 +193,29 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     return ok(undefined);
   }
 
+  /**
+   * After display (and thumbnail) derivatives exist in storage: uploaded → ready.
+   * Item-level width/height reflect the display derivative dimensions.
+   */
+  markReadyAfterDerivatives(
+    input: { displayWidth: number; displayHeight: number },
+    actorId: ActorId,
+  ): WriteResult {
+    if (this.props.status !== MediaItemStatus.uploaded) {
+      return fail(AppErrorCollection.mediaItem.StatusNotPending);
+    }
+    const w = Math.round(input.displayWidth);
+    const h = Math.round(input.displayHeight);
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+      return fail(ContractError.InvalidMediaDimensions);
+    }
+    this.props.width = w;
+    this.props.height = h;
+    this.props.status = MediaItemStatus.ready;
+    this.touch(actorId);
+    return ok(undefined);
+  }
+
   protected childEntities(): ChildEntities {
     return {
       comments: this.#comments,

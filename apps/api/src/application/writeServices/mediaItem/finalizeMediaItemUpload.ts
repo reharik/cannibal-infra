@@ -1,4 +1,4 @@
-import { AppErrorCollection, MediaAssetKind } from '@packages/contracts';
+import { AppErrorCollection, MediaAssetKind, MediaKind } from '@packages/contracts';
 import { IocGeneratedCradle } from 'apps/api/src/di/generated/ioc-registry.types';
 import { fail, ok } from 'apps/api/src/domain/utilities/writeResponse';
 import { WriteResult } from 'apps/api/src/types/types';
@@ -17,6 +17,7 @@ export const buildFinalizeMediaItemUpload = ({
   mediaItemRepository,
   mediaAssetRepository,
   mediaStorage,
+  mediaProcessingJobRepository,
 }: IocGeneratedCradle): FinalizeMediaItemUpload => {
   return async (
     input: FinalizeMediaItemUploadCommand,
@@ -62,6 +63,13 @@ export const buildFinalizeMediaItemUpload = ({
     }
     await mediaAssetRepository.save(uploadAsset);
     await mediaItemRepository.save(mediaItem);
+
+    if (mediaItem.kind() === MediaKind.photo) {
+      await mediaProcessingJobRepository.enqueueIfNoneActive({
+        mediaItemId: mediaItem.id(),
+        actorId: viewerId,
+      });
+    }
 
     return ok({
       mediaItemId: mediaItem.id(),

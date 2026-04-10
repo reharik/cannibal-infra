@@ -5,17 +5,15 @@
     "noEmit": true,
     "allowJs": true,
     "baseUrl": "../..",
-    "types": ["jest", "vite/client"],
-    "plugins": [
-      {
-        "transform": "typia/lib/transform"
-      }
-    ],
+    "paths": {
+      "@packages/contracts": ["packages/contracts/dist/src/index"],
+      "@packages/contracts/*": ["packages/contracts/dist/src/*"]
+    },
     "skipLibCheck": true,
     "strictNullChecks": true,
     "strict": true,
     "isolatedModules": true
   },
-  "include": ["src/**/*.ts", "db/**/*.ts"],
-  "exclude": ["jest.*", "dist", "node_modules", "src/_original/**"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
 }

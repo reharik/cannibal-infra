@@ -12,6 +12,7 @@ import { Album } from '../domain/Album/Album';
 import type { AlbumRepository } from '../domain/Album/AlbumRepository';
 import { MediaAsset } from '../domain/MediaAsset/MediaAsset';
 import type { MediaAssetRepository } from '../domain/MediaAsset/MediaAssetRepository';
+import type { MediaProcessingJobRepository } from '../domain/MediaProcessingJob/MediaProcessingJobRepository';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
 import { EntityId } from '../types/types';
@@ -27,13 +28,51 @@ const MINIMAL_PNG_1X1 = Buffer.from([
 
 type ObjectState = { size: number; mimeType?: string; body?: Buffer };
 
+const assetCompositeKey = (mediaItemId: string, kind: MediaAssetKind): string =>
+  `${mediaItemId}:${kind.value}`;
+
 const createInMemoryMediaAssetRepository = (): MediaAssetRepository => {
-  const assetsByMediaItemId = new Map<string, MediaAsset>();
+  const byKey = new Map<string, MediaAsset>();
   return {
-    getFirstByMediaItemId: async (mediaItemId: string) => assetsByMediaItemId.get(mediaItemId),
-    save: async (asset) => {
-      assetsByMediaItemId.set(asset.mediaItemId(), asset);
+    getFirstByMediaItemId: async (mediaItemId: string) => {
+      const direct = byKey.get(assetCompositeKey(mediaItemId, MediaAssetKind.original));
+      if (direct) {
+        return direct;
+      }
+      for (const asset of byKey.values()) {
+        if (asset.mediaItemId() === mediaItemId) {
+          return asset;
+        }
+      }
+      return undefined;
     },
+    getByMediaItemIdAndKind: async (mediaItemId: string, kind: MediaAssetKind) =>
+      byKey.get(assetCompositeKey(mediaItemId, kind)),
+    save: async (asset) => {
+      byKey.set(assetCompositeKey(asset.mediaItemId(), asset.kind()), asset);
+    },
+  };
+};
+
+const createNoopMediaProcessingJobRepository = (): MediaProcessingJobRepository => ({
+  enqueueIfNoneActive: async () => {},
+  claimNextAvailableJob: async () => undefined,
+  markSucceeded: async () => {},
+  markFailed: async () => {},
+});
+
+const createTrackingMediaProcessingJobRepository = (): MediaProcessingJobRepository & {
+  enqueued: { mediaItemId: string; actorId: string }[];
+} => {
+  const enqueued: { mediaItemId: string; actorId: string }[] = [];
+  return {
+    enqueued,
+    enqueueIfNoneActive: async (input) => {
+      enqueued.push(input);
+    },
+    claimNextAvailableJob: async () => undefined,
+    markSucceeded: async () => {},
+    markFailed: async () => {},
   };
 };
 
@@ -184,6 +223,7 @@ describe('Media upload pipeline (application services)', () => {
         mediaItemRepository,
         mediaAssetRepository,
         mediaStorage,
+        mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
 
       const created = await createUpload({
@@ -231,6 +271,55 @@ describe('Media upload pipeline (application services)', () => {
       expect(after?.width()).toBeUndefined();
       expect(after?.height()).toBeUndefined();
     });
+
+    it('should enqueue a background processing job for photo media', async () => {
+      const mediaAssetRepository = createInMemoryMediaAssetRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaStorage = createTrackingMediaStorage(serverUrl);
+      const jobRepository = createTrackingMediaProcessingJobRepository();
+      const createUpload = buildCreateMediaItemUpload({
+        mediaItemRepository,
+        mediaStorage,
+      } as never);
+      const finalize = buildFinalizeMediaItemUpload({
+        mediaItemRepository,
+        mediaAssetRepository,
+        mediaStorage,
+        mediaProcessingJobRepository: jobRepository,
+      } as never);
+
+      const created = await createUpload({
+        viewerId: viewerA,
+        kind: MediaKind.photo,
+        mimeType: 'image/png',
+      });
+      expect(created.success).toBe(true);
+      if (!created.success) {
+        return;
+      }
+      const item = await mediaItemRepository.getById(created.value.mediaItemId);
+      expect(item).toBeDefined();
+      if (!item) {
+        return;
+      }
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
+        },
+      );
+
+      const finalized = await finalize({
+        viewerId: viewerA,
+        mediaItemId: created.value.mediaItemId,
+      });
+      expect(finalized.success).toBe(true);
+      expect(jobRepository.enqueued).toEqual([
+        { mediaItemId: created.value.mediaItemId, actorId: viewerA },
+      ]);
+    });
   });
 
   describe('When finalize runs before any object exists in storage', () => {
@@ -246,6 +335,7 @@ describe('Media upload pipeline (application services)', () => {
         mediaItemRepository,
         mediaAssetRepository,
         mediaStorage,
+        mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
 
       const created = await createUpload({
@@ -282,6 +372,7 @@ describe('Media upload pipeline (application services)', () => {
         mediaItemRepository,
         mediaAssetRepository,
         mediaStorage,
+        mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
 
       const created = await createUpload({
@@ -416,6 +507,7 @@ describe('Album integration (application services)', () => {
         mediaItemRepository,
         mediaAssetRepository,
         mediaStorage,
+        mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
 
       const mediaResult = await createUpload({
@@ -499,6 +591,7 @@ describe('Album integration (application services)', () => {
         mediaItemRepository,
         mediaAssetRepository,
         mediaStorage,
+        mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
 
       const mediaResult = await createUpload({

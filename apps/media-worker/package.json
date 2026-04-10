@@ -1,0 +1,12 @@
+{
+  "name": "@app/media-worker",
+  "private": true,
+  "type": "module",
+  "description": "Background media processing worker",
+  "scripts": {
+    "build": "nx build media-worker",
+    "build:dev": "nx build media-worker --configuration=development",
+    "build:prod": "nx build media-worker --configuration=production",
+    "start": "node dist/main.js"
+  }
+}

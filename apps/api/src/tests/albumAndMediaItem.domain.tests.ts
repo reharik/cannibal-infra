@@ -46,6 +46,33 @@ describe('MediaItem (domain)', () => {
     });
   });
 
+  describe('When markReadyAfterDerivatives is called from uploaded with display dimensions', () => {
+    it('should transition to ready and set width and height from the display derivative', () => {
+      const ownerId = TEST_USER_A_ID;
+      const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
+      item.completeUploadedWithMetadata({ sizeBytes: 5000, mimeType: 'image/jpeg' }, ownerId);
+      const result = item.markReadyAfterDerivatives({ displayWidth: 1200, displayHeight: 800 }, ownerId);
+      expect(result.success).toBe(true);
+      expect(item.status()).toBe(MediaItemStatus.ready);
+      expect(item.width()).toBe(1200);
+      expect(item.height()).toBe(800);
+    });
+  });
+
+  describe('When markReadyAfterDerivatives is called but the item is not uploaded', () => {
+    it('should fail with status not pending', () => {
+      const ownerId = TEST_USER_A_ID;
+      const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
+      const result = item.markReadyAfterDerivatives({ displayWidth: 1, displayHeight: 1 }, ownerId);
+      expect(result.success).toBe(false);
+      let code = '';
+      if (!result.success) {
+        code = result.error.code;
+      }
+      expect(code).toBe(AppErrorCollection.mediaItem.StatusNotPending.code);
+    });
+  });
+
   describe('When completeReadyWithMetadata is called but the item is already ready', () => {
     it('should fail with status not pending', () => {
       const ownerId = TEST_USER_A_ID;

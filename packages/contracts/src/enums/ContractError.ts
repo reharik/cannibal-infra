@@ -66,6 +66,13 @@ const contractErrorInput = {
     area: ErrorArea.mediaItem,
     retryable: false,
   },
+  StatusNotUploaded: {
+    code: 'MEDIA_ITEM_STATUS_NOT_UPLOADED',
+    display: 'Media item is not awaiting derivative processing',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: false,
+  },
   MediaItemNotFound: {
     code: 'MEDIA_ITEM_NOT_FOUND',
     display: 'Media item not found',

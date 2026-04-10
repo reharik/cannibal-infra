@@ -33,6 +33,7 @@ export type Config = {
   s3Bucket: string;
   s3UploadUrlTtlSeconds: number;
   s3DownloadUrlTtlSeconds: number;
+  mediaWorkerPollIntervalMs: number;
 };
 
 const getValidValue = <T extends string>(value: string, allowedValues: readonly T[]): T => {
@@ -94,6 +95,9 @@ const createConfigFromEnv = (): Config => {
     s3DownloadUrlTtlSeconds: process.env.S3_DOWNLOAD_URL_TTL_SECONDS
       ? Number(process.env.S3_DOWNLOAD_URL_TTL_SECONDS)
       : DEFAULT_DOWNLOAD_URL_TTL_SECONDS,
+    mediaWorkerPollIntervalMs: process.env.MEDIA_WORKER_POLL_MS
+      ? Number(process.env.MEDIA_WORKER_POLL_MS)
+      : 2000,
   };
 };
 

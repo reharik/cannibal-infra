@@ -1,0 +1,39 @@
+{
+  "name": "media-worker",
+  "projectType": "application",
+  "sourceRoot": "{projectRoot}/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "dependsOn": ["contracts:build", "api:gen:container"],
+      "options": {
+        "command": "vite build --config vite.config.mjs",
+        "cwd": "{projectRoot}"
+      },
+      "configurations": {
+        "development": {
+          "command": "vite build --config vite.config.mjs --mode development"
+        },
+        "production": {
+          "command": "vite build --config vite.config.mjs --mode production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,mjs,cjs}"],
+        "forceColor": true,
+        "fix": false
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write {projectRoot}/src/**/*.{ts,tsx,js,jsx,json}"
+      }
+    }
+  },
+  "tags": ["type:app"]
+}

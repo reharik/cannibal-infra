@@ -4,6 +4,7 @@ Re-run `npm run gen:manifest` after changing factories or IoC config.
 import type Router from '../../../../../node_modules/@types/koa__router/index.d.js';
 import type { Knex } from '../../../../../node_modules/knex/types/index.d.js';
 import type { MediaStorage } from '../../application/media/MediaStorage.js';
+import type { ProcessNextMediaImageJob } from '../../application/mediaProcessing/processNextMediaImageJob.js';
 import type { ViewerAlbumReadServiceFactory } from '../../application/readServices/viewerReadServices/viewerAlbumReadService.js';
 import type { ViewerMediaItemReadServiceFactory } from '../../application/readServices/viewerReadServices/viewerMediaItemReadService.js';
 import type { AddAlbumItem } from '../../application/writeServices/album/addAlbumItem.js';
@@ -24,6 +25,7 @@ import type { AlbumRepository } from '../../repositories/domainRepositories/albu
 import type { CommentRepository } from '../../repositories/domainRepositories/commentRepository.js';
 import type { MediaAssetRepository } from '../../repositories/domainRepositories/mediaAssetRepository.js';
 import type { MediaItemRepository } from '../../repositories/domainRepositories/mediaItemRepository.js';
+import type { MediaProcessingJobRepository } from '../../repositories/domainRepositories/mediaProcessingJobRepository.js';
 import type { NotificationRepository } from '../../repositories/domainRepositories/notificationRepository.js';
 import type { ShareLinkRepository } from '../../repositories/domainRepositories/shareLinkRepository.js';
 import type { UserRepository } from '../../repositories/domainRepositories/userRepository.js';
@@ -58,8 +60,10 @@ export interface IocGeneratedTypes {
   mediaAssetRepository: MediaAssetRepository;
   mediaItemReadRepository: MediaItemReadRepository;
   mediaItemRepository: MediaItemRepository;
+  mediaProcessingJobRepository: MediaProcessingJobRepository;
   mediaStorage: MediaStorage;
   notificationRepository: NotificationRepository;
+  processNextMediaImageJob: ProcessNextMediaImageJob;
   requestLogger: RequestLogger;
   rootRouter: RootRouter;
   router: Router;
