@@ -1,7 +1,7 @@
 import type { AwilixContainer } from 'awilix';
 import { asValue, createContainer } from 'awilix';
-import type { Knex } from 'knex';
 import { registerIocFromManifest } from 'ioc-manifest';
+import type { Knex } from 'knex';
 
 import { iocManifest } from '../di/generated/ioc-manifest';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';

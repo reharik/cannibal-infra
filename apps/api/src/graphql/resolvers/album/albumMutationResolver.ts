@@ -1,5 +1,6 @@
 import { authenticatedResolver } from '../../context/authenticatedContext';
 import type { Resolvers } from '../../generated/types.generated';
+import { toContractErrorPayload } from '../../mappers/contractErrorMapper';
 
 const albumResolvers: Pick<Resolvers, 'Mutation'> = {
   Mutation: {
@@ -12,7 +13,7 @@ const albumResolvers: Pick<Resolvers, 'Mutation'> = {
 
       return {
         data: result.success ? { albumId: result.value.albumId } : undefined,
-        errors: result.success ? [] : [result.error],
+        errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
     AddMediaItemToAlbum: authenticatedResolver(async (_parent, args, ctx) => {
@@ -29,7 +30,7 @@ const albumResolvers: Pick<Resolvers, 'Mutation'> = {
               albumItemId: result.value.albumItemId,
             }
           : undefined,
-        errors: result.success ? [] : [result.error],
+        errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
   },

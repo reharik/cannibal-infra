@@ -23,6 +23,8 @@ export default {
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^./knexfile$': '<rootDir>/src/tests/__mocks__/knexfile.js',
+    '^@packages/contracts$': '<rootDir>/../../packages/foundation/contracts/src/index.ts',
+    '^@packages/media-core$': '<rootDir>/../../packages/context/media-core/src/index.ts',
   },
   coverageDirectory: '<rootDir>/coverage',
   globalTeardown: '<rootDir>/src/tests/jestGlobalTeardown.ts',

@@ -1,11 +1,11 @@
-import { DatabaseError } from 'pg';
-import { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
 import type {
   MediaProcessingJobRepository as DomainMediaProcessingJobRepository,
+  EntityId,
   MediaProcessingJobRow,
-} from '../../domain/MediaProcessingJob/MediaProcessingJobRepository';
-import { MediaProcessingJobStatus } from '../../domain/MediaProcessingJob/mediaProcessingJobStatus';
-import type { EntityId } from '../../types/types';
+} from '@packages/media-core';
+import { MediaProcessingJobStatus } from '@packages/media-core';
+import { DatabaseError } from 'pg';
+import { IocGeneratedCradle } from '../../di/generated/ioc-registry.types';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface MediaProcessingJobRepository extends DomainMediaProcessingJobRepository {}
@@ -82,7 +82,7 @@ export const buildMediaProcessingJobRepository = ({
     await database('mediaProcessingJob').where({ id: jobId }).update({
       status: MediaProcessingJobStatus.succeeded,
       completedAt: database.fn.now(),
-      lastError: null,
+      lastError: undefined,
       updatedAt: database.fn.now(),
       updatedBy: actorId,
     });

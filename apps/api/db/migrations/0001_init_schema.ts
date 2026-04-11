@@ -78,7 +78,12 @@ export const up = async (knex: Knex): Promise<void> => {
   await knex.schema.createTable('album_item', (table) => {
     table.uuid('id').primary();
     table.uuid('album_id').notNullable().references('id').inTable('album').onDelete('CASCADE');
-    table.uuid('media_item_id').notNullable().references('id').inTable('media_item').onDelete('CASCADE');
+    table
+      .uuid('media_item_id')
+      .notNullable()
+      .references('id')
+      .inTable('media_item')
+      .onDelete('CASCADE');
     table.timestamp('created_at', { useTz: false }).notNullable().defaultTo(knex.fn.now());
     table.timestamp('updated_at', { useTz: false }).notNullable().defaultTo(knex.fn.now());
     table.uuid('created_by').notNullable();
@@ -126,7 +131,12 @@ export const up = async (knex: Knex): Promise<void> => {
 
   await knex.schema.createTable('media_asset', (table) => {
     table.uuid('id').primary();
-    table.uuid('media_item_id').notNullable().references('id').inTable('media_item').onDelete('CASCADE');
+    table
+      .uuid('media_item_id')
+      .notNullable()
+      .references('id')
+      .inTable('media_item')
+      .onDelete('CASCADE');
     table.string('kind', 32).notNullable();
     table.string('mime_type', 128).notNullable();
     table.integer('width').nullable();

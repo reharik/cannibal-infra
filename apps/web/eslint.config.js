@@ -1,9 +1,9 @@
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
-import { createBaseTypeScriptConfig } from '../../infra/config/eslint/eslint-shared.js';
+import { createRepoEslintConfig } from '../../eslint.repo.config.js';
 
-export default await createBaseTypeScriptConfig({
+export default await createRepoEslintConfig({
   tsconfigRootDir: import.meta.dirname,
   ignores: ['**/generated/**', '**/*.generated.*'],
   globals: globals.browser,

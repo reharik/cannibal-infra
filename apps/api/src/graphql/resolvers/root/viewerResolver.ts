@@ -14,7 +14,9 @@ const viewerResolvers: Pick<Resolvers, 'Query' | 'Viewer'> = {
   Viewer: {
     albums: authenticatedResolver(async (_parent, { input }, ctx) => {
       const collectionInfo = standardizeCollectionInput(input.collectionInfo, AlbumSortBy);
-      return (await ctx.readServices.viewerAlbumReadService.listAlbums(collectionInfo)) || null;
+      return (
+        (await ctx.readServices.viewerAlbumReadService.listAlbums(collectionInfo)) || undefined
+      );
     }),
     album: authenticatedResolver(async (_parent, { id }, ctx) => {
       return await ctx.readServices.viewerAlbumReadService.getAlbum(id);
@@ -27,7 +29,8 @@ const viewerResolvers: Pick<Resolvers, 'Query' | 'Viewer'> = {
     mediaItems: authenticatedResolver(async (_parent, { input }, ctx) => {
       const collectionInfo = standardizeCollectionInput(input.collectionInfo, MediaItemSortBy);
       return (
-        (await ctx.readServices.viewerMediaItemReadService.listMediaItems(collectionInfo)) || null
+        (await ctx.readServices.viewerMediaItemReadService.listMediaItems(collectionInfo)) ||
+        undefined
       );
     }),
   },

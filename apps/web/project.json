@@ -45,11 +45,22 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["{projectRoot}/**/*.{ts,tsx,js,jsx}"],
-        "forceColor": true,
-        "fix": false
+        "commands": [
+          "npx eslint --config {projectRoot}/eslint.config.js \"{projectRoot}/**/*.{ts,tsx,js,jsx}\"",
+          "npx eslint --config {projectRoot}/eslint.test.config.js --quiet --no-error-on-unmatched-pattern \"{projectRoot}/**/*.tests.ts\" \"{projectRoot}/**/*.tests.tsx\" \"{projectRoot}/**/*.test.ts\" \"{projectRoot}/**/*.test.tsx\" \"{projectRoot}/**/*.spec.ts\" \"{projectRoot}/**/*.spec.tsx\" \"{projectRoot}/src/tests/**/*.ts\" \"{projectRoot}/src/tests/**/*.tsx\""
+        ],
+        "parallel": false
+      },
+      "configurations": {
+        "fix": {
+          "commands": [
+            "npx eslint --config {projectRoot}/eslint.config.js --fix \"{projectRoot}/**/*.{ts,tsx,js,jsx}\"",
+            "npx eslint --config {projectRoot}/eslint.test.config.js --quiet --fix --no-error-on-unmatched-pattern \"{projectRoot}/**/*.tests.ts\" \"{projectRoot}/**/*.tests.tsx\" \"{projectRoot}/**/*.test.ts\" \"{projectRoot}/**/*.test.tsx\" \"{projectRoot}/**/*.spec.ts\" \"{projectRoot}/**/*.spec.tsx\" \"{projectRoot}/src/tests/**/*.ts\" \"{projectRoot}/src/tests/**/*.tsx\""
+          ],
+          "parallel": false
+        }
       }
     },
     "test": {

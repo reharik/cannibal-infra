@@ -1,6 +1,6 @@
-import { createBaseTypeScriptConfig } from '../../infra/config/eslint/eslint-shared.js';
+import { createRepoEslintConfig } from '../../eslint.repo.config.js';
 
-const baseConfig = await createBaseTypeScriptConfig({
+const baseConfig = await createRepoEslintConfig({
   tsconfigRootDir: import.meta.dirname,
   ignores: ['**/db/**', '**/generated/**'],
 });

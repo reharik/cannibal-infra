@@ -3,11 +3,7 @@ query ViewerAlbums {
     id
     albums(
       input: {
-        collectionInfo: {
-          pageInfo: { limit: 50, offset: 0 }
-          sortBy: CREATED_AT
-          sortDir: DESC
-        }
+        collectionInfo: { pageInfo: { limit: 50, offset: 0 }, sortBy: CREATED_AT, sortDir: DESC }
       }
     ) {
       nodes {

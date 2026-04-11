@@ -99,7 +99,7 @@ export const AlbumScreen = () => {
     <Container>
       <Header>
         <BackLink to="/albums">← Albums</BackLink>
-        <Title>{loading ? 'Album' : album?.title ?? 'Album'}</Title>
+        <Title>{loading ? 'Album' : (album?.title ?? 'Album')}</Title>
         <HeaderActions>
           <PrimaryButton type="button" onClick={() => setAddItemOpen(true)} disabled={!album}>
             Add album item
@@ -146,9 +146,7 @@ export const AlbumScreen = () => {
                 <AlbumStats>
                   <Stat>{itemNodes.length} media items</Stat>
                 </AlbumStats>
-                <AlbumDescription>
-                  Updated {formatCreatedAt(album.updatedAt)}
-                </AlbumDescription>
+                <AlbumDescription>Updated {formatCreatedAt(album.updatedAt)}</AlbumDescription>
               </AlbumInfo>
             </AlbumMeta>
 

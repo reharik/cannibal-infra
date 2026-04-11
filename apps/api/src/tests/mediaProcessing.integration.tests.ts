@@ -1,25 +1,23 @@
-import { Readable } from 'node:stream';
 import { MediaAssetKind, MediaAssetStatus, MediaItemStatus, MediaKind } from '@packages/contracts';
+import { Readable } from 'node:stream';
 
-import { buildMediaAssetStorageKey, type MediaStorage } from '../application/media/MediaStorage';
-import { buildProcessNextMediaImageJob } from '../application/mediaProcessing/processNextMediaImageJob';
-import { buildCreateMediaItemUpload } from '../application/writeServices/mediaItem/createMediaItemUpload';
-import { buildFinalizeMediaItemUpload } from '../application/writeServices/mediaItem/finalizeMediaItemUpload';
-import { MediaAsset } from '../domain/MediaAsset/MediaAsset';
-import type { MediaAssetRepository } from '../domain/MediaAsset/MediaAssetRepository';
-import { MediaItem } from '../domain/MediaItem/MediaItem';
-import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
 import type {
+  MediaAssetRepository,
+  MediaItemRepository,
   MediaProcessingJobRepository,
   MediaProcessingJobRow,
-} from '../domain/MediaProcessingJob/MediaProcessingJobRepository';
-import { MediaProcessingJobStatus } from '../domain/MediaProcessingJob/mediaProcessingJobStatus';
+} from '@packages/media-core';
+import { MediaAsset, MediaItem, MediaProcessingJobStatus } from '@packages/media-core';
+import { buildMediaAssetStorageKey, type MediaStorage } from '@packages/media-core';
+import { buildProcessNextMediaImageJob } from '../application/mediaProcessing/processNextMediaImageJob';
+import { buildCreateMediaItemUpload, buildFinalizeMediaItemUpload } from '@packages/media-core';
 
 const MINIMAL_PNG_1X1 = Buffer.from([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00,
-  0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00,
-  0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01,
-  0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+  0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+  0x42, 0x60, 0x82,
 ]);
 
 type ObjectState = { size: number; mimeType?: string; body?: Buffer };
@@ -144,7 +142,10 @@ const createInMemoryMediaProcessingJobRepository = (): MediaProcessingJobReposit
     claimNextAvailableJob: async () => {
       const now = Date.now();
       const next = jobs
-        .filter((job) => job.status === MediaProcessingJobStatus.pending && job.availableAt.getTime() <= now)
+        .filter(
+          (job) =>
+            job.status === MediaProcessingJobStatus.pending && job.availableAt.getTime() <= now,
+        )
         .sort((a, b) => a.availableAt.getTime() - b.availableAt.getTime())[0];
       if (!next) {
         return undefined;
@@ -215,11 +216,14 @@ describe('Media processing pipeline', () => {
       expect(item).toBeDefined();
       if (!item) return;
 
-      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: MINIMAL_PNG_1X1.length,
-        mimeType: 'image/png',
-        body: MINIMAL_PNG_1X1,
-      });
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
+        },
+      );
 
       const finalized = await finalize({
         viewerId,
@@ -237,7 +241,10 @@ describe('Media processing pipeline', () => {
       const ready = await mediaItemRepository.getById(item.id());
       expect(ready?.status()).toBe(MediaItemStatus.ready);
 
-      const display = await mediaAssetRepository.getByMediaItemIdAndKind(item.id(), MediaAssetKind.display);
+      const display = await mediaAssetRepository.getByMediaItemIdAndKind(
+        item.id(),
+        MediaAssetKind.display,
+      );
       const thumbnail = await mediaAssetRepository.getByMediaItemIdAndKind(
         item.id(),
         MediaAssetKind.thumbnail,
@@ -298,11 +305,14 @@ describe('Media processing pipeline', () => {
       expect(item).toBeDefined();
       if (!item) return;
 
-      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: 15,
-        mimeType: 'image/jpeg',
-        body: Buffer.from('not-a-real-image'),
-      });
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: 15,
+          mimeType: 'image/jpeg',
+          body: Buffer.from('not-a-real-image'),
+        },
+      );
 
       const finalized = await finalize({
         viewerId,

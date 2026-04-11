@@ -1,8 +1,8 @@
 import { User } from '@packages/contracts';
+import { StripFactory } from '@packages/media-core';
 import type { YogaInitialContext } from 'graphql-yoga';
 import type Koa from 'koa';
 import { IocGeneratedTypes } from '../../di/generated/ioc-registry.types';
-import { StripFactory } from '../../types/types';
 
 export type ReadServices = StripFactory<IocGeneratedTypes['readServiceFactories']>;
 

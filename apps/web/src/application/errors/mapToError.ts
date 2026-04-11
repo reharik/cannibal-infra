@@ -1,4 +1,4 @@
-import { ContractError } from '@packages/contracts';
+import { ContractError, FrontendError } from '@packages/contracts';
 import {
   AppError,
   ContractErrorPayload,

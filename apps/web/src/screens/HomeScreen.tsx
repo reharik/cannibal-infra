@@ -4,9 +4,9 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { mediaItemDetailPath } from '../app/paths';
+import { AppError } from '../application/errors/types';
 import { mediaUploadWorkflow } from '../application/media/mediaUploadWorkflow';
 import { ViewerRecentMediaDocument } from '../graphql/generated/types';
-import { AppError } from '../application/errors/types';
 
 export const HomeScreen = () => {
   const navigate = useNavigate();
@@ -102,7 +102,10 @@ export const HomeScreen = () => {
               <MediaGridItem key={item.id} to={mediaItemDetailPath(item.id)}>
                 <MediaThumb>
                   {item.asset?.url ? (
-                    <ThumbImage src={item.asset.url} alt={item.title?.trim() || kindLabel(item.kind)} />
+                    <ThumbImage
+                      src={item.asset.url}
+                      alt={item.title?.trim() || kindLabel(item.kind)}
+                    />
                   ) : (
                     <ThumbIcon aria-hidden>{item.kind === 'VIDEO' ? '🎬' : '🖼️'}</ThumbIcon>
                   )}

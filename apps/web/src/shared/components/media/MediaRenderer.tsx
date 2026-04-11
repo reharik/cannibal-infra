@@ -33,7 +33,9 @@ export const MediaRenderer = ({ kind, mimeType, displayUrl, imageAlt }: MediaRen
       <UnsupportedBlock>
         <UnsupportedIcon aria-hidden>🎬</UnsupportedIcon>
         <UnsupportedTitle>Video playback isn’t available yet</UnsupportedTitle>
-        <UnsupportedHint>This item opens here for details; a player will be added later.</UnsupportedHint>
+        <UnsupportedHint>
+          This item opens here for details; a player will be added later.
+        </UnsupportedHint>
       </UnsupportedBlock>
     );
   }

@@ -3,11 +3,7 @@ query ViewerRecentMedia {
     id
     mediaItems(
       input: {
-        collectionInfo: {
-          pageInfo: { limit: 10, offset: 0 }
-          sortBy: CREATED_AT
-          sortDir: DESC
-        }
+        collectionInfo: { pageInfo: { limit: 10, offset: 0 }, sortBy: CREATED_AT, sortDir: DESC }
       }
     ) {
       nodes {

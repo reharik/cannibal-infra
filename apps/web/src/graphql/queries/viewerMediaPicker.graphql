@@ -3,11 +3,7 @@ query ViewerMediaPicker {
     id
     mediaItems(
       input: {
-        collectionInfo: {
-          pageInfo: { limit: 40, offset: 0 }
-          sortBy: CREATED_AT
-          sortDir: DESC
-        }
+        collectionInfo: { pageInfo: { limit: 40, offset: 0 }, sortBy: CREATED_AT, sortDir: DESC }
       }
     ) {
       nodes {

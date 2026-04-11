@@ -1,5 +1,4 @@
 import {
-  UserRoleEnum,
   type AuthResponse,
   type LoginInput,
   type SignupInput,
@@ -7,7 +6,7 @@ import {
 } from '@packages/contracts';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
+import { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
 export type SanitizedUser = Omit<User, 'passwordHash'>;
 
@@ -78,7 +77,7 @@ export const buildAuthService = ({
   },
 
   signup: async (credentials: SignupInput) => {
-    const { email, password, name, role = UserRoleEnum.KID } = credentials;
+    const { email, password, name } = credentials;
 
     // Check if user already exists
     const existingUser = await database('user').where({ email }).first();
@@ -97,7 +96,6 @@ export const buildAuthService = ({
         email,
         passwordHash,
         name,
-        role,
         isActive: true,
       })
       .returning('*');

@@ -11,10 +11,9 @@ services:
       target: dev
       args:
         NODE_VERSION: '22'
-        API_WORKSPACE_PATH: 'apps/api'
-        NX_PROJECT: 'api'
-        DEV_WORKSPACE: '@app/api'
-        NODE_ENTRYPOINT: 'apps/api/dist/index.js'
+        APP_WORKSPACE_PATH: 'apps/api'
+        APP_WORKSPACE_NAME: '@app/api'
+        NX_PROJECT_NAME: 'api'
     ports:
       - '3001:3001'
     env_file:
@@ -24,6 +23,7 @@ services:
       db:
         condition: service_healthy
     environment:
+      APP_WORKSPACE_PATH: apps/api
       POSTGRES_HOST: db
       POSTGRES_PORT: '5432'
       API_PORT: '3001'
@@ -34,7 +34,8 @@ services:
       - /app/apps/api/node_modules
       - ./packages:/app/packages
       - ~/.aws:/root/.aws:ro
-    command: ['sh', 'apps/api/src/scripts/serverStartUpDev.sh']
+    # Override default dev CMD; keep APP_WORKSPACE_PATH in sync with build.args above and volume mount.
+    command: ['sh', '-c', 'sh apps/api/src/scripts/serverStartUpDev.sh']
 
   db:
     # Replace default 5432:5432 so we don't conflict with another Postgres (e.g. network app)

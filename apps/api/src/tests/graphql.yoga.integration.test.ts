@@ -23,10 +23,8 @@ describe('GraphQL', () => {
   });
 
   afterEach(async () => {
-    await resetIntegrationTestDb(
-      container.resolve('database'),
-      undefined,
-      () => integrationTestMediaStorage.clear(),
+    await resetIntegrationTestDb(container.resolve('database'), undefined, () =>
+      integrationTestMediaStorage.clear(),
     );
   });
 
