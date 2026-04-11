@@ -128,10 +128,7 @@ export const AlbumsListScreen = () => {
       </Content>
 
       {createOpen ? (
-        <ModalBackdrop
-          role="presentation"
-          onClick={() => !isCreating && closeCreate()}
-        >
+        <ModalBackdrop role="presentation" onClick={() => !isCreating && closeCreate()}>
           <Modal
             role="dialog"
             aria-labelledby="create-album-title"
@@ -151,7 +148,11 @@ export const AlbumsListScreen = () => {
               <SecondaryButton type="button" onClick={closeCreate} disabled={isCreating}>
                 Cancel
               </SecondaryButton>
-              <PrimaryButton type="button" onClick={() => void submitCreate()} disabled={isCreating}>
+              <PrimaryButton
+                type="button"
+                onClick={() => void submitCreate()}
+                disabled={isCreating}
+              >
                 {isCreating ? 'Creating…' : 'Create'}
               </PrimaryButton>
             </ModalActions>

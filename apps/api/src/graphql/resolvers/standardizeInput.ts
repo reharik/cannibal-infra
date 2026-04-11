@@ -1,6 +1,6 @@
 import { SortDir } from '@packages/contracts';
+import type { CollectionInfo } from '@packages/media-core';
 import { reviveEnumField, type AnyEnumLike, type StandardEnumItem } from '@reharik/smart-enum';
-import type { CollectionInfo } from '../../types/types';
 import type { PageInfoInput } from '../generated/types.generated';
 
 type GraphQlCollectionInfoInput = {

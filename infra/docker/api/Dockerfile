@@ -1,6 +1,10 @@
 ARG NODE_VERSION=22
-ARG API_WORKSPACE_PATH=apps/api
-ARG API_WORKSPACE_NAME=@app/api
+# Path under repo root (e.g. apps/api, apps/worker) — used for COPY paths and prod CMD.
+ARG APP_WORKSPACE_PATH=apps/api
+# npm workspace name from root package.json workspaces (e.g. @app/api).
+ARG APP_WORKSPACE_NAME=@app/api
+# Nx project name for `nx build` (see apps/<name>/project.json "name" or nx.json).
+ARG NX_PROJECT_NAME=api
 
 # =============================================================================
 # BASE IMAGE SETUP
@@ -15,17 +19,17 @@ RUN corepack enable || true
 # =============================================================================
 
 FROM base AS deps-dev-staging
-ARG API_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_PATH=apps/api
 COPY package.json package-lock.json ./
-COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
+COPY ${APP_WORKSPACE_PATH}/package.json ${APP_WORKSPACE_PATH}/package.json
 # Copy other workspaces (e.g. packages/*) so npm sees them; otherwise "No workspaces found!"
 COPY packages/ packages/
 RUN npm ci --workspaces --include-workspace-root --ignore-scripts
 
 FROM base AS deps-prod
-ARG API_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_PATH=apps/api
 COPY package.json package-lock.json ./
-COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
+COPY ${APP_WORKSPACE_PATH}/package.json ${APP_WORKSPACE_PATH}/package.json
 COPY packages/ packages/
 RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 
@@ -34,8 +38,9 @@ RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 # =============================================================================
 
 FROM base AS build
-ARG API_WORKSPACE_PATH=apps/api
-ARG API_WORKSPACE_NAME=@app/api
+ARG APP_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_NAME=@app/api
+ARG NX_PROJECT_NAME=api
 WORKDIR /repo
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
@@ -43,21 +48,23 @@ ENV NX_DAEMON=false
 RUN npx nx reset || true
 
 # Generate container types (run from repo root so npm finds package.json)
-RUN npm run gen:container --workspace=${API_WORKSPACE_NAME}
+RUN npm run gen:container --workspace=${APP_WORKSPACE_NAME}
 
 # Verify IoC generated artifacts exist
-RUN test -f ${API_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
+RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
   (echo "ERROR: ioc-manifest.ts was not generated" && exit 1)
-RUN test -f ${API_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts || \
+RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts || \
   (echo "ERROR: ioc-registry.types.ts was not generated" && exit 1)
 
-RUN npx nx build api --configuration=production
+RUN npx nx build ${NX_PROJECT_NAME} --configuration=production
 
 # =============================================================================
 # RUNTIME STAGES
 # =============================================================================
 
 FROM node:${NODE_VERSION}-slim AS dev
+ARG APP_WORKSPACE_NAME=@app/api
+ENV APP_WORKSPACE_NAME=${APP_WORKSPACE_NAME}
 ENV NODE_ENV=development
 WORKDIR /app
 RUN apt-get update && apt-get install -y git vim
@@ -65,27 +72,28 @@ COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
 RUN npm install -g nodemon
 EXPOSE 3000
-CMD ["npm", "run", "dev", "--workspace=@app/api"]
+CMD ["sh", "-c", "npm run dev --workspace=${APP_WORKSPACE_NAME}"]
 
 FROM node:${NODE_VERSION}-slim AS production
-ARG API_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_PATH=apps/api
+ENV APP_WORKSPACE_PATH=${APP_WORKSPACE_PATH}
 ENV NODE_ENV=production
 WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /repo/${API_WORKSPACE_PATH}/dist ./${API_WORKSPACE_PATH}/dist
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/dist ./${APP_WORKSPACE_PATH}/dist
 
 # Copy generated IoC types to dist (for source maps / tooling parity)
-RUN mkdir -p ${API_WORKSPACE_PATH}/dist/di/generated
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts ./${API_WORKSPACE_PATH}/dist/di/generated/ioc-manifest.ts
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts ./${API_WORKSPACE_PATH}/dist/di/generated/ioc-registry.types.ts
-RUN test -f ${API_WORKSPACE_PATH}/dist/di/generated/ioc-registry.types.ts || \
+RUN mkdir -p ${APP_WORKSPACE_PATH}/dist/di/generated
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts ./${APP_WORKSPACE_PATH}/dist/di/generated/ioc-manifest.ts
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts ./${APP_WORKSPACE_PATH}/dist/di/generated/ioc-registry.types.ts
+RUN test -f ${APP_WORKSPACE_PATH}/dist/di/generated/ioc-registry.types.ts || \
   (echo "ERROR: ioc-registry.types.ts was not copied to dist" && exit 1)
 
 # Copy server startup script (copy from build stage where source files are)
-RUN mkdir -p ${API_WORKSPACE_PATH}/dist/scripts
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/scripts/serverStartUpProd.sh ./${API_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
-RUN chmod +x ${API_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
+RUN mkdir -p ${APP_WORKSPACE_PATH}/dist/scripts
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/src/scripts/serverStartUpProd.sh ./${APP_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
+RUN chmod +x ${APP_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
 
 COPY --from=deps-prod /repo/node_modules ./node_modules
 
@@ -95,9 +103,9 @@ RUN (test -d node_modules/dotenv || \
     echo "✓ dotenv verified in node_modules"
 
 EXPOSE 3000
-CMD ["sh", "apps/api/dist/scripts/serverStartUpProd.sh"]
+CMD ["sh", "-c", "exec sh ${APP_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh"]
 
 FROM production AS staging
 ENV NODE_ENV=staging
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
-COPY eslint-shared.js ./
+COPY infra/config/eslint/eslint-shared.js ./eslint-shared.js

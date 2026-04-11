@@ -39,23 +39,39 @@ export const createBaseTypeScriptConfig = async (options = {}) => {
     ecmaVersion = 'latest',
     tsconfigRootDir = import.meta.dirname,
     ignores: extraIgnores = [],
+    files = ['**/*.ts'],
     additionalRules = {},
     additionalPlugins = {},
+    /**
+     * When set, use classic `project` mode instead of `projectService` (e.g. for `tsconfig.spec.json`
+     * so test files excluded from the main tsconfig stay type-aware under ESLint).
+     */
+    parserOptionsOverride,
   } = options;
 
-  return defineConfig(
-    { ignores: [...defaultIgnores, ...extraIgnores] },
-    {
-      files: ['**/*.ts'],
-      extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
-      languageOptions: {
-        globals: customGlobals,
-        parserOptions: {
+  const parserOptions =
+    parserOptionsOverride !== undefined
+      ? {
+          ecmaVersion,
+          sourceType: 'module',
+          tsconfigRootDir,
+          ...parserOptionsOverride,
+        }
+      : {
           ecmaVersion,
           sourceType: 'module',
           projectService: true,
           tsconfigRootDir,
-        },
+        };
+
+  return defineConfig(
+    { ignores: [...defaultIgnores, ...extraIgnores] },
+    {
+      files,
+      extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
+      languageOptions: {
+        globals: customGlobals,
+        parserOptions,
       },
       plugins: {
         prettier: prettierPlugin,

@@ -6,8 +6,8 @@
     "allowJs": true,
     "baseUrl": "../..",
     "paths": {
-      "@packages/contracts": ["packages/contracts/dist/src/index"],
-      "@packages/contracts/*": ["packages/contracts/dist/src/*"]
+      "@packages/contracts": ["packages/foundation/contracts/src/index"],
+      "@packages/media-core": ["packages/context/media-core/src/index"]
     },
     "types": ["jest", "vite/client"],
     "plugins": [
@@ -20,6 +20,11 @@
     "strict": true,
     "isolatedModules": true
   },
-  "include": ["src/**/*.ts", "db/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "db/**/*.ts",
+    "../../packages/context/media-core/src/types/types.ts",
+    "../../packages/context/media-core/src/application/media/s3MediaStorage.ts"
+  ],
   "exclude": ["jest.*", "dist", "node_modules", "src/_original/**"]
 }

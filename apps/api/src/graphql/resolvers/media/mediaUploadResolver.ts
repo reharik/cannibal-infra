@@ -1,6 +1,7 @@
 import { MediaKind } from '@packages/contracts';
 import { authenticatedResolver } from '../../context/authenticatedContext';
 import type { Resolvers } from '../../generated/types.generated';
+import { toContractErrorPayload } from '../../mappers/contractErrorMapper';
 
 const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
   Mutation: {
@@ -27,7 +28,7 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
               },
             }
           : undefined,
-        errors: result.success ? [] : [result.error],
+        errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
     finalizeMediaUpload: authenticatedResolver(async (_parent, args, ctx) => {
@@ -46,7 +47,7 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
               kind: result.value.kind.value,
             }
           : undefined,
-        errors: result.success ? [] : [result.error],
+        errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
   },

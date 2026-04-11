@@ -22,7 +22,7 @@ generates:
       enumsAsTypes: true
       mappers:
         Viewer: ../resolvers/parentModels#ViewerParent
-        Album: ../../application/readServices/viewerReadServices/viewerAlbumReadService.types#AlbumProjection
-        MediaItem: ../../application/readServices/viewerReadServices/viewerMediaItemReadService.types#MediaItemProjection
-        MediaAsset: ../../application/readServices/viewerReadServices/viewerMediaItemReadService.types#MediaAssetProjection
-        AlbumItem: ../../application/readServices/viewerReadServices/viewerAlbumReadService.types#AlbumItemProjection
+        Album: '@packages/media-core#AlbumProjection'
+        MediaItem: '@packages/media-core#MediaItemProjection'
+        MediaAsset: '@packages/media-core#MediaAssetProjection'
+        AlbumItem: '@packages/media-core#AlbumItemProjection'

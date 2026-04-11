@@ -5,10 +5,13 @@ import type { Knex } from 'knex';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
-import { MINIMAL_PNG_1X1, seedIntegrationTestUploadedObject } from './integrationMediaObjectTestHelper';
+import {
+  MINIMAL_PNG_1X1,
+  seedIntegrationTestUploadedObject,
+} from './integrationMediaObjectTestHelper';
+import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 import { resetIntegrationTestDb } from './resetDb';
 import { TEST_VIEWER_B_ID } from './testViewerIds';
-import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 
 describe('GraphQL media upload integration', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
@@ -163,7 +166,12 @@ describe('GraphQL media upload integration', () => {
         return;
       }
 
-      await seedIntegrationTestUploadedObject(database, integrationTestMediaStorage, mediaItemId, MINIMAL_PNG_1X1);
+      await seedIntegrationTestUploadedObject(
+        database,
+        integrationTestMediaStorage,
+        mediaItemId,
+        MINIMAL_PNG_1X1,
+      );
 
       const { response, json } = await executeGraphQL<{
         finalizeMediaUpload: {

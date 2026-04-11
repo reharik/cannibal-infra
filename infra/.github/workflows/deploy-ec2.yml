@@ -179,10 +179,9 @@ jobs:
           platforms: linux/arm64
           build-args: |
             NODE_VERSION=${{ env.DOCKER_NODE_VERSION }}
-            API_WORKSPACE_PATH=${{ env.DOCKER_API_WORKSPACE_PATH }}
-            NX_PROJECT=${{ env.DOCKER_NX_PROJECT }}
-            DEV_WORKSPACE=${{ env.DOCKER_DEV_WORKSPACE }}
-            NODE_ENTRYPOINT=${{ env.DOCKER_NODE_ENTRYPOINT }}
+            APP_WORKSPACE_PATH=${{ env.DOCKER_API_WORKSPACE_PATH }}
+            APP_WORKSPACE_NAME=${{ env.DOCKER_DEV_WORKSPACE }}
+            NX_PROJECT_NAME=${{ env.DOCKER_NX_PROJECT }}
           tags: |
             ${{ format('{0}-api:{1}', env.APP_NAME, github.sha) }}
             ${{ format('{0}-api:latest', env.APP_NAME) }}

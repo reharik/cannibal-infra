@@ -9,12 +9,7 @@ export type MediaViewerProps = {
   imageAlt: string;
 };
 
-export const MediaViewer = ({
-  kind,
-  mimeType,
-  displayUrl,
-  imageAlt,
-}: MediaViewerProps) => {
+export const MediaViewer = ({ kind, mimeType, displayUrl, imageAlt }: MediaViewerProps) => {
   return (
     <ViewerShell>
       <ViewerCard>

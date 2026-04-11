@@ -1,4 +1,4 @@
-import { UserRoleEnum, type User } from '@packages/contracts';
+import { type User } from '@packages/contracts';
 import type { Context } from 'koa';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
@@ -39,7 +39,6 @@ export const buildAuthController = ({
     logger.info('Login successful from controller', {
       userId: result.user.id,
       email: result.user.email,
-      role: result.user.role,
       ip: ctx.ip,
     });
 
@@ -52,7 +51,7 @@ export const buildAuthController = ({
   },
 
   signup: async (ctx: Context): Promise<Context> => {
-    const { email, password, name, role } = ctx.request.body as {
+    const { email, password, name } = ctx.request.body as {
       email: string;
       password: string;
       name: string;
@@ -72,13 +71,10 @@ export const buildAuthController = ({
       return ctx;
     }
 
-    const userRole = UserRoleEnum.tryFromValue(role);
-
     const result = await authService.signup({
       email,
       password,
       name,
-      role: userRole,
     });
     if (!result) {
       logger.warn('Signup attempt failed from controller', {
@@ -93,7 +89,6 @@ export const buildAuthController = ({
     logger.info('Signup successful from controller', {
       userId: result.user.id,
       email: result.user.email,
-      role: result.user.role,
       ip: ctx.ip,
     });
 

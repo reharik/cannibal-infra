@@ -7,7 +7,10 @@ import type { Knex } from 'knex';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { createExecuteGraphQL } from './executeGQL';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
-import { MINIMAL_PNG_1X1, seedIntegrationTestUploadedObject } from './integrationMediaObjectTestHelper';
+import {
+  MINIMAL_PNG_1X1,
+  seedIntegrationTestUploadedObject,
+} from './integrationMediaObjectTestHelper';
 import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 import { resetIntegrationTestDb } from './resetDb';
 import { TEST_VIEWER_1_ID, TEST_VIEWER_A_ID } from './testViewerIds';
@@ -104,28 +107,30 @@ const listCollection = `
   }
 `;
 
-const viewerAlbumsWithItemsQuery = `
-  query ViewerAlbumsWithItems {
-    viewer {
-      id
-      albums(input: { ${listCollection} }) {
-        nodes {
-          id
-          title
-          items(input: { ${listCollection} }) {
-            nodes {
-              id
-              mediaItem {
-                id
-                status
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
+// seems unused
+
+// const viewerAlbumsWithItemsQuery = `
+//   query ViewerAlbumsWithItems {
+//     viewer {
+//       id
+//       albums(input: { ${listCollection} }) {
+//         nodes {
+//           id
+//           title
+//           items(input: { ${listCollection} }) {
+//             nodes {
+//               id
+//               mediaItem {
+//                 id
+//                 status
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+// `;
 
 const insertViewerRoleMember = async (
   database: Knex,
@@ -172,7 +177,12 @@ const createUploadedMediaItemViaGraphQL = async (params: {
     throw new Error('expected mediaItemId');
   }
 
-  await seedIntegrationTestUploadedObject(database, integrationTestMediaStorage, mediaItemId, MINIMAL_PNG_1X1);
+  await seedIntegrationTestUploadedObject(
+    database,
+    integrationTestMediaStorage,
+    mediaItemId,
+    MINIMAL_PNG_1X1,
+  );
 
   const finalized = await executeGraphQL<{
     finalizeMediaUpload: WriteMutationResponse<{ mediaItemId: string; status: string }>;
@@ -183,7 +193,9 @@ const createUploadedMediaItemViaGraphQL = async (params: {
   });
   expect(finalized.json.errors).toBeUndefined();
   expect(finalized.json.data?.finalizeMediaUpload.errors).toEqual([]);
-  expect(finalized.json.data?.finalizeMediaUpload.data?.status).toBe(MediaItemStatus.uploaded.value);
+  expect(finalized.json.data?.finalizeMediaUpload.data?.status).toBe(
+    MediaItemStatus.uploaded.value,
+  );
 
   return mediaItemId;
 };

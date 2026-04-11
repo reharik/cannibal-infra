@@ -54,9 +54,9 @@ type ContractError {
 }
 
 enum ErrorCategory {
-  validation
-  domain
-  auth
-  conflict
-  system
+  VALIDATION
+  DOMAIN
+  AUTH
+  CONFLICT
+  SYSTEM
 }

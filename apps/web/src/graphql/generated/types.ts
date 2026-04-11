@@ -139,11 +139,11 @@ export type EnumMetaPropInput = {
 };
 
 export type ErrorCategory =
-  | 'auth'
-  | 'conflict'
-  | 'domain'
-  | 'system'
-  | 'validation';
+  | 'AUTH'
+  | 'CONFLICT'
+  | 'DOMAIN'
+  | 'SYSTEM'
+  | 'VALIDATION';
 
 export type FinalizeMediaUploadInput = {
   mediaItemId: Scalars['ID']['input'];

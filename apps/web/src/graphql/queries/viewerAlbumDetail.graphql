@@ -19,11 +19,7 @@ query ViewerAlbumDetail($albumId: ID!) {
       }
       items(
         input: {
-          collectionInfo: {
-            pageInfo: { limit: 100, offset: 0 }
-            sortBy: CREATED_AT
-            sortDir: DESC
-          }
+          collectionInfo: { pageInfo: { limit: 100, offset: 0 }, sortBy: CREATED_AT, sortDir: DESC }
         }
       ) {
         nodes {

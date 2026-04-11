@@ -20,7 +20,10 @@
       "inputs": ["default", "^default"],
       "outputs": ["{projectRoot}/coverage"]
     },
-    "lint": { "cache": true, "inputs": ["default", "^default"] },
+    "lint": {
+      "cache": false,
+      "inputs": ["default", "^default"]
+    },
     "serve": { "cache": false }
   },
   "nxCloudAccessToken": "",

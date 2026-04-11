@@ -6,9 +6,9 @@ const mediaItemResolvers: Pick<Resolvers, 'MediaItem'> = {
   MediaItem: {
     asset: authenticatedResolver(async (mediaItem, { kind }, ctx) => {
       const requestedKind =
-        kind === MediaAssetKind.display.key
+        kind === MediaAssetKind.display.value
           ? MediaAssetKind.display
-          : kind === MediaAssetKind.thumbnail.key
+          : kind === MediaAssetKind.thumbnail.value
             ? MediaAssetKind.thumbnail
             : MediaAssetKind.original;
       return ctx.readServices.viewerMediaItemReadService.getAssetForMediaItem({

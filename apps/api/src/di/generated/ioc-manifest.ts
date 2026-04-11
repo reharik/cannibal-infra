@@ -4,38 +4,39 @@ Re-run `npm run gen:manifest` after changing factories or IoC config.
 */
 import type { IocGeneratedContainerManifest, IocModuleNamespace } from 'ioc-manifest';
 
-import * as ioc_application_readServices_viewerReadServices_viewerAlbumReadService from '../../application/readServices/viewerReadServices/viewerAlbumReadService.js';
-import * as ioc_application_readServices_viewerReadServices_viewerMediaItemReadService from '../../application/readServices/viewerReadServices/viewerMediaItemReadService.js';
-import * as ioc_application_writeServices_album_addAlbumItem from '../../application/writeServices/album/addAlbumItem.js';
-import * as ioc_application_writeServices_album_createAlbum from '../../application/writeServices/album/createAlbum.js';
-import * as ioc_application_writeServices_mediaItem_createMediaItemUpload from '../../application/writeServices/mediaItem/createMediaItemUpload.js';
-import * as ioc_application_writeServices_mediaItem_finalizeMediaItemUpload from '../../application/writeServices/mediaItem/finalizeMediaItemUpload.js';
-import * as ioc_config from '../../config.js';
-import * as ioc_controllers_authController from '../../controllers/authController.js';
-import * as ioc_graphql_context_createGraphQLContext from '../../graphql/context/createGraphQLContext.js';
-import * as ioc_graphql_server_createGraphQLServer from '../../graphql/server/createGraphQLServer.js';
-import * as ioc_infrastructure_media_s3MediaStorage from '../../infrastructure/media/s3MediaStorage.js';
-import * as ioc_knex from '../../knex.js';
-import * as ioc_knexfile from '../../knexfile.js';
-import * as ioc_koaServer from '../../koaServer.js';
-import * as ioc_logger from '../../logger.js';
-import * as ioc_middleware_authMiddleware from '../../middleware/authMiddleware.js';
-import * as ioc_middleware_errorHandler from '../../middleware/errorHandler.js';
-import * as ioc_middleware_requestLogger from '../../middleware/requestLogger.js';
-import * as ioc_repositories_domainRepositories_albumRepository from '../../repositories/domainRepositories/albumRepository.js';
-import * as ioc_repositories_domainRepositories_commentRepository from '../../repositories/domainRepositories/commentRepository.js';
-import * as ioc_repositories_domainRepositories_mediaAssetRepository from '../../repositories/domainRepositories/mediaAssetRepository.js';
-import * as ioc_repositories_domainRepositories_mediaItemRepository from '../../repositories/domainRepositories/mediaItemRepository.js';
-import * as ioc_repositories_domainRepositories_notificationRepository from '../../repositories/domainRepositories/notificationRepository.js';
-import * as ioc_repositories_domainRepositories_shareLinkRepository from '../../repositories/domainRepositories/shareLinkRepository.js';
-import * as ioc_repositories_domainRepositories_userRepository from '../../repositories/domainRepositories/userRepository.js';
-import * as ioc_repositories_readRepositories_albumReadRepository from '../../repositories/readRepositories/albumReadRepository.js';
-import * as ioc_repositories_readRepositories_mediaAssetReadRepository from '../../repositories/readRepositories/mediaAssetReadRepository.js';
-import * as ioc_repositories_readRepositories_mediaItemReadRepository from '../../repositories/readRepositories/mediaItemReadRepository.js';
-import * as ioc_routes_apiRouter from '../../routes/apiRouter.js';
-import * as ioc_routes_authRouter from '../../routes/authRouter.js';
-import * as ioc_server from '../../server.js';
-import * as ioc_services_authService from '../../services/authService.js';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_albumRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_commentRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_mediaAssetRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_mediaItemRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_notificationRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_shareLinkRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_domainRepositories_userRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_readRepositories_albumReadRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_readRepositories_mediaAssetReadRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_repositories_readRepositories_mediaItemReadRepository from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_readServices_viewerReadServices_viewerAlbumReadService from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_readServices_viewerReadServices_viewerMediaItemReadService from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_album_addAlbumItem from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_album_createAlbum from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_createMediaItemUpload from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_finalizeMediaItemUpload from '@packages/media-core';
+import * as ioc_src_config from '../../config.js';
+import * as ioc_src_controllers_authController from '../../controllers/authController.js';
+import * as ioc_src_graphql_context_createGraphQLContext from '../../graphql/context/createGraphQLContext.js';
+import * as ioc_src_graphql_server_createGraphQLServer from '../../graphql/server/createGraphQLServer.js';
+import * as ioc_src_infrastructure_media_mediaStorage from '../../infrastructure/media/mediaStorage.js';
+import * as ioc_src_knex from '../../knex.js';
+import * as ioc_src_knexfile from '../../knexfile.js';
+import * as ioc_src_koaServer from '../../koaServer.js';
+import * as ioc_src_logger from '../../logger.js';
+import * as ioc_src_middleware_authMiddleware from '../../middleware/authMiddleware.js';
+import * as ioc_src_middleware_errorHandler from '../../middleware/errorHandler.js';
+import * as ioc_src_middleware_requestLogger from '../../middleware/requestLogger.js';
+import * as ioc_src_repositories_domainRepositories_mediaProcessingJobRepository from '../../repositories/domainRepositories/mediaProcessingJobRepository.js';
+import * as ioc_src_routes_apiRouter from '../../routes/apiRouter.js';
+import * as ioc_src_routes_authRouter from '../../routes/authRouter.js';
+import * as ioc_src_server from '../../server.js';
+import * as ioc_src_services_authService from '../../services/authService.js';
 
 type IocManifestGroupRoots = {
   readonly readServiceFactories: {
@@ -70,38 +71,39 @@ type IocManifestGroupRoots = {
 
 export const iocManifest = {
   moduleImports: [
-    ioc_application_readServices_viewerReadServices_viewerAlbumReadService,
-    ioc_application_readServices_viewerReadServices_viewerMediaItemReadService,
-    ioc_application_writeServices_album_addAlbumItem,
-    ioc_application_writeServices_album_createAlbum,
-    ioc_application_writeServices_mediaItem_createMediaItemUpload,
-    ioc_application_writeServices_mediaItem_finalizeMediaItemUpload,
-    ioc_config,
-    ioc_controllers_authController,
-    ioc_graphql_context_createGraphQLContext,
-    ioc_graphql_server_createGraphQLServer,
-    ioc_infrastructure_media_s3MediaStorage,
-    ioc_knex,
-    ioc_knexfile,
-    ioc_koaServer,
-    ioc_logger,
-    ioc_middleware_authMiddleware,
-    ioc_middleware_errorHandler,
-    ioc_middleware_requestLogger,
-    ioc_repositories_domainRepositories_albumRepository,
-    ioc_repositories_domainRepositories_commentRepository,
-    ioc_repositories_domainRepositories_mediaAssetRepository,
-    ioc_repositories_domainRepositories_mediaItemRepository,
-    ioc_repositories_domainRepositories_notificationRepository,
-    ioc_repositories_domainRepositories_shareLinkRepository,
-    ioc_repositories_domainRepositories_userRepository,
-    ioc_repositories_readRepositories_albumReadRepository,
-    ioc_repositories_readRepositories_mediaAssetReadRepository,
-    ioc_repositories_readRepositories_mediaItemReadRepository,
-    ioc_routes_apiRouter,
-    ioc_routes_authRouter,
-    ioc_server,
-    ioc_services_authService,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_albumRepository,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_commentRepository,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_mediaAssetRepository,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_mediaItemRepository,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_notificationRepository,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_shareLinkRepository,
+    ioc_______packages_context_media_core_src_repositories_domainRepositories_userRepository,
+    ioc_______packages_context_media_core_src_repositories_readRepositories_albumReadRepository,
+    ioc_______packages_context_media_core_src_repositories_readRepositories_mediaAssetReadRepository,
+    ioc_______packages_context_media_core_src_repositories_readRepositories_mediaItemReadRepository,
+    ioc_______packages_context_media_core_src_services_readServices_viewerReadServices_viewerAlbumReadService,
+    ioc_______packages_context_media_core_src_services_readServices_viewerReadServices_viewerMediaItemReadService,
+    ioc_______packages_context_media_core_src_services_writeServices_album_addAlbumItem,
+    ioc_______packages_context_media_core_src_services_writeServices_album_createAlbum,
+    ioc_______packages_context_media_core_src_services_writeServices_mediaItem_createMediaItemUpload,
+    ioc_______packages_context_media_core_src_services_writeServices_mediaItem_finalizeMediaItemUpload,
+    ioc_src_config,
+    ioc_src_controllers_authController,
+    ioc_src_graphql_context_createGraphQLContext,
+    ioc_src_graphql_server_createGraphQLServer,
+    ioc_src_infrastructure_media_mediaStorage,
+    ioc_src_knex,
+    ioc_src_knexfile,
+    ioc_src_koaServer,
+    ioc_src_logger,
+    ioc_src_middleware_authMiddleware,
+    ioc_src_middleware_errorHandler,
+    ioc_src_middleware_requestLogger,
+    ioc_src_repositories_domainRepositories_mediaProcessingJobRepository,
+    ioc_src_routes_apiRouter,
+    ioc_src_routes_authRouter,
+    ioc_src_server,
+    ioc_src_services_authService,
   ] as const satisfies readonly IocModuleNamespace[],
 
   contracts: {
@@ -109,12 +111,13 @@ export const iocManifest = {
       addAlbumItem: {
         exportName: 'buildAddAlbumItem',
         registrationKey: 'addAlbumItem',
-        modulePath: 'application/writeServices/album/addAlbumItem.ts',
-        relImport: '../../application/writeServices/album/addAlbumItem.js',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/album/addAlbumItem.ts',
+        relImport: '@packages/media-core',
         contractName: 'AddAlbumItem',
         implementationName: 'addAlbumItem',
         lifetime: 'singleton',
-        moduleIndex: 2,
+        moduleIndex: 12,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AlbumRepository', 'MediaItemReadRepository'],
@@ -124,12 +127,13 @@ export const iocManifest = {
       albumReadRepository: {
         exportName: 'buildAlbumReadRepository',
         registrationKey: 'albumReadRepository',
-        modulePath: 'repositories/readRepositories/albumReadRepository.ts',
-        relImport: '../../repositories/readRepositories/albumReadRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/readRepositories/albumReadRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'AlbumReadRepository',
         implementationName: 'albumReadRepository',
         lifetime: 'scoped',
-        moduleIndex: 25,
+        moduleIndex: 7,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -140,12 +144,13 @@ export const iocManifest = {
       albumRepository: {
         exportName: 'buildAlbumRepository',
         registrationKey: 'albumRepository',
-        modulePath: 'repositories/domainRepositories/albumRepository.ts',
-        relImport: '../../repositories/domainRepositories/albumRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/albumRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'AlbumRepository',
         implementationName: 'albumRepository',
         lifetime: 'singleton',
-        moduleIndex: 18,
+        moduleIndex: 0,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -155,12 +160,12 @@ export const iocManifest = {
       authController: {
         exportName: 'buildAuthController',
         registrationKey: 'authController',
-        modulePath: 'controllers/authController.ts',
+        modulePath: 'src/controllers/authController.ts',
         relImport: '../../controllers/authController.js',
         contractName: 'AuthController',
         implementationName: 'authController',
         lifetime: 'singleton',
-        moduleIndex: 7,
+        moduleIndex: 17,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AuthService', 'Logger'],
@@ -170,12 +175,12 @@ export const iocManifest = {
       authMiddleware: {
         exportName: 'buildAuthMiddleware',
         registrationKey: 'strictAuthMiddleware',
-        modulePath: 'middleware/authMiddleware.ts',
+        modulePath: 'src/middleware/authMiddleware.ts',
         relImport: '../../middleware/authMiddleware.js',
         contractName: 'AuthMiddleware',
         implementationName: 'authMiddleware',
         lifetime: 'singleton',
-        moduleIndex: 15,
+        moduleIndex: 25,
         discoveredBy: 'naming',
         configOverridesApplied: ['name'],
         dependencyContractNames: ['AuthService', 'Logger'],
@@ -183,12 +188,12 @@ export const iocManifest = {
       optionalAuthMiddleware: {
         exportName: 'buildOptionalAuthMiddleware',
         registrationKey: 'optionalAuthMiddleware',
-        modulePath: 'middleware/authMiddleware.ts',
+        modulePath: 'src/middleware/authMiddleware.ts',
         relImport: '../../middleware/authMiddleware.js',
         contractName: 'AuthMiddleware',
         implementationName: 'optionalAuthMiddleware',
         lifetime: 'singleton',
-        moduleIndex: 15,
+        moduleIndex: 25,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['default'],
@@ -199,12 +204,12 @@ export const iocManifest = {
       authService: {
         exportName: 'buildAuthService',
         registrationKey: 'authService',
-        modulePath: 'services/authService.ts',
+        modulePath: 'src/services/authService.ts',
         relImport: '../../services/authService.js',
         contractName: 'AuthService',
         implementationName: 'authService',
         lifetime: 'singleton',
-        moduleIndex: 31,
+        moduleIndex: 32,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config', 'Knex', 'Logger'],
@@ -214,12 +219,13 @@ export const iocManifest = {
       commentRepository: {
         exportName: 'buildCommentRepository',
         registrationKey: 'commentRepository',
-        modulePath: 'repositories/domainRepositories/commentRepository.ts',
-        relImport: '../../repositories/domainRepositories/commentRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/commentRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'CommentRepository',
         implementationName: 'commentRepository',
         lifetime: 'singleton',
-        moduleIndex: 19,
+        moduleIndex: 1,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -229,12 +235,12 @@ export const iocManifest = {
       config: {
         exportName: 'buildConfig',
         registrationKey: 'config',
-        modulePath: 'config.ts',
+        modulePath: 'src/config.ts',
         relImport: '../../config.js',
         contractName: 'Config',
         implementationName: 'config',
         lifetime: 'singleton',
-        moduleIndex: 6,
+        moduleIndex: 16,
         default: true,
         discoveredBy: 'naming',
       },
@@ -243,12 +249,13 @@ export const iocManifest = {
       createAlbum: {
         exportName: 'buildCreateAlbum',
         registrationKey: 'createAlbum',
-        modulePath: 'application/writeServices/album/createAlbum.ts',
-        relImport: '../../application/writeServices/album/createAlbum.js',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/album/createAlbum.ts',
+        relImport: '@packages/media-core',
         contractName: 'CreateAlbum',
         implementationName: 'createAlbum',
         lifetime: 'singleton',
-        moduleIndex: 3,
+        moduleIndex: 13,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AlbumRepository'],
@@ -258,12 +265,13 @@ export const iocManifest = {
       createMediaItemUpload: {
         exportName: 'buildCreateMediaItemUpload',
         registrationKey: 'createMediaItemUpload',
-        modulePath: 'application/writeServices/mediaItem/createMediaItemUpload.ts',
-        relImport: '../../application/writeServices/mediaItem/createMediaItemUpload.js',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/mediaItem/createMediaItemUpload.ts',
+        relImport: '@packages/media-core',
         contractName: 'CreateMediaUpload',
         implementationName: 'createMediaItemUpload',
         lifetime: 'singleton',
-        moduleIndex: 4,
+        moduleIndex: 14,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['MediaItemRepository', 'MediaStorage'],
@@ -273,12 +281,12 @@ export const iocManifest = {
       errorHandler: {
         exportName: 'buildErrorHandler',
         registrationKey: 'errorHandler',
-        modulePath: 'middleware/errorHandler.ts',
+        modulePath: 'src/middleware/errorHandler.ts',
         relImport: '../../middleware/errorHandler.js',
         contractName: 'ErrorHandler',
         implementationName: 'errorHandler',
         lifetime: 'singleton',
-        moduleIndex: 16,
+        moduleIndex: 26,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Logger'],
@@ -288,12 +296,13 @@ export const iocManifest = {
       finalizeMediaItemUpload: {
         exportName: 'buildFinalizeMediaItemUpload',
         registrationKey: 'finalizeMediaItemUpload',
-        modulePath: 'application/writeServices/mediaItem/finalizeMediaItemUpload.ts',
-        relImport: '../../application/writeServices/mediaItem/finalizeMediaItemUpload.js',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/mediaItem/finalizeMediaItemUpload.ts',
+        relImport: '@packages/media-core',
         contractName: 'FinalizeMediaItemUpload',
         implementationName: 'finalizeMediaItemUpload',
         lifetime: 'singleton',
-        moduleIndex: 5,
+        moduleIndex: 15,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['MediaAssetRepository', 'MediaItemRepository', 'MediaStorage'],
@@ -303,12 +312,12 @@ export const iocManifest = {
       createGraphQLContext: {
         exportName: 'buildCreateGraphQLContext',
         registrationKey: 'createGraphQLContext',
-        modulePath: 'graphql/context/createGraphQLContext.ts',
+        modulePath: 'src/graphql/context/createGraphQLContext.ts',
         relImport: '../../graphql/context/createGraphQLContext.js',
         contractName: 'GraphQLContextFactory',
         implementationName: 'createGraphQLContext',
         lifetime: 'singleton',
-        moduleIndex: 8,
+        moduleIndex: 18,
         default: true,
         discoveredBy: 'naming',
       },
@@ -317,12 +326,12 @@ export const iocManifest = {
       graphQLServer: {
         exportName: 'buildGraphQLServer',
         registrationKey: 'graphQLServer',
-        modulePath: 'graphql/server/createGraphQLServer.ts',
+        modulePath: 'src/graphql/server/createGraphQLServer.ts',
         relImport: '../../graphql/server/createGraphQLServer.js',
         contractName: 'GraphQLServer',
         implementationName: 'graphQLServer',
         lifetime: 'singleton',
-        moduleIndex: 9,
+        moduleIndex: 19,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['YogaApp'],
@@ -332,12 +341,12 @@ export const iocManifest = {
       database: {
         exportName: 'buildDatabase',
         registrationKey: 'database',
-        modulePath: 'knex.ts',
+        modulePath: 'src/knex.ts',
         relImport: '../../knex.js',
         contractName: 'Knex',
         implementationName: 'database',
         lifetime: 'singleton',
-        moduleIndex: 11,
+        moduleIndex: 21,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['accessKey'],
@@ -349,12 +358,12 @@ export const iocManifest = {
       knexConfig: {
         exportName: 'buildKnexConfig',
         registrationKey: 'knexConfig',
-        modulePath: 'knexfile.ts',
+        modulePath: 'src/knexfile.ts',
         relImport: '../../knexfile.js',
         contractName: 'KnexConfig',
         implementationName: 'knexConfig',
         lifetime: 'singleton',
-        moduleIndex: 12,
+        moduleIndex: 22,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -364,12 +373,12 @@ export const iocManifest = {
       koaServer: {
         exportName: 'buildKoaServer',
         registrationKey: 'koaServer',
-        modulePath: 'koaServer.ts',
+        modulePath: 'src/koaServer.ts',
         relImport: '../../koaServer.js',
         contractName: 'KoaServer',
         implementationName: 'koaServer',
         lifetime: 'singleton',
-        moduleIndex: 13,
+        moduleIndex: 23,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: [
@@ -388,12 +397,12 @@ export const iocManifest = {
       logger: {
         exportName: 'buildLogger',
         registrationKey: 'logger',
-        modulePath: 'logger.ts',
+        modulePath: 'src/logger.ts',
         relImport: '../../logger.js',
         contractName: 'Logger',
         implementationName: 'logger',
         lifetime: 'singleton',
-        moduleIndex: 14,
+        moduleIndex: 24,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -403,12 +412,13 @@ export const iocManifest = {
       mediaAssetReadRepository: {
         exportName: 'buildMediaAssetReadRepository',
         registrationKey: 'mediaAssetReadRepository',
-        modulePath: 'repositories/readRepositories/mediaAssetReadRepository.ts',
-        relImport: '../../repositories/readRepositories/mediaAssetReadRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/readRepositories/mediaAssetReadRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'MediaAssetReadRepository',
         implementationName: 'mediaAssetReadRepository',
         lifetime: 'scoped',
-        moduleIndex: 26,
+        moduleIndex: 8,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -419,12 +429,13 @@ export const iocManifest = {
       mediaAssetRepository: {
         exportName: 'buildMediaAssetRepository',
         registrationKey: 'mediaAssetRepository',
-        modulePath: 'repositories/domainRepositories/mediaAssetRepository.ts',
-        relImport: '../../repositories/domainRepositories/mediaAssetRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/mediaAssetRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'MediaAssetRepository',
         implementationName: 'mediaAssetRepository',
         lifetime: 'scoped',
-        moduleIndex: 20,
+        moduleIndex: 2,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -435,12 +446,13 @@ export const iocManifest = {
       mediaItemReadRepository: {
         exportName: 'buildMediaItemReadRepository',
         registrationKey: 'mediaItemReadRepository',
-        modulePath: 'repositories/readRepositories/mediaItemReadRepository.ts',
-        relImport: '../../repositories/readRepositories/mediaItemReadRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/readRepositories/mediaItemReadRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'MediaItemReadRepository',
         implementationName: 'mediaItemReadRepository',
         lifetime: 'scoped',
-        moduleIndex: 27,
+        moduleIndex: 9,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -451,30 +463,45 @@ export const iocManifest = {
       mediaItemRepository: {
         exportName: 'buildMediaItemRepository',
         registrationKey: 'mediaItemRepository',
-        modulePath: 'repositories/domainRepositories/mediaItemRepository.ts',
-        relImport: '../../repositories/domainRepositories/mediaItemRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/mediaItemRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'MediaItemRepository',
         implementationName: 'mediaItemRepository',
         lifetime: 'singleton',
-        moduleIndex: 21,
+        moduleIndex: 3,
+        default: true,
+        discoveredBy: 'naming',
+        dependencyContractNames: ['Knex'],
+      },
+    },
+    MediaProcessingJobRepository: {
+      mediaProcessingJobRepository: {
+        exportName: 'buildMediaProcessingJobRepository',
+        registrationKey: 'mediaProcessingJobRepository',
+        modulePath: 'src/repositories/domainRepositories/mediaProcessingJobRepository.ts',
+        relImport: '../../repositories/domainRepositories/mediaProcessingJobRepository.js',
+        contractName: 'MediaProcessingJobRepository',
+        implementationName: 'mediaProcessingJobRepository',
+        lifetime: 'singleton',
+        moduleIndex: 28,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
       },
     },
     MediaStorage: {
-      s3MediaStorage: {
-        exportName: 'buildS3MediaStorage',
-        registrationKey: 's3MediaStorage',
-        modulePath: 'infrastructure/media/s3MediaStorage.ts',
-        relImport: '../../infrastructure/media/s3MediaStorage.js',
+      mediaStorage: {
+        exportName: 'buildMediaStorage',
+        registrationKey: 'mediaStorage',
+        modulePath: 'src/infrastructure/media/mediaStorage.ts',
+        relImport: '../../infrastructure/media/mediaStorage.js',
         contractName: 'MediaStorage',
-        implementationName: 's3MediaStorage',
+        implementationName: 'mediaStorage',
         lifetime: 'singleton',
-        moduleIndex: 10,
+        moduleIndex: 20,
         default: true,
         discoveredBy: 'naming',
-        configOverridesApplied: ['default'],
         dependencyContractNames: ['Config'],
       },
     },
@@ -482,12 +509,13 @@ export const iocManifest = {
       notificationRepository: {
         exportName: 'buildNotificationRepository',
         registrationKey: 'notificationRepository',
-        modulePath: 'repositories/domainRepositories/notificationRepository.ts',
-        relImport: '../../repositories/domainRepositories/notificationRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/notificationRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'NotificationRepository',
         implementationName: 'notificationRepository',
         lifetime: 'singleton',
-        moduleIndex: 22,
+        moduleIndex: 4,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -497,12 +525,12 @@ export const iocManifest = {
       requestLogger: {
         exportName: 'buildRequestLogger',
         registrationKey: 'requestLogger',
-        modulePath: 'middleware/requestLogger.ts',
+        modulePath: 'src/middleware/requestLogger.ts',
         relImport: '../../middleware/requestLogger.js',
         contractName: 'RequestLogger',
         implementationName: 'requestLogger',
         lifetime: 'singleton',
-        moduleIndex: 17,
+        moduleIndex: 27,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Logger'],
@@ -512,12 +540,12 @@ export const iocManifest = {
       apiRoutes: {
         exportName: 'buildApiRoutes',
         registrationKey: 'apiRoutes',
-        modulePath: 'routes/apiRouter.ts',
+        modulePath: 'src/routes/apiRouter.ts',
         relImport: '../../routes/apiRouter.js',
         contractName: 'RootRouter',
         implementationName: 'apiRoutes',
         lifetime: 'singleton',
-        moduleIndex: 28,
+        moduleIndex: 29,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Router'],
@@ -527,12 +555,12 @@ export const iocManifest = {
       router: {
         exportName: 'buildRouter',
         registrationKey: 'router',
-        modulePath: 'routes/authRouter.ts',
+        modulePath: 'src/routes/authRouter.ts',
         relImport: '../../routes/authRouter.js',
         contractName: 'Router',
         implementationName: 'router',
         lifetime: 'singleton',
-        moduleIndex: 29,
+        moduleIndex: 30,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AuthController'],
@@ -542,12 +570,12 @@ export const iocManifest = {
       server: {
         exportName: 'buildServer',
         registrationKey: 'server',
-        modulePath: 'server.ts',
+        modulePath: 'src/server.ts',
         relImport: '../../server.js',
         contractName: 'Server',
         implementationName: 'server',
         lifetime: 'singleton',
-        moduleIndex: 30,
+        moduleIndex: 31,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config', 'KoaServer', 'Logger'],
@@ -557,12 +585,13 @@ export const iocManifest = {
       shareLinkRepository: {
         exportName: 'buildShareLinkRepository',
         registrationKey: 'shareLinkRepository',
-        modulePath: 'repositories/domainRepositories/shareLinkRepository.ts',
-        relImport: '../../repositories/domainRepositories/shareLinkRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/shareLinkRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'ShareLinkRepository',
         implementationName: 'shareLinkRepository',
         lifetime: 'singleton',
-        moduleIndex: 23,
+        moduleIndex: 5,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -572,12 +601,13 @@ export const iocManifest = {
       userRepository: {
         exportName: 'buildUserRepository',
         registrationKey: 'userRepository',
-        modulePath: 'repositories/domainRepositories/userRepository.ts',
-        relImport: '../../repositories/domainRepositories/userRepository.js',
+        modulePath:
+          '../../packages/context/media-core/src/repositories/domainRepositories/userRepository.ts',
+        relImport: '@packages/media-core',
         contractName: 'UserRepository',
         implementationName: 'userRepository',
         lifetime: 'singleton',
-        moduleIndex: 24,
+        moduleIndex: 6,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Knex'],
@@ -587,12 +617,13 @@ export const iocManifest = {
       viewerAlbumReadServiceFactory: {
         exportName: 'buildViewerAlbumReadServiceFactory',
         registrationKey: 'viewerAlbumReadServiceFactory',
-        modulePath: 'application/readServices/viewerReadServices/viewerAlbumReadService.ts',
-        relImport: '../../application/readServices/viewerReadServices/viewerAlbumReadService.js',
+        modulePath:
+          '../../packages/context/media-core/src/services/readServices/viewerReadServices/viewerAlbumReadService.ts',
+        relImport: '@packages/media-core',
         contractName: 'ViewerAlbumReadServiceFactory',
         implementationName: 'viewerAlbumReadServiceFactory',
         lifetime: 'scoped',
-        moduleIndex: 0,
+        moduleIndex: 10,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -603,13 +634,13 @@ export const iocManifest = {
       viewerMediaItemReadServiceFactory: {
         exportName: 'buildViewerMediaItemReadServiceFactory',
         registrationKey: 'viewerMediaItemReadServiceFactory',
-        modulePath: 'application/readServices/viewerReadServices/viewerMediaItemReadService.ts',
-        relImport:
-          '../../application/readServices/viewerReadServices/viewerMediaItemReadService.js',
+        modulePath:
+          '../../packages/context/media-core/src/services/readServices/viewerReadServices/viewerMediaItemReadService.ts',
+        relImport: '@packages/media-core',
         contractName: 'ViewerMediaItemReadServiceFactory',
         implementationName: 'viewerMediaItemReadServiceFactory',
         lifetime: 'scoped',
-        moduleIndex: 1,
+        moduleIndex: 11,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -624,12 +655,12 @@ export const iocManifest = {
       yogaApp: {
         exportName: 'buildYogaApp',
         registrationKey: 'yogaApp',
-        modulePath: 'graphql/server/createGraphQLServer.ts',
+        modulePath: 'src/graphql/server/createGraphQLServer.ts',
         relImport: '../../graphql/server/createGraphQLServer.js',
         contractName: 'YogaApp',
         implementationName: 'yogaApp',
         lifetime: 'singleton',
-        moduleIndex: 9,
+        moduleIndex: 19,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['GraphQLContextFactory'],

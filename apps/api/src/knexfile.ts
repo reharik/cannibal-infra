@@ -51,7 +51,7 @@ const createKnexConfig = (config: Config): KnexConfig => {
     connection,
     ...knexStringcase({
       appPostProcessResponse: (result: unknown, queryContext?: unknown) =>
-        smartEnumPostProcessResponse(convertNullsToUndefined(result), queryContext),
+        smartEnumPostProcessResponse?.(convertNullsToUndefined(result), queryContext),
     }),
     migrations: {
       directory: MIGRATIONS_DIR,

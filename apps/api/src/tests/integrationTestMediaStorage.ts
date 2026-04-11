@@ -5,7 +5,7 @@ import type {
   MediaStorageObjectMetadata,
   MediaStorageStreamResult,
   UploadTarget,
-} from '../application/media/MediaStorage';
+} from '@packages/media-core';
 
 type ObjectState = { size: number; mimeType?: string; body?: Buffer };
 

@@ -2,12 +2,20 @@ import { defineIocConfig } from 'ioc-manifest';
 
 export default defineIocConfig({
   discovery: {
-    rootDir: 'src',
-    generatedDir: 'di/generated',
+    scanDirs: [
+      { path: 'src', importMode: 'subpath' },
+      {
+        path: '../../packages/context/media-core',
+        importPrefix: '@packages/media-core',
+        importMode: 'root',
+      },
+    ],
+    generatedDir: 'src/di/generated',
     includes: ['**/*.{ts,tsx}'],
     excludes: [
       '**/*.d.ts',
-      '**/*.test.{ts,tsx}',
+      '**/*.{test,tests}.{ts,tsx}',
+      '!**/{test,tests}/**',
       '**/*.spec.{ts,tsx}',
       'di/generated/**',
       'dist/**',
@@ -16,10 +24,6 @@ export default defineIocConfig({
     factoryPrefix: 'build',
   },
   registrations: {
-    MediaStorage: {
-      s3MediaStorage: { default: true },
-    },
-
     MediaItemReadRepository: {
       mediaItemReadRepository: { lifetime: 'scoped' },
     },

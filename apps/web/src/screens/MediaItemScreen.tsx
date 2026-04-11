@@ -57,9 +57,7 @@ export const MediaItemScreen = () => {
   const originalAsset = mediaItem?.originalAsset ?? null;
 
   const displayUrl =
-    displayAsset != null && isNonEmptyDisplayUrl(displayAsset.url)
-      ? displayAsset.url.trim()
-      : null;
+    displayAsset != null && isNonEmptyDisplayUrl(displayAsset.url) ? displayAsset.url.trim() : null;
 
   const mimeForViewer =
     originalAsset?.mimeType != null && originalAsset.mimeType.trim().length > 0
@@ -104,9 +102,7 @@ export const MediaItemScreen = () => {
         mimeType={mimeForViewer}
         displayUrl={displayUrl}
         imageAlt={
-          mediaItem.title?.trim() ||
-          mediaItem.originalFileName?.trim() ||
-          kindLabel(mediaItem.kind)
+          mediaItem.title?.trim() || mediaItem.originalFileName?.trim() || kindLabel(mediaItem.kind)
         }
       />
     );

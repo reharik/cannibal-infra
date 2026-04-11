@@ -5,7 +5,8 @@
   "workspaces": [
     "apps/api",
     "apps/web",
-    "packages/contracts"
+    "packages/*",
+    "packages/*/*"
   ],
   "scripts": {
     "build": "nx run-many -t build",
@@ -27,8 +28,9 @@
     "graph": "nx graph",
     "ioc:inspect": "ioc inspect",
     "ioc:inspect:discovery": "ioc inspect --discovery",
-    "lint": "nx run-many -t lint --projects=api,web,contracts",
-    "lint:fix": "nx run-many -t lint --projects=api,web,contracts -- --fix",
+    "lint": "nx run-many -t lint --projects=api,web,contracts,media-core",
+    "lint:fix": "nx run-many -t lint --projects=api,web,contracts,media-core --configuration=fix",
+    "eslint": "npm run lint",
     "nuke": "rimraf node_modules api/node_modules web/node_modules contracts/node_modules api/dist web/dist contracts/dist dist .nx/cache && npm install && npm run build:clean && npm run lint && npm run test",
     "nuke:lite": "rimraf api/dist web/dist contracts/dist dist .nx/cache && npm run build:clean && npm run lint && npm run test",
     "nx": "nx",
@@ -49,6 +51,7 @@
     "@jest/globals": "^30.1.2",
     "@nx/esbuild": "21.4.1",
     "@nx/eslint": "^21.4.1",
+    "@nx/eslint-plugin": "^21.4.1",
     "@nx/jest": "^21.4.1",
     "@nx/js": "21.4.1",
     "@nx/react": "21.4.1",
