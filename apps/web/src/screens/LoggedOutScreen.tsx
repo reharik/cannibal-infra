@@ -34,7 +34,8 @@ export const LoggedOutScreen = () => {
         return;
       }
 
-      navigate('/', { replace: true });
+      await navigate('/', { replace: true });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
     } finally {

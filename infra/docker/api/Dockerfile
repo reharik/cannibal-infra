@@ -67,7 +67,7 @@ ARG APP_WORKSPACE_NAME=@app/api
 ENV APP_WORKSPACE_NAME=${APP_WORKSPACE_NAME}
 ENV NODE_ENV=development
 WORKDIR /app
-RUN apt-get update && apt-get install -y git vim
+RUN apt-get update && apt-get install -y git vim && rm -rf /var/lib/apt/lists/*
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
 RUN npm install -g nodemon

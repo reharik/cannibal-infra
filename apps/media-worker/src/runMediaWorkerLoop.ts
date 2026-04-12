@@ -1,6 +1,6 @@
+import type { Logger } from '../../../packages/foundation/infrastructure/src/logger/coreLogger.js';
 import type { Config } from '../../api/src/config.ts';
-import type { Logger } from '../../api/src/logger.ts';
-import type { ProcessNextMediaImageJob } from '../../api/src/application/mediaProcessing/processNextMediaImageJob.ts';
+import type { ProcessNextMediaImageJob } from './application/processNextMediaImageJob.js';
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {

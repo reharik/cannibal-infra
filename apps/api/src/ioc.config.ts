@@ -19,9 +19,16 @@ export default defineIocConfig({
       '**/*.spec.{ts,tsx}',
       'di/generated/**',
       'dist/**',
+      '**/dist/**',
       '**/node_modules/**',
     ],
     factoryPrefix: 'build',
+    workspacePackageImportBases: [
+      {
+        root: 'packages/foundation/infrastructure/src',
+        importBase: '@packages/infrastructure',
+      },
+    ],
   },
   registrations: {
     MediaItemReadRepository: {
@@ -32,6 +39,9 @@ export default defineIocConfig({
     },
     MediaAssetRepository: {
       mediaAssetRepository: { lifetime: 'scoped' },
+    },
+    MediaProcessingJobRepository: {
+      mediaProcessingJobRepository: { lifetime: 'scoped' },
     },
     ViewerMediaItemReadServiceFactory: {
       viewerMediaItemReadServiceFactory: { lifetime: 'scoped' },

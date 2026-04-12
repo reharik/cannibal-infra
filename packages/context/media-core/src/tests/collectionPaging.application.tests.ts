@@ -1,12 +1,12 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { AlbumItemSortBy, AlbumSortBy, SortDir } from '@packages/contracts';
 import {
-  type AlbumReadRepository,
   buildViewerAlbumReadServiceFactory,
   CollectionInfo,
   type AlbumCollectionInfo,
   type AlbumItemCollectionInfo,
   type AlbumItemWithMediaRow,
+  type AlbumReadRepository,
   type AlbumWithCoverRow,
   type MediaAssetProjection,
 } from '@packages/media-core';

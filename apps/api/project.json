@@ -32,6 +32,7 @@
         "ts-patch:install",
         "clean",
         "contracts:build",
+        "infrastructure:build",
         "gen:container",
         "gen:graphql",
         "build:knexfile"
@@ -110,7 +111,7 @@
     },
     "gen:container": {
       "executor": "nx:run-commands",
-      "dependsOn": ["contracts:build"],
+      "dependsOn": ["contracts:build", "infrastructure:build"],
       "options": {
         "command": "tsx src/di/gen-ioc-manifest.ts",
         "cwd": "{projectRoot}"

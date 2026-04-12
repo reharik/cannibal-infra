@@ -45,7 +45,7 @@ export const HomeScreen = () => {
     }
 
     await refetch();
-    navigate(mediaItemDetailPath(result.data.mediaItemId));
+    await navigate(mediaItemDetailPath(result.data.mediaItemId));
   };
 
   const formatCreatedAt = (value: unknown): string => {
@@ -283,8 +283,7 @@ const StatusPill = styled.span<{ $fail?: boolean }>`
   letter-spacing: 0.5px;
   padding: ${({ theme }) => theme.spacing(0.5)} ${({ theme }) => theme.spacing(1)};
   border-radius: ${({ theme }) => theme.radius.sm};
-  background: ${({ theme, $fail }) =>
-    $fail ? 'rgba(217, 140, 126, 0.25)' : 'rgba(0, 0, 0, 0.55)'};
+  background: ${({ $fail }) => ($fail ? 'rgba(217, 140, 126, 0.25)' : 'rgba(0, 0, 0, 0.55)')};
   color: ${({ theme }) => theme.colors.bg};
 `;
 

@@ -21,18 +21,6 @@ const StyledNavigation = styled.div`
   gap: ${({ theme }) => theme.spacing(6)};
 `;
 
-const AppTitle = styled(Link)`
-  font-size: 18px;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.text};
-  text-decoration: none;
-  letter-spacing: -0.5px;
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.text};
-  }
-`;
-
 const StyledNavLinks = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing(1)};

@@ -1,7 +1,7 @@
+import { Logger } from '@packages/infrastructure';
 import dotenv from 'dotenv';
 import type { Knex } from 'knex';
 import { initializeContainer } from './container';
-import { Logger } from './logger';
 import type { Server } from './server';
 
 const attachGlobalHandlers = (database: Knex, logger: Logger) => {

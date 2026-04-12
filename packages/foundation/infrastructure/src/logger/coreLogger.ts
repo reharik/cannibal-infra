@@ -1,5 +1,4 @@
 import { createLogger, format, transports, type Logger as WinstonLogger } from 'winston';
-import { IocGeneratedCradle } from './di/generated/ioc-registry.types';
 
 type Level = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug';
 
@@ -77,7 +76,7 @@ const humanReadableFormat = format.printf((info) => {
   return `${header}${errorBlock}${meta}`;
 });
 
-const buildConsoleFormat = () =>
+const createConsoleFormat = () =>
   format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSSS ZZ' }), humanReadableFormat);
 
 const jsonErrorFormatter = format((info) => {
@@ -94,7 +93,7 @@ const jsonErrorFormatter = format((info) => {
   return typed;
 });
 
-const buildJsonFormat = () =>
+const createJsonFormat = () =>
   format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSSS ZZ' }),
     jsonErrorFormatter(),
@@ -103,28 +102,34 @@ const buildJsonFormat = () =>
 
 let appLogger: WinstonLogger;
 
-export const buildLogger = ({ config }: IocGeneratedCradle): Logger => {
+export const coreLogger = ({
+  logJsonFilePath,
+  logLevel,
+}: {
+  logJsonFilePath?: string;
+  logLevel: string;
+}): Logger => {
   const loggerTransports: WinstonLogger['transports'] = [
     new transports.Console({
       stderrLevels: ['error'],
       handleExceptions: true,
-      format: buildConsoleFormat(),
+      format: createConsoleFormat(),
     }),
   ];
 
-  if (config.logJsonFilePath) {
+  if (logJsonFilePath) {
     loggerTransports.push(
       new transports.File({
-        filename: config.logJsonFilePath,
-        level: config.logLevel,
+        filename: logJsonFilePath,
+        level: logLevel,
         handleExceptions: true,
-        format: buildJsonFormat(),
+        format: createJsonFormat(),
       }),
     );
   }
 
   appLogger = createLogger({
-    level: config.logLevel,
+    level: logLevel,
     levels: {
       error: 0,
       warn: 1,

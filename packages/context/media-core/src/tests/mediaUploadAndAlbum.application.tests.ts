@@ -1,29 +1,34 @@
-import { AppErrorCollection, MediaItemStatus, MediaKind } from '@packages/contracts';
-import { MediaAssetKind } from '@packages/contracts';
+import {
+  AppErrorCollection,
+  MediaAssetKind,
+  MediaItemStatus,
+  MediaKind,
+} from '@packages/contracts';
 import { Readable } from 'node:stream';
 import type { MediaStorage } from '../application/media/MediaStorage';
 import { buildMediaAssetStorageKey } from '../application/media/MediaStorage';
-import type { MediaItemRow } from '../application/readServices/viewerReadServices/viewerMediaItemReadService.types';
-import { buildAddAlbumItem } from '../application/writeServices/album/addAlbumItem';
-import { buildCreateAlbum } from '../application/writeServices/album/createAlbum';
-import { buildCreateMediaItemUpload } from '../application/writeServices/mediaItem/createMediaItemUpload';
-import { buildFinalizeMediaItemUpload } from '../application/writeServices/mediaItem/finalizeMediaItemUpload';
 import { Album } from '../domain/Album/Album';
-import type { AlbumRepository } from '../domain/Album/AlbumRepository';
 import { MediaAsset } from '../domain/MediaAsset/MediaAsset';
-import type { MediaAssetRepository } from '../domain/MediaAsset/MediaAssetRepository';
-import type { MediaProcessingJobRepository } from '../domain/MediaProcessingJob/MediaProcessingJobRepository';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
-import type { MediaItemRepository } from '../domain/MediaItem/MediaItemRepository';
+import type { MediaProcessingJobRepository } from '../domain/MediaProcessingJob/MediaProcessingJobRepository';
+import type { AlbumRepository } from '../repositories/domainRepositories/albumRepository';
+import type { MediaAssetRepository } from '../repositories/domainRepositories/mediaAssetRepository';
+import { MediaItemRepository } from '../repositories/domainRepositories/mediaItemRepository';
+import type { MediaItemRow } from '../services/readServices/viewerReadServices/viewerMediaItemReadService.types';
+import { buildAddAlbumItem } from '../services/writeServices/album/addAlbumItem';
+import { buildCreateAlbum } from '../services/writeServices/album/createAlbum';
+import { buildCreateMediaItemUpload } from '../services/writeServices/mediaItem/createMediaItemUpload';
+import { buildFinalizeMediaItemUpload } from '../services/writeServices/mediaItem/finalizeMediaItemUpload';
 import { EntityId } from '../types/types';
 import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID } from './testViewerIds';
 
 /** 1×1 PNG — used so finalize can read width/height from uploaded bytes. */
 const MINIMAL_PNG_1X1 = Buffer.from([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00,
-  0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00,
-  0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01,
-  0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+  0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+  0x42, 0x60, 0x82,
 ]);
 
 type ObjectState = { size: number; mimeType?: string; body?: Buffer };
@@ -119,7 +124,7 @@ const createTrackingMediaStorage = (
     getObjectMetadata: async (storageKey: string) => {
       const o = objects.get(storageKey);
       if (!o) {
-        return null;
+        return undefined;
       }
       const size = o.body !== undefined ? o.body.length : o.size;
       return { size, mimeType: o.mimeType };
@@ -130,7 +135,7 @@ const createTrackingMediaStorage = (
     getObjectStream: async (storageKey: string) => {
       const object = objects.get(storageKey);
       if (!object) {
-        return null;
+        return undefined;
       }
       const buf = object.body ?? Buffer.alloc(object.size);
       return {
@@ -141,7 +146,7 @@ const createTrackingMediaStorage = (
     getObjectBuffer: async (storageKey: string, maxBytes: number) => {
       const object = objects.get(storageKey);
       if (!object) {
-        return null;
+        return undefined;
       }
       const raw = object.body ?? Buffer.alloc(object.size);
       return raw.subarray(0, Math.min(raw.length, maxBytes));
@@ -292,7 +297,7 @@ describe('Media upload pipeline (application services)', () => {
         viewerId: viewerA,
         kind: MediaKind.photo,
         mimeType: 'image/png',
-  });
+      });
       expect(created.success).toBe(true);
       if (!created.success) {
         return;
@@ -392,11 +397,14 @@ describe('Media upload pipeline (application services)', () => {
       if (!asset) {
         return;
       }
-      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: MINIMAL_PNG_1X1.length,
-        mimeType: 'image/png',
-        body: MINIMAL_PNG_1X1,
-      });
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
+        },
+      );
 
       const finalized = await finalize({
         viewerId: viewerB,
@@ -527,11 +535,14 @@ describe('Album integration (application services)', () => {
       if (!asset) {
         return;
       }
-      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: MINIMAL_PNG_1X1.length,
-        mimeType: 'image/png',
-        body: MINIMAL_PNG_1X1,
-      });
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
+        },
+      );
       const fin = await finalize({ viewerId, mediaItemId: item.id() });
       expect(fin.success).toBe(true);
       if (!fin.success) {
@@ -611,11 +622,14 @@ describe('Album integration (application services)', () => {
       if (!asset) {
         return;
       }
-      mediaStorage.objects.set(buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original), {
-        size: MINIMAL_PNG_1X1.length,
-        mimeType: 'image/png',
-        body: MINIMAL_PNG_1X1,
-      });
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
+        },
+      );
       await finalize({ viewerId, mediaItemId: item.id() });
       const readyItem = await mediaItemRepository.getById(item.id());
       if (!readyItem) {

@@ -36,7 +36,11 @@ export interface MediaStorageStreamResult {
 
 export interface MediaStorage {
   getUploadTarget(input: UploadTargetRequest): Promise<UploadTarget>;
-  writeObject(input: { storageKey: string; body: Readable; mimeType?: string }): Promise<void>;
+  writeObject(input: {
+    storageKey: string;
+    body: Readable | Buffer;
+    mimeType?: string;
+  }): Promise<void>;
   getObjectMetadata(storageKey: string): Promise<MediaStorageObjectMetadata | undefined>;
   verifyExistence(storageKey: string): Promise<boolean>;
   getObjectAccessUrl(input: { storageKey: string; expiresInSeconds?: number }): Promise<string>;

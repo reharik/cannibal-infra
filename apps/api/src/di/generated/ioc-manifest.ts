@@ -24,11 +24,11 @@ import * as ioc_src_config from '../../config.js';
 import * as ioc_src_controllers_authController from '../../controllers/authController.js';
 import * as ioc_src_graphql_context_createGraphQLContext from '../../graphql/context/createGraphQLContext.js';
 import * as ioc_src_graphql_server_createGraphQLServer from '../../graphql/server/createGraphQLServer.js';
+import * as ioc_src_infrastructure_logger_logger from '../../infrastructure/logger/logger.js';
 import * as ioc_src_infrastructure_media_mediaStorage from '../../infrastructure/media/mediaStorage.js';
 import * as ioc_src_knex from '../../knex.js';
 import * as ioc_src_knexfile from '../../knexfile.js';
 import * as ioc_src_koaServer from '../../koaServer.js';
-import * as ioc_src_logger from '../../logger.js';
 import * as ioc_src_middleware_authMiddleware from '../../middleware/authMiddleware.js';
 import * as ioc_src_middleware_errorHandler from '../../middleware/errorHandler.js';
 import * as ioc_src_middleware_requestLogger from '../../middleware/requestLogger.js';
@@ -91,11 +91,11 @@ export const iocManifest = {
     ioc_src_controllers_authController,
     ioc_src_graphql_context_createGraphQLContext,
     ioc_src_graphql_server_createGraphQLServer,
+    ioc_src_infrastructure_logger_logger,
     ioc_src_infrastructure_media_mediaStorage,
     ioc_src_knex,
     ioc_src_knexfile,
     ioc_src_koaServer,
-    ioc_src_logger,
     ioc_src_middleware_authMiddleware,
     ioc_src_middleware_errorHandler,
     ioc_src_middleware_requestLogger,
@@ -305,7 +305,12 @@ export const iocManifest = {
         moduleIndex: 15,
         default: true,
         discoveredBy: 'naming',
-        dependencyContractNames: ['MediaAssetRepository', 'MediaItemRepository', 'MediaStorage'],
+        dependencyContractNames: [
+          'MediaAssetRepository',
+          'MediaItemRepository',
+          'MediaProcessingJobRepository',
+          'MediaStorage',
+        ],
       },
     },
     GraphQLContextFactory: {
@@ -346,7 +351,7 @@ export const iocManifest = {
         contractName: 'Knex',
         implementationName: 'database',
         lifetime: 'singleton',
-        moduleIndex: 21,
+        moduleIndex: 22,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['accessKey'],
@@ -363,7 +368,7 @@ export const iocManifest = {
         contractName: 'KnexConfig',
         implementationName: 'knexConfig',
         lifetime: 'singleton',
-        moduleIndex: 22,
+        moduleIndex: 23,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -378,7 +383,7 @@ export const iocManifest = {
         contractName: 'KoaServer',
         implementationName: 'koaServer',
         lifetime: 'singleton',
-        moduleIndex: 23,
+        moduleIndex: 24,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: [
@@ -397,12 +402,12 @@ export const iocManifest = {
       logger: {
         exportName: 'buildLogger',
         registrationKey: 'logger',
-        modulePath: 'src/logger.ts',
-        relImport: '../../logger.js',
+        modulePath: 'src/infrastructure/logger/logger.ts',
+        relImport: '../../infrastructure/logger/logger.js',
         contractName: 'Logger',
         implementationName: 'logger',
         lifetime: 'singleton',
-        moduleIndex: 24,
+        moduleIndex: 20,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -483,10 +488,11 @@ export const iocManifest = {
         relImport: '../../repositories/domainRepositories/mediaProcessingJobRepository.js',
         contractName: 'MediaProcessingJobRepository',
         implementationName: 'mediaProcessingJobRepository',
-        lifetime: 'singleton',
+        lifetime: 'scoped',
         moduleIndex: 28,
         default: true,
         discoveredBy: 'naming',
+        configOverridesApplied: ['lifetime'],
         dependencyContractNames: ['Knex'],
       },
     },
@@ -499,7 +505,7 @@ export const iocManifest = {
         contractName: 'MediaStorage',
         implementationName: 'mediaStorage',
         lifetime: 'singleton',
-        moduleIndex: 20,
+        moduleIndex: 21,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],

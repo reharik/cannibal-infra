@@ -1,5 +1,6 @@
 import { AppErrorCollection, MediaAssetKind, MediaKind } from '@packages/contracts';
 import { buildMediaAssetStorageKey, MediaStorage } from '../../../application/media/MediaStorage';
+import type { MediaProcessingJobRepository } from '../../../domain/MediaProcessingJob/MediaProcessingJobRepository';
 import { fail, ok } from '../../../domain/utilities/writeResponse';
 import { MediaAssetRepository } from '../../../repositories/domainRepositories/mediaAssetRepository';
 import { MediaItemRepository } from '../../../repositories/domainRepositories/mediaItemRepository';
@@ -18,12 +19,14 @@ type FinalizeMediaItemUploadDeps = {
   mediaItemRepository: MediaItemRepository;
   mediaAssetRepository: MediaAssetRepository;
   mediaStorage: MediaStorage;
+  mediaProcessingJobRepository: MediaProcessingJobRepository;
 };
 
 export const buildFinalizeMediaItemUpload = ({
   mediaItemRepository,
   mediaAssetRepository,
   mediaStorage,
+  mediaProcessingJobRepository,
 }: FinalizeMediaItemUploadDeps): FinalizeMediaItemUpload => {
   return async (
     input: FinalizeMediaItemUploadCommand,

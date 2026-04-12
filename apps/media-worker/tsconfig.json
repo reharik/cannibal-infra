@@ -6,8 +6,9 @@
     "allowJs": true,
     "baseUrl": "../..",
     "paths": {
-      "@packages/contracts": ["packages/contracts/dist/src/index"],
-      "@packages/contracts/*": ["packages/contracts/dist/src/*"]
+      "@packages/contracts": ["packages/foundation/contracts/src/index.ts"],
+      "@packages/infrastructure": ["packages/foundation/infrastructure/src/index.ts"],
+      "@packages/media-core": ["packages/context/media-core/src/index.ts"]
     },
     "skipLibCheck": true,
     "strictNullChecks": true,

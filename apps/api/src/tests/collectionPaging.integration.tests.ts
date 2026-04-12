@@ -4,9 +4,9 @@ import { AlbumSortBy, SortDir } from '@packages/contracts';
 import type { AwilixContainer } from 'awilix';
 import type { Knex } from 'knex';
 
-import { CollectionInfo } from '../../../../packages/context/media-core/src/types/types';
+import type { AlbumReadRepository } from '@packages/media-core';
+import { CollectionInfo } from '@packages/media-core';
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
-import type { AlbumReadRepository } from '../repositories/readRepositories/albumReadRepository';
 import { setupGraphqlIntegrationTests } from './graphqlIntegrationTestSetup';
 import type { IntegrationTestMediaStorage } from './integrationTestMediaStorage';
 import { resetIntegrationTestDb } from './resetDb';

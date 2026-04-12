@@ -1,3 +1,4 @@
+import type { PutObjectCommandInput } from '@aws-sdk/client-s3';
 import {
   GetObjectCommand,
   HeadObjectCommand,
@@ -103,17 +104,21 @@ export const s3MediaStorage = ({
 
   const writeObject = async (input: {
     storageKey: string;
-    body: Readable;
+    body: Readable | Buffer;
     mimeType?: string;
   }): Promise<void> => {
-    await client.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: input.storageKey,
-        Body: input.body,
-        ContentType: input.mimeType,
-      }),
-    );
+    const commandInput: PutObjectCommandInput = {
+      Bucket: bucket,
+      Key: input.storageKey,
+      Body: input.body,
+    };
+    if (input.mimeType !== undefined) {
+      commandInput.ContentType = input.mimeType;
+    }
+    if (Buffer.isBuffer(input.body)) {
+      commandInput.ContentLength = input.body.length;
+    }
+    await client.send(new PutObjectCommand(commandInput));
   };
 
   const getObjectMetadata = async (

@@ -12,4 +12,3 @@
   "include": ["src/**/*.ts", "jest.config.js"],
   "exclude": ["dist", "node_modules"]
 }
-

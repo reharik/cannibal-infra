@@ -19,8 +19,7 @@ const baseInput = css<{ $hasError: boolean }>`
     border-color: ${({ theme, $hasError }) =>
       $hasError ? theme.colors.danger : theme.colors.accent};
     box-shadow: 0 0 0 3px
-      ${({ theme, $hasError }) =>
-        $hasError ? `rgba(220, 38, 38, 0.15)` : `rgba(124, 156, 255, 0.15)`};
+      ${({ $hasError }) => ($hasError ? `rgba(220, 38, 38, 0.15)` : `rgba(124, 156, 255, 0.15)`)};
   }
   &::placeholder {
     color: ${({ theme }) => theme.colors.subtext};
@@ -84,7 +83,7 @@ export const FormInput = React.forwardRef(
     ref: React.ForwardedRef<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) => {
     const { label, error, as, ...rest } = props as FormInputProps<AllowedTags>;
-    const tag: AllowedTags = (as ?? 'input') as AllowedTags;
+    const tag: AllowedTags = as ?? 'input';
 
     const hasError = !!error;
 
@@ -102,11 +101,7 @@ export const FormInput = React.forwardRef(
 
     return (
       <FieldWrapper>
-        {label && (
-          <LabelWrapper htmlFor={(rest as PropsOf<'input'>).id as string | undefined}>
-            {label}
-          </LabelWrapper>
-        )}
+        {label && <LabelWrapper htmlFor={(rest as PropsOf<'input'>).id}>{label}</LabelWrapper>}
         {field}
         {hasError && <ErrorMessage>{error}</ErrorMessage>}
       </FieldWrapper>

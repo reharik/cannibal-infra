@@ -7,10 +7,16 @@ import type {
   MediaProcessingJobRepository,
   MediaProcessingJobRow,
 } from '@packages/media-core';
-import { MediaAsset, MediaItem, MediaProcessingJobStatus } from '@packages/media-core';
-import { buildMediaAssetStorageKey, type MediaStorage } from '@packages/media-core';
-import { buildProcessNextMediaImageJob } from '../application/mediaProcessing/processNextMediaImageJob';
-import { buildCreateMediaItemUpload, buildFinalizeMediaItemUpload } from '@packages/media-core';
+import {
+  buildCreateMediaItemUpload,
+  buildFinalizeMediaItemUpload,
+  buildMediaAssetStorageKey,
+  MediaAsset,
+  MediaItem,
+  MediaProcessingJobStatus,
+  type MediaStorage,
+} from '@packages/media-core';
+import { buildProcessNextMediaImageJob } from '../../../media-worker/src/application/processNextMediaImageJob';
 
 const MINIMAL_PNG_1X1 = Buffer.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
@@ -32,13 +38,18 @@ const createTrackingMediaStorage = (): MediaStorage & { objects: Map<string, Obj
       headers: mimeType ? [{ name: 'Content-Type', value: mimeType }] : [],
     }),
     writeObject: async ({ storageKey, body, mimeType }) => {
-      const chunks: Buffer[] = [];
-      for await (const chunk of body) {
-        if (Buffer.isBuffer(chunk)) chunks.push(chunk);
-        else if (typeof chunk === 'string') chunks.push(Buffer.from(chunk));
-        else chunks.push(Buffer.from(chunk));
+      let buffer: Buffer;
+      if (Buffer.isBuffer(body)) {
+        buffer = body;
+      } else {
+        const chunks: Buffer[] = [];
+        for await (const chunk of body) {
+          if (Buffer.isBuffer(chunk)) chunks.push(chunk);
+          else if (typeof chunk === 'string') chunks.push(Buffer.from(chunk));
+          else chunks.push(Buffer.from(chunk));
+        }
+        buffer = Buffer.concat(chunks);
       }
-      const buffer = Buffer.concat(chunks);
       objects.set(storageKey, { size: buffer.length, mimeType, body: buffer });
     },
     getObjectMetadata: async (storageKey) => {

@@ -68,7 +68,7 @@ export const AlbumsListScreen = () => {
 
     closeCreate();
     await refetch();
-    navigate(`/albums/${result.data.albumId}`);
+    await navigate(`/albums/${result.data.albumId}`);
   };
 
   return (

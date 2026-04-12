@@ -27,6 +27,17 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react({
         fastRefresh: true,
+        babel: {
+          plugins: [
+            [
+              'babel-plugin-styled-components',
+              {
+                displayName: true,
+                fileName: true,
+              },
+            ],
+          ],
+        },
       }),
       tsconfigPaths(),
     ],

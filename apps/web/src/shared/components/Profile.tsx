@@ -11,8 +11,8 @@ export const Profile = ({ displayName }: ProfileProps) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/', { replace: true });
+    logout();
+    await navigate('/', { replace: true });
   };
 
   return (

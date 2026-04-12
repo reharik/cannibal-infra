@@ -1,37 +1,37 @@
-import { asFunction, AwilixContainer, createContainer, Lifetime } from 'awilix';
+import { AwilixContainer, createContainer } from 'awilix';
 import { registerIocFromManifest } from 'ioc-manifest';
 import type { Knex } from 'knex';
+import { iocManifest } from './di/generated/ioc-manifest';
+import type { IocGeneratedCradle } from './di/generated/ioc-registry.types';
 
-import { iocManifest } from '../../api/src/di/generated/ioc-manifest.ts';
-import type { IocGeneratedCradle } from '../../api/src/di/generated/ioc-registry.types.ts';
-import { buildRunMediaWorkerLoop, type RunMediaWorkerLoop } from './runMediaWorkerLoop';
+let container: AwilixContainer<IocGeneratedCradle> | undefined;
 
-type WorkerCradle = IocGeneratedCradle & {
-  runMediaWorkerLoop: RunMediaWorkerLoop;
-};
-
-let container: AwilixContainer<WorkerCradle> | undefined;
-
-export const initializeWorkerContainer = (): AwilixContainer<WorkerCradle> => {
+const initializeWorkerContainer = (): AwilixContainer<IocGeneratedCradle> => {
   if (container) {
     return container;
   }
 
-  const next = createContainer<WorkerCradle>({
+  const _container = createContainer<IocGeneratedCradle>({
     injectionMode: 'PROXY',
   });
-  registerIocFromManifest(next as unknown as AwilixContainer<IocGeneratedCradle>, iocManifest);
-  next.register({
-    runMediaWorkerLoop: asFunction(buildRunMediaWorkerLoop, {
-      lifetime: Lifetime.SINGLETON,
-    }),
-  });
 
-  container = next;
-  return next;
+  registerIocFromManifest(_container, iocManifest);
+
+  container = _container;
+  return container;
 };
 
-export const destroyWorkerContainer = async (): Promise<void> => {
+const getWorkerContainer = (): AwilixContainer<IocGeneratedCradle> => {
+  if (!container) {
+    throw new Error(
+      '[ioc] container has not been initialized yet. Call initializeWorkerContainer() first.',
+    );
+  }
+
+  return container;
+};
+
+const destroyWorkerContainer = async (): Promise<void> => {
   if (!container) {
     return;
   }
@@ -39,3 +39,5 @@ export const destroyWorkerContainer = async (): Promise<void> => {
   await db.destroy();
   container = undefined;
 };
+
+export { destroyWorkerContainer, getWorkerContainer, initializeWorkerContainer };

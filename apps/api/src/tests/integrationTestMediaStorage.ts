@@ -53,10 +53,10 @@ export const createIntegrationTestMediaStorage = (): IntegrationTestMediaStorage
 
   const writeObject = async (input: {
     storageKey: string;
-    body: Readable;
+    body: Readable | Buffer;
     mimeType?: string;
   }): Promise<void> => {
-    const body = await streamToBuffer(input.body);
+    const body = Buffer.isBuffer(input.body) ? input.body : await streamToBuffer(input.body);
     objects.set(input.storageKey, {
       size: body.length,
       mimeType: input.mimeType,

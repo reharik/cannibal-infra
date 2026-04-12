@@ -54,7 +54,10 @@ describe('MediaItem (domain)', () => {
       const ownerId = TEST_USER_A_ID;
       const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
       item.completeUploadedWithMetadata({ sizeBytes: 5000, mimeType: 'image/jpeg' }, ownerId);
-      const result = item.markReadyAfterDerivatives({ displayWidth: 1200, displayHeight: 800 }, ownerId);
+      const result = item.markReadyAfterDerivatives(
+        { displayWidth: 1200, displayHeight: 800 },
+        ownerId,
+      );
       expect(result.success).toBe(true);
       expect(item.status()).toBe(MediaItemStatus.ready);
       expect(item.width()).toBe(1200);
