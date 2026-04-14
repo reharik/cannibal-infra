@@ -21,6 +21,10 @@
     "strict": true,
     "isolatedModules": true
   },
-  "include": ["src/**/*.ts", "db/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "db/**/*.ts",
+    "../../packages/context/media-core/src/infrastructure/repositories/repoOptions.ts"
+  ],
   "exclude": ["jest.*", "dist", "node_modules", "src/_original/**"]
 }

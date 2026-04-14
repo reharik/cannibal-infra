@@ -12,22 +12,22 @@ import { AlbumRepository } from '../../../repositories/domainRepositories/albumR
 import { MediaItemReadRepository } from '../../../repositories/readRepositories/mediaItemReadRepository';
 import { WriteResult } from '../../../types/types';
 import { WriteServiceBase } from '../writeServiceBaseType';
-import { AddAlbumItemCommand, AddAlbumItemResult } from './writeAlbum.types';
+import { SetCoverMediaCommand, SetCoverMediaResult } from './writeAlbum.types';
 
-export interface AddAlbumItem extends WriteServiceBase {
-  (input: AddAlbumItemCommand): Promise<WriteResult<AddAlbumItemResult>>;
+export interface SetCoverMedia extends WriteServiceBase {
+  (input: SetCoverMediaCommand): Promise<WriteResult<SetCoverMediaResult>>;
 }
 
-type AddAlbumItemDeps = {
+type SetCoverMediaDeps = {
   albumRepository: AlbumRepository;
   mediaItemReadRepository: MediaItemReadRepository;
 };
 
-export const buildAddAlbumItem = ({
+export const buildSetCoverMedia = ({
   albumRepository,
   mediaItemReadRepository,
-}: AddAlbumItemDeps): AddAlbumItem => {
-  return async (input: AddAlbumItemCommand): Promise<WriteResult<AddAlbumItemResult>> => {
+}: SetCoverMediaDeps): SetCoverMedia => {
+  return async (input: SetCoverMediaCommand): Promise<WriteResult<SetCoverMediaResult>> => {
     const { viewerId, albumId, mediaItemId } = input;
     const r1 = await loadRequiredAlbum(albumId, albumRepository);
     if (!r1.success) {
@@ -44,7 +44,6 @@ export const buildAddAlbumItem = ({
     if (!r3.success) {
       return r3;
     }
-
     const r4 = ensureMemberCanEditAlbum(album, viewerId);
     if (!r4.success) {
       return r4;
@@ -54,16 +53,15 @@ export const buildAddAlbumItem = ({
       return r5;
     }
 
-    const r6 = album.addItem(mediaItemId, viewerId);
+    const r6 = album.setCoverMedia(mediaItemId, viewerId);
     if (!r6.success) {
       return r6;
     }
-    const albumItem = r6.value;
     await albumRepository.save(album);
 
     return ok({
       albumId: album.id(),
-      albumItemId: albumItem.id(),
+      mediaCoverId: mediaItemId,
     });
   };
 };

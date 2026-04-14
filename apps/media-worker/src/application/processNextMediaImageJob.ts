@@ -1,5 +1,5 @@
 import { MediaAssetKind, MediaItemStatus, MediaKind } from '@packages/contracts';
-import { buildMediaAssetStorageKey, MediaAsset } from '@packages/media-core';
+import { buildMediaAssetStorageKey } from '@packages/media-core';
 
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 import { generateImageDerivatives } from './imageDerivativeGenerator';
@@ -8,26 +8,6 @@ import { readStreamToBuffer } from './readStreamToBuffer';
 export type ProcessNextMediaImageJobResult = 'processed' | 'idle';
 
 export type ProcessNextMediaImageJob = () => Promise<ProcessNextMediaImageJobResult>;
-
-const loadOrCreateDerivativeAsset = (input: {
-  existing: MediaAsset | undefined;
-  mediaItemId: string;
-  kind: MediaAssetKind;
-  mimeType: string;
-  ownerId: string;
-}): MediaAsset => {
-  if (input.existing) {
-    return input.existing;
-  }
-  return MediaAsset.create(
-    {
-      mediaItemId: input.mediaItemId,
-      kind: input.kind,
-      mimeType: input.mimeType,
-    },
-    input.ownerId,
-  );
-};
 
 const serializeError = (e: unknown): string => {
   if (e instanceof Error) {
@@ -40,7 +20,6 @@ export const buildProcessNextMediaImageJob = ({
   config,
   mediaProcessingJobRepository,
   mediaItemRepository,
-  mediaAssetRepository,
   mediaStorage,
   logger,
 }: IocGeneratedCradle): ProcessNextMediaImageJob => {
@@ -129,45 +108,23 @@ export const buildProcessNextMediaImageJob = ({
         mimeType: derivatives.thumbnail.mimeType,
       });
 
-      const displayAsset = loadOrCreateDerivativeAsset({
-        existing: await mediaAssetRepository.getByMediaItemIdAndKind(
-          job.mediaItemId,
-          MediaAssetKind.display,
-        ),
-        mediaItemId: job.mediaItemId,
-        kind: MediaAssetKind.display,
+      mediaItem.addAsset(MediaAssetKind.display, derivatives.display.mimeType);
+      mediaItem.updateAssetWithMetadata({
+        sizeBytes: derivatives.display.fileSizeBytes,
         mimeType: derivatives.display.mimeType,
-        ownerId,
+        width: derivatives.display.width,
+        height: derivatives.display.height,
+        kind: MediaAssetKind.display,
       });
-      displayAsset.applyUploadedObjectMetadata(
-        {
-          sizeBytes: derivatives.display.fileSizeBytes,
-          mimeType: derivatives.display.mimeType,
-          width: derivatives.display.width,
-          height: derivatives.display.height,
-        },
-        ownerId,
-      );
 
-      const thumbnailAsset = loadOrCreateDerivativeAsset({
-        existing: await mediaAssetRepository.getByMediaItemIdAndKind(
-          job.mediaItemId,
-          MediaAssetKind.thumbnail,
-        ),
-        mediaItemId: job.mediaItemId,
-        kind: MediaAssetKind.thumbnail,
+      mediaItem.addAsset(MediaAssetKind.thumbnail, derivatives.thumbnail.mimeType);
+      mediaItem.updateAssetWithMetadata({
+        sizeBytes: derivatives.thumbnail.fileSizeBytes,
         mimeType: derivatives.thumbnail.mimeType,
-        ownerId,
+        width: derivatives.thumbnail.width,
+        height: derivatives.thumbnail.height,
+        kind: MediaAssetKind.thumbnail,
       });
-      thumbnailAsset.applyUploadedObjectMetadata(
-        {
-          sizeBytes: derivatives.thumbnail.fileSizeBytes,
-          mimeType: derivatives.thumbnail.mimeType,
-          width: derivatives.thumbnail.width,
-          height: derivatives.thumbnail.height,
-        },
-        ownerId,
-      );
 
       const readyResult = mediaItem.markReadyAfterDerivatives(
         {
@@ -181,8 +138,6 @@ export const buildProcessNextMediaImageJob = ({
         return 'processed';
       }
 
-      await mediaAssetRepository.save(displayAsset);
-      await mediaAssetRepository.save(thumbnailAsset);
       await mediaItemRepository.save(mediaItem);
       await finishSucceeded();
       return 'processed';

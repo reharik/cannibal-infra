@@ -23,23 +23,23 @@ type MediaItemReadRepositoryDeps = { database: Knex };
 
 const mediaItemRowFields = [
   'media_item.id',
-  'media_item.ownerId',
-  'media_item.storageKey',
+  'media_item.owner_id',
+  'media_item.storage_key',
   'media_item.kind',
   'media_item.status',
-  'media_item.mimeType',
-  'media_item.sizeBytes',
-  'media_item.originalFileName',
+  'media_item.mime_type',
+  'media_item.size_bytes',
+  'media_item.original_file_name',
   'media_item.width',
   'media_item.height',
-  'media_item.durationSeconds',
+  'media_item.duration_seconds',
   'media_item.title',
   'media_item.description',
-  'media_item.takenAt',
-  'media_item.createdAt',
-  'media_item.updatedAt',
-  'media_item.createdBy',
-  'media_item.updatedBy',
+  'media_item.taken_at',
+  'media_item.created_at',
+  'media_item.updated_at',
+  'media_item.created_by',
+  'media_item.updated_by',
 ];
 
 export const buildMediaItemReadRepository = ({
@@ -67,11 +67,11 @@ export const buildMediaItemReadRepository = ({
   }): Promise<MediaItemRow[]> => {
     const rows = await database<MediaItemRow>('mediaItem')
       .where({ ownerId: viewerId })
-      .orderBy(`media_item.${collectionInfo.sortBy.column}`, collectionInfo.sortDir.value)
-      .orderBy('media_item.id', 'asc') // tie-breaker
+      .orderBy(collectionInfo.sortBy.column, collectionInfo.sortDir.value)
+      .orderBy('id', 'asc') // tie-breaker
+      .select<MediaItemRow[]>(...mediaItemRowFields)
       .limit(collectionInfo.pageInfo.limit + 1)
-      .offset(collectionInfo.pageInfo.offset)
-      .select<MediaItemRow[]>(...mediaItemRowFields);
+      .offset(collectionInfo.pageInfo.offset);
     return rows;
   },
 });

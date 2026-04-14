@@ -9,7 +9,7 @@ export * from './Album/AlbumItem';
 export * from './Album/AlbumMember';
 export * from './Comment/Comment';
 export * from './Entity';
-export * from './MediaAsset/MediaAsset';
+export * from './MediaItem/MediaAsset';
 export * from './MediaItem/MediaItem';
 export * from './MediaProcessingJob/MediaProcessingJobRepository';
 export * from './MediaProcessingJob/mediaProcessingJobStatus';

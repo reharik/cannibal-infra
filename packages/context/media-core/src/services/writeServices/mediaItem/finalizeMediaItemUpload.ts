@@ -2,7 +2,6 @@ import { AppErrorCollection, MediaAssetKind, MediaKind } from '@packages/contrac
 import { buildMediaAssetStorageKey, MediaStorage } from '../../../application/media/MediaStorage';
 import type { MediaProcessingJobRepository } from '../../../domain/MediaProcessingJob/MediaProcessingJobRepository';
 import { fail, ok } from '../../../domain/utilities/writeResponse';
-import { MediaAssetRepository } from '../../../repositories/domainRepositories/mediaAssetRepository';
 import { MediaItemRepository } from '../../../repositories/domainRepositories/mediaItemRepository';
 import type { WriteResult } from '../../../types/types';
 import { WriteServiceBase } from '../writeServiceBaseType';
@@ -17,14 +16,12 @@ export interface FinalizeMediaItemUpload extends WriteServiceBase {
 
 type FinalizeMediaItemUploadDeps = {
   mediaItemRepository: MediaItemRepository;
-  mediaAssetRepository: MediaAssetRepository;
   mediaStorage: MediaStorage;
   mediaProcessingJobRepository: MediaProcessingJobRepository;
 };
 
 export const buildFinalizeMediaItemUpload = ({
   mediaItemRepository,
-  mediaAssetRepository,
   mediaStorage,
   mediaProcessingJobRepository,
 }: FinalizeMediaItemUploadDeps): FinalizeMediaItemUpload => {
@@ -39,10 +36,7 @@ export const buildFinalizeMediaItemUpload = ({
     if (mediaItem.ownerId() !== viewerId) {
       return fail(AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer);
     }
-    const uploadAsset = await mediaAssetRepository.getFirstByMediaItemId(mediaItemId);
-    if (!uploadAsset) {
-      return fail(AppErrorCollection.mediaItem.MediaBytesNotFound);
-    }
+
     const originalAssetStorageKey = buildMediaAssetStorageKey(
       mediaItem.storageKey(),
       MediaAssetKind.original,
@@ -52,13 +46,14 @@ export const buildFinalizeMediaItemUpload = ({
       return fail(AppErrorCollection.mediaItem.MediaBytesNotFound);
     }
 
-    uploadAsset.applyUploadedObjectMetadata(
-      {
-        sizeBytes: objectMetadata.size,
-        mimeType: objectMetadata.mimeType,
-      },
-      viewerId,
-    );
+    const result = mediaItem.updateAssetWithMetadata({
+      kind: MediaAssetKind.original,
+      sizeBytes: objectMetadata.size,
+      mimeType: objectMetadata.mimeType,
+    });
+    if (!result.success) {
+      return result;
+    }
 
     const finalized = mediaItem.completeUploadedWithMetadata(
       {
@@ -70,7 +65,7 @@ export const buildFinalizeMediaItemUpload = ({
     if (!finalized.success) {
       return finalized;
     }
-    await mediaAssetRepository.save(uploadAsset);
+
     await mediaItemRepository.save(mediaItem);
 
     if (mediaItem.kind() === MediaKind.photo) {

@@ -62,6 +62,7 @@ services:
       - /app/apps/media-worker/node_modules
       - ./packages:/app/packages
       - ~/.aws:/root/.aws:ro
+    command: ['sh', '-c', 'sh apps/media-worker/src/scripts/serverStartUpDev.sh']
 
   db:
     # Replace default 5432:5432 so we don't conflict with another Postgres (e.g. network app)

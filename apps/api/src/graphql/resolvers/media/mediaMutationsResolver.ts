@@ -50,6 +50,21 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
         errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
+    deleteMediaItem: authenticatedResolver(async (_parent, args, ctx) => {
+      const result = await ctx.writeServices.deleteMediaItem({
+        viewerId: ctx.viewer.id,
+        mediaItemId: args.input.mediaItemId,
+      });
+
+      return {
+        data: result.success
+          ? {
+              mediaItemId: result.value.mediaItemId,
+            }
+          : undefined,
+        errors: result.success ? [] : [toContractErrorPayload(result.error)],
+      };
+    }),
   },
 };
 

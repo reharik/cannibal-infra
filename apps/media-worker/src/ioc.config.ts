@@ -37,9 +37,6 @@ export default defineIocConfig({
     MediaAssetReadRepository: {
       mediaAssetReadRepository: { lifetime: 'scoped' },
     },
-    MediaAssetRepository: {
-      mediaAssetRepository: { lifetime: 'scoped' },
-    },
     MediaProcessingJobRepository: {
       mediaProcessingJobRepository: { lifetime: 'scoped' },
     },

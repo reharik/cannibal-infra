@@ -7,7 +7,6 @@ import type { ActorId, EntityId } from '../../types/types';
 import { Entity, type EntityAuditRecord } from '../Entity';
 
 export type MediaAssetProps = {
-  mediaItemId: EntityId;
   kind: MediaAssetKind;
   mimeType: string;
   width?: number;
@@ -18,7 +17,6 @@ export type MediaAssetProps = {
 
 export type MediaAssetRecord = {
   id: EntityId;
-  mediaItemId: EntityId;
   kind: MediaAssetKind;
   mimeType: string;
   width?: number;
@@ -28,7 +26,6 @@ export type MediaAssetRecord = {
 } & EntityAuditRecord;
 
 export type CreateMediaAssetInput = {
-  mediaItemId: EntityId;
   kind: MediaAssetKind;
   mimeType: string;
 };
@@ -43,7 +40,6 @@ export class MediaAsset extends Entity<MediaAssetRecord> {
 
   static create(input: CreateMediaAssetInput, actorId: ActorId): MediaAsset {
     return new MediaAsset(crypto.randomUUID(), actorId, {
-      mediaItemId: input.mediaItemId,
       kind: input.kind,
       mimeType: input.mimeType,
       status: MediaAssetStatus.pending,
@@ -52,7 +48,6 @@ export class MediaAsset extends Entity<MediaAssetRecord> {
 
   static rehydrate(record: MediaAssetRecord): MediaAsset {
     const asset = new MediaAsset(record.id, record.createdBy, {
-      mediaItemId: record.mediaItemId,
       kind: record.kind,
       mimeType: record.mimeType,
       width: record.width,
@@ -62,10 +57,6 @@ export class MediaAsset extends Entity<MediaAssetRecord> {
     });
     asset.rehydrateAudit(record);
     return asset;
-  }
-
-  mediaItemId(): EntityId {
-    return this.props.mediaItemId;
   }
 
   status(): MediaAssetStatus {

@@ -12,6 +12,20 @@ type Viewer {
   album(id: ID!): Album
   mediaItem(id: ID!): MediaItem
   mediaItems(input: ViewerMediaItemsInput!): MediaItemCollectionPayload!
+  deleteAlbum(input: DeleteAlbumInput!): DeleteAlbumResponse!
+}
+
+type DeleteAlbumResponse {
+  data: DeleteAlbumPayload
+  errors: [ContractError!]
+}
+
+type DeleteAlbumPayload {
+  albumId: ID!
+}
+
+input DeleteAlbumInput {
+  albumId: ID!
 }
 
 input ViewerAlbumsInput {

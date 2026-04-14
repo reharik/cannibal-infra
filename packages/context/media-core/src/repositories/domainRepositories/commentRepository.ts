@@ -3,11 +3,12 @@ import { withEnumRevival } from '@reharik/smart-enum-knex';
 import type { Knex } from 'knex';
 import type { CommentRecord } from '../../domain/Comment/Comment';
 import { Comment } from '../../domain/Comment/Comment';
+import { RepoOptions, runInTransaction } from '../../infrastructure/repositories/runInTransaction';
 import type { EntityId } from '../../types/types';
 
 export type CommentRepository = {
   getById: (id: EntityId) => Promise<Comment | undefined>;
-  save: (comment: Comment, resourceId: EntityId) => Promise<void>;
+  save: (comment: Comment, resourceId: EntityId, options?: RepoOptions) => Promise<void>;
 };
 
 type CommentRepositoryDeps = { database: Knex };
@@ -27,11 +28,15 @@ export const buildCommentRepository = ({ database }: CommentRepositoryDeps): Com
     return Comment.rehydrate(commentRow);
   };
 
-  const save = async (comment: Comment, resourceId: EntityId): Promise<void> => {
-    const record = comment.toPersistence();
-    const row = { ...record, resourceId };
+  const save = async (
+    comment: Comment,
+    resourceId: EntityId,
+    options?: RepoOptions,
+  ): Promise<void> => {
+    await runInTransaction(database, options, async (trx) => {
+      const record = comment.toPersistence();
+      const row = { ...record, resourceId };
 
-    await database.transaction(async (trx: Knex.Transaction) => {
       const existing = await trx<CommentRecord>('comment').where({ id: record.id }).first();
 
       if (existing) {

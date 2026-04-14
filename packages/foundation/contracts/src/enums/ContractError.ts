@@ -7,13 +7,63 @@ export type ErrorArea = Enumeration<typeof ErrorArea>;
 export const ErrorArea = enumeration<typeof errorAreaInput>('ErrorArea', {
   input: errorAreaInput,
 });
-
+// @blocksort asc
 const contractErrorInput = {
+  AlbumNotFound: {
+    code: 'ALBUM_NOT_FOUND',
+    display: 'Album not found',
+    category: ErrorCategory.domain,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  AlbumSetCoverForbidden: {
+    code: 'ALBUM_SET_COVER_FORBIDDEN',
+    display: 'Album set cover forbidden',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  AlbumViewForbidden: {
+    code: 'ALBUM_VIEW_FORBIDDEN',
+    display: 'Album view forbidden',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  AssetKindAlreadyExists: {
+    code: 'ASSET_KIND_ALREADY_EXISTS',
+    display: 'Asset kind already exists',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: false,
+  },
+  AssetNotFound: {
+    code: 'ASSET_NOT_FOUND',
+    display: 'Asset not found',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: false,
+  },
+  AssetNotPending: {
+    code: 'ASSET_NOT_PENDING',
+    display: 'Asset is not pending',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: false,
+  },
   CoverMediaNotPartOfAlbum: {
     code: 'ALBUM_COVER_MEDIA_NOT_PART_OF_ALBUM',
     display: 'Cover media not part of album',
     category: ErrorCategory.domain,
     area: ErrorArea.album,
+    retryable: false,
+  },
+
+  InvalidMediaDimensions: {
+    code: 'MEDIA_ITEM_INVALID_DIMENSIONS',
+    display: 'Media dimensions must be positive integers',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
     retryable: false,
   },
   MediaAlreadyInAlbum: {
@@ -23,55 +73,19 @@ const contractErrorInput = {
     area: ErrorArea.album,
     retryable: false,
   },
-  UserAlreadyMember: {
-    code: 'ALBUM_USER_ALREADY_MEMBER',
-    display: 'User already member',
-    category: ErrorCategory.domain,
-    area: ErrorArea.album,
-    retryable: false,
-  },
-  AlbumNotFound: {
-    code: 'ALBUM_NOT_FOUND',
-    display: 'Album not found',
-    category: ErrorCategory.domain,
-    area: ErrorArea.album,
-    retryable: false,
-  },
-  UserIsNotMember: {
-    code: 'USER_IS_NOT_MEMBER',
-    display: 'User is not member',
-    category: ErrorCategory.auth,
-    area: ErrorArea.album,
-    retryable: false,
-  },
-  MemberNotAllowedToAddItem: {
-    code: 'MEMBER_NOT_ALLOWED_TO_ADD_ITEM',
-    display: 'Member not allowed to add item',
-    category: ErrorCategory.auth,
-    area: ErrorArea.album,
-    retryable: false,
-  },
-  UserCanNotCreateAlbum: {
-    code: 'USER_CAN_NOT_CREATE_ALBUM',
-    display: 'User can not create album',
-    category: ErrorCategory.auth,
-    area: ErrorArea.album,
-    retryable: false,
-  },
-
-  StatusNotPending: {
-    code: 'MEDIA_ITEM_STATUS_NOT_PENDING',
-    display: 'Media item status is not pending',
+  MediaBytesNotFound: {
+    code: 'MEDIA_BYTES_NOT_FOUND',
+    display: 'Media bytes not found',
     category: ErrorCategory.domain,
     area: ErrorArea.mediaItem,
     retryable: false,
   },
-  StatusNotUploaded: {
-    code: 'MEDIA_ITEM_STATUS_NOT_UPLOADED',
-    display: 'Media item is not awaiting derivative processing',
+  MediaDimensionsNotAvailable: {
+    code: 'MEDIA_DIMENSIONS_NOT_AVAILABLE',
+    display: 'Could not read media width and height from the uploaded file',
     category: ErrorCategory.domain,
     area: ErrorArea.mediaItem,
-    retryable: false,
+    retryable: true,
   },
   MediaItemNotFound: {
     code: 'MEDIA_ITEM_NOT_FOUND',
@@ -80,11 +94,11 @@ const contractErrorInput = {
     area: ErrorArea.mediaItem,
     retryable: false,
   },
-  MediaBytesNotFound: {
-    code: 'MEDIA_BYTES_NOT_FOUND',
-    display: 'Media bytes not found',
+  MediaItemNotInAlbum: {
+    code: 'MEDIA_ITEM_NOT_IN_ALBUM',
+    display: 'Media item not in album',
     category: ErrorCategory.domain,
-    area: ErrorArea.mediaItem,
+    area: ErrorArea.album,
     retryable: false,
   },
   MediaItemNotOwnedByViewer: {
@@ -101,22 +115,70 @@ const contractErrorInput = {
     area: ErrorArea.mediaItem,
     retryable: false,
   },
-  MediaDimensionsNotAvailable: {
-    code: 'MEDIA_DIMENSIONS_NOT_AVAILABLE',
-    display: 'Could not read media width and height from the uploaded file',
-    category: ErrorCategory.domain,
-    area: ErrorArea.mediaItem,
-    retryable: true,
+  MemberNotAllowedToAddItem: {
+    code: 'MEMBER_NOT_ALLOWED_TO_ADD_ITEM',
+    display: 'Member not allowed to add item',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
   },
-  InvalidMediaDimensions: {
-    code: 'MEDIA_ITEM_INVALID_DIMENSIONS',
-    display: 'Media dimensions must be positive integers',
+  MemberNotAllowedToDeleteAlbum: {
+    code: 'MEMBER_NOT_ALLOWED_TO_DELETE_ALBUM',
+    display: 'Member not allowed to delete album',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  MemberNotAllowedToDeleteItem: {
+    code: 'MEMBER_NOT_ALLOWED_TO_DELETE_ITEM',
+    display: 'Member not allowed to delete item',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  MemberNotAllowedToEditAlbum: {
+    code: 'MEMBER_NOT_ALLOWED_TO_EDIT_ALBUM',
+    display: 'Member not allowed to edit album',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  StatusNotPending: {
+    code: 'MEDIA_ITEM_STATUS_NOT_PENDING',
+    display: 'Media item status is not pending',
     category: ErrorCategory.domain,
     area: ErrorArea.mediaItem,
     retryable: false,
   },
+  StatusNotUploaded: {
+    code: 'MEDIA_ITEM_STATUS_NOT_UPLOADED',
+    display: 'Media item is not awaiting derivative processing',
+    category: ErrorCategory.domain,
+    area: ErrorArea.mediaItem,
+    retryable: false,
+  },
+  UserAlreadyMember: {
+    code: 'ALBUM_USER_ALREADY_MEMBER',
+    display: 'User already member',
+    category: ErrorCategory.domain,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  UserCanNotCreateAlbum: {
+    code: 'USER_CAN_NOT_CREATE_ALBUM',
+    display: 'User can not create album',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
+  UserIsNotMember: {
+    code: 'USER_IS_NOT_MEMBER',
+    display: 'User is not member',
+    category: ErrorCategory.auth,
+    area: ErrorArea.album,
+    retryable: false,
+  },
 } as const;
-
 export type ContractError = Enumeration<typeof ContractError>;
 export const ContractError = enumeration<typeof contractErrorInput>('ContractError', {
   input: contractErrorInput,

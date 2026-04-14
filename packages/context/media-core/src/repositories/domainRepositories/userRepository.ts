@@ -1,11 +1,12 @@
 import type { Knex } from 'knex';
 import type { UserRecord } from '../../domain/User/User';
 import { User } from '../../domain/User/User';
+import { RepoOptions, runInTransaction } from '../../infrastructure/repositories/runInTransaction';
 import type { EntityId } from '../../types/types';
 
 export type UserRepository = {
   getById: (id: EntityId) => Promise<User | undefined>;
-  save: (user: User) => Promise<void>;
+  save: (user: User, options?: RepoOptions) => Promise<void>;
 };
 
 type UserRepositoryDeps = { database: Knex };
@@ -21,16 +22,18 @@ export const buildUserRepository = ({ database }: UserRepositoryDeps): UserRepos
     return User.rehydrate(userRow);
   };
 
-  const save = async (user: User): Promise<void> => {
-    const record = user.toPersistence();
+  const save = async (user: User, options?: RepoOptions): Promise<void> => {
+    await runInTransaction(database, options, async (trx) => {
+      const record = user.toPersistence();
 
-    const existing = await database<UserRecord>('user').where({ id: record.id }).first();
+      const existing = await trx<UserRecord>('user').where({ id: record.id }).first();
 
-    if (existing) {
-      await database<UserRecord>('user').where({ id: record.id }).update(record);
-    } else {
-      await database<UserRecord>('user').insert(record);
-    }
+      if (existing) {
+        await trx<UserRecord>('user').where({ id: record.id }).update(record);
+      } else {
+        await trx<UserRecord>('user').insert(record);
+      }
+    });
   };
 
   return {

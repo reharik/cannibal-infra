@@ -9,14 +9,18 @@ import type {
   CommentRepository,
   CreateAlbum,
   CreateMediaUpload,
+  DeleteAlbum,
+  DeleteAlbumItem,
+  DeleteMediaItem,
   FinalizeMediaItemUpload,
   MediaAssetReadRepository,
-  MediaAssetRepository,
   MediaItemReadRepository,
   MediaItemRepository,
   MediaStorage,
   NotificationRepository,
+  SetCoverMedia,
   ShareLinkRepository,
+  UnsetCoverMedia,
   UserRepository,
   ViewerAlbumReadServiceFactory,
   ViewerMediaItemReadServiceFactory,
@@ -36,12 +40,14 @@ export interface IocGeneratedTypes {
   config: Config;
   createAlbum: CreateAlbum;
   createMediaUpload: CreateMediaUpload;
+  deleteAlbum: DeleteAlbum;
+  deleteAlbumItem: DeleteAlbumItem;
+  deleteMediaItem: DeleteMediaItem;
   finalizeMediaItemUpload: FinalizeMediaItemUpload;
   database: Knex;
   knexConfig: KnexConfig;
   logger: Logger;
   mediaAssetReadRepository: MediaAssetReadRepository;
-  mediaAssetRepository: MediaAssetRepository;
   mediaItemReadRepository: MediaItemReadRepository;
   mediaItemRepository: MediaItemRepository;
   mediaProcessingJobRepository: MediaProcessingJobRepository;
@@ -49,7 +55,9 @@ export interface IocGeneratedTypes {
   notificationRepository: NotificationRepository;
   processNextMediaImageJob: ProcessNextMediaImageJob;
   runMediaWorkerLoop: RunMediaWorkerLoop;
+  setCoverMedia: SetCoverMedia;
   shareLinkRepository: ShareLinkRepository;
+  unsetCoverMedia: UnsetCoverMedia;
   userRepository: UserRepository;
   viewerAlbumReadServiceFactory: ViewerAlbumReadServiceFactory;
   viewerMediaItemReadServiceFactory: ViewerMediaItemReadServiceFactory;
@@ -61,7 +69,12 @@ export interface IocGeneratedTypes {
     addAlbumItem: AddAlbumItem;
     createAlbum: CreateAlbum;
     createMediaUpload: CreateMediaUpload;
+    deleteAlbum: DeleteAlbum;
+    deleteAlbumItem: DeleteAlbumItem;
+    deleteMediaItem: DeleteMediaItem;
     finalizeMediaItemUpload: FinalizeMediaItemUpload;
+    setCoverMedia: SetCoverMedia;
+    unsetCoverMedia: UnsetCoverMedia;
   };
 }
 

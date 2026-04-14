@@ -1,6 +1,7 @@
 type Mutation {
   createMediaUpload(input: CreateMediaUploadInput!): CreateMediaUploadResponse!
   finalizeMediaUpload(input: FinalizeMediaUploadInput!): FinalizeMediaUploadResponse!
+  deleteMediaItem(input: DeleteMediaItemInput!): DeleteMediaItemResponse!
 }
 
 input CreateMediaUploadInput {
@@ -9,15 +10,28 @@ input CreateMediaUploadInput {
   originalFileName: String
 }
 
+type UploadHeader {
+  key: String!
+  value: String!
+}
+
 type UploadInstructions {
   method: String!
   url: String!
   headers: [UploadHeader!]!
 }
 
-type UploadHeader {
-  key: String!
-  value: String!
+input DeleteMediaItemInput {
+  mediaItemId: ID!
+}
+
+type DeleteMediaItemResponse {
+  data: DeleteMediaItemPayload
+  errors: [ContractError!]
+}
+
+type DeleteMediaItemPayload {
+  mediaItemId: ID!
 }
 
 type CreateMediaUploadResponse {

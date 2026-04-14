@@ -34,21 +34,6 @@ describe('MediaItem (domain)', () => {
     });
   });
 
-  describe('When completeReadyWithMetadata is called from pending with dimensions', () => {
-    it('should transition to ready', () => {
-      const ownerId = TEST_USER_A_ID;
-      const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
-      const result = item.completeReadyWithMetadata(
-        { sizeBytes: 100, width: 800, height: 600 },
-        ownerId,
-      );
-      expect(result.success).toBe(true);
-      expect(item.status()).toBe(MediaItemStatus.ready);
-      expect(item.width()).toBe(800);
-      expect(item.height()).toBe(600);
-    });
-  });
-
   describe('When markReadyAfterDerivatives is called from uploaded with display dimensions', () => {
     it('should transition to ready and set width and height from the display derivative', () => {
       const ownerId = TEST_USER_A_ID;
@@ -79,16 +64,18 @@ describe('MediaItem (domain)', () => {
     });
   });
 
-  describe('When completeReadyWithMetadata is called but the item is already ready', () => {
+  describe('When markReadyAfterDerivatives is called again after the item is already ready', () => {
     it('should fail with status not pending', () => {
       const ownerId = TEST_USER_A_ID;
       const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
-      item.completeReadyWithMetadata({ sizeBytes: 1, width: 1, height: 1 }, ownerId);
-      const result = item.completeReadyWithMetadata({ sizeBytes: 1, width: 2, height: 2 }, ownerId);
-      expect(result.success).toBe(false);
+      item.completeUploadedWithMetadata({ sizeBytes: 1, mimeType: 'image/jpeg' }, ownerId);
+      const first = item.markReadyAfterDerivatives({ displayWidth: 10, displayHeight: 10 }, ownerId);
+      expect(first.success).toBe(true);
+      const second = item.markReadyAfterDerivatives({ displayWidth: 20, displayHeight: 20 }, ownerId);
+      expect(second.success).toBe(false);
       let code = '';
-      if (!result.success) {
-        code = result.error.code;
+      if (!second.success) {
+        code = second.error.code;
       }
       expect(code).toBe(AppErrorCollection.mediaItem.StatusNotPending.code);
     });

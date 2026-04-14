@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import type { AwilixContainer } from 'awilix';
 
 import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
@@ -9,6 +10,26 @@ import { TEST_VIEWER_1_ID } from './testViewerIds';
 
 /** Masked generic errors vs explicit auth errors (resolver / gateway behavior may differ). */
 const authRequiredMutationErrorMessages = ['Unexpected error.', 'Not authenticated'];
+
+const expectGraphQLMutationRejectedForAuth = (
+  json: { data?: unknown; errors?: Array<{ message?: string }> },
+  fieldName: 'createMediaUpload' | 'finalizeMediaUpload',
+): void => {
+  expect(
+    json.errors?.some((e) =>
+      authRequiredMutationErrorMessages.some((m) => m === e.message),
+    ),
+  ).toBe(true);
+
+  if (json.data === null || json.data === undefined) {
+    return;
+  }
+  expect(json.data).toEqual(
+    expect.objectContaining({
+      [fieldName]: null,
+    }),
+  );
+};
 
 describe('GraphQL', () => {
   let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
@@ -80,8 +101,11 @@ describe('GraphQL', () => {
   describe('createMediaUpload mutation', () => {
     describe('when executing while logged out', () => {
       it('should return an authentication error', async () => {
-        const { response, json } = await executeGraphQL({
-          query: `
+        /** Yoga logs resolver throws to console.error; we expect auth failure — keep output readable. */
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+          const { response, json } = await executeGraphQL({
+            query: `
             mutation {
               createMediaUpload(
                 input: { kind: PHOTO, mimeType: "image/jpeg" }
@@ -101,15 +125,15 @@ describe('GraphQL', () => {
               }
             }
           `,
-          context: {
-            isLoggedIn: false,
-          },
-        });
-        expect(response.status).toBe(200);
-        expect(json.data).toBeNull();
-        expect(authRequiredMutationErrorMessages.some((m) => m === json.errors?.[0]?.message)).toBe(
-          true,
-        );
+            context: {
+              isLoggedIn: false,
+            },
+          });
+          expect(response.status).toBe(200);
+          expectGraphQLMutationRejectedForAuth(json, 'createMediaUpload');
+        } finally {
+          consoleErrorSpy.mockRestore();
+        }
       });
     });
   });
@@ -117,8 +141,10 @@ describe('GraphQL', () => {
   describe('finalizeMediaUpload mutation', () => {
     describe('when executing while logged out', () => {
       it('should return an authentication error', async () => {
-        const { response, json } = await executeGraphQL({
-          query: `
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+          const { response, json } = await executeGraphQL({
+            query: `
             mutation {
               finalizeMediaUpload(input: { mediaItemId: "media-1" }) {
                 data {
@@ -134,16 +160,16 @@ describe('GraphQL', () => {
               }
             }
           `,
-          context: {
-            isLoggedIn: false,
-          },
-        });
+            context: {
+              isLoggedIn: false,
+            },
+          });
 
-        expect(response.status).toBe(200);
-        expect(json.data).toBeNull();
-        expect(authRequiredMutationErrorMessages.some((m) => m === json.errors?.[0]?.message)).toBe(
-          true,
-        );
+          expect(response.status).toBe(200);
+          expectGraphQLMutationRejectedForAuth(json, 'finalizeMediaUpload');
+        } finally {
+          consoleErrorSpy.mockRestore();
+        }
       });
     });
   });

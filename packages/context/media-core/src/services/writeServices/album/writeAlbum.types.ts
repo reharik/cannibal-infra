@@ -20,3 +20,43 @@ export type AddAlbumItemResult = {
   albumId: EntityId;
   albumItemId: EntityId;
 };
+
+export type DeleteAlbumItemCommand = {
+  viewerId: EntityId;
+  albumId: EntityId;
+  mediaItemId: EntityId;
+};
+
+export type DeleteAlbumItemResult = {
+  albumId: EntityId;
+  mediaItemId: EntityId;
+};
+
+export type DeleteAlbumCommand = {
+  viewerId: EntityId;
+  albumId: EntityId;
+};
+
+export type DeleteAlbumResult = {
+  albumId: EntityId;
+};
+
+export type SetCoverMediaCommand = {
+  viewerId: EntityId;
+  albumId: EntityId;
+  mediaItemId: EntityId;
+};
+
+export type SetCoverMediaResult = {
+  albumId: EntityId;
+  mediaCoverId: EntityId;
+};
+
+export type UnsetCoverMediaCommand = {
+  viewerId: EntityId;
+  albumId: EntityId;
+};
+
+export type UnsetCoverMediaResult = {
+  albumId: EntityId;
+};

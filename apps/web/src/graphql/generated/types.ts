@@ -132,6 +132,53 @@ export type CreateMediaUploadResponse = {
   errors?: Maybe<Array<ContractError>>;
 };
 
+export type DeleteAlbumInput = {
+  albumId: Scalars['ID']['input'];
+};
+
+export type DeleteAlbumItemFromAlbumInput = {
+  albumId: Scalars['ID']['input'];
+  mediaItemId: Scalars['ID']['input'];
+};
+
+export type DeleteAlbumItemFromAlbumPayload = {
+  __typename?: 'DeleteAlbumItemFromAlbumPayload';
+  albumId: Scalars['ID']['output'];
+  mediaItemId: Scalars['ID']['output'];
+};
+
+export type DeleteAlbumItemFromAlbumResponse = {
+  __typename?: 'DeleteAlbumItemFromAlbumResponse';
+  data?: Maybe<DeleteAlbumItemFromAlbumPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
+export type DeleteAlbumPayload = {
+  __typename?: 'DeleteAlbumPayload';
+  albumId: Scalars['ID']['output'];
+};
+
+export type DeleteAlbumResponse = {
+  __typename?: 'DeleteAlbumResponse';
+  data?: Maybe<DeleteAlbumPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
+export type DeleteMediaItemInput = {
+  mediaItemId: Scalars['ID']['input'];
+};
+
+export type DeleteMediaItemPayload = {
+  __typename?: 'DeleteMediaItemPayload';
+  mediaItemId: Scalars['ID']['output'];
+};
+
+export type DeleteMediaItemResponse = {
+  __typename?: 'DeleteMediaItemResponse';
+  data?: Maybe<DeleteMediaItemPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
 /** Optional metadata on enum values for SmartEnum / codegen (e.g. DB column names). */
 export type EnumMetaPropInput = {
   name: Scalars['String']['input'];
@@ -243,14 +290,34 @@ export type MediaKind =
 export type Mutation = {
   __typename?: 'Mutation';
   AddMediaItemToAlbum: AddMediaItemToAlbumResponse;
+  DeleteAlbumItemFromAlbum: DeleteAlbumItemFromAlbumResponse;
+  SetCoverMedia: SetCoverMediaResponse;
+  UnsetCoverMedia: UnsetCoverMediaResponse;
   createAlbum: CreateAlbumResponse;
   createMediaUpload: CreateMediaUploadResponse;
+  deleteAlbum: DeleteAlbumResponse;
+  deleteMediaItem: DeleteMediaItemResponse;
   finalizeMediaUpload: FinalizeMediaUploadResponse;
 };
 
 
 export type MutationAddMediaItemToAlbumArgs = {
   input: AddMediaItemToAlbumInput;
+};
+
+
+export type MutationDeleteAlbumItemFromAlbumArgs = {
+  input: DeleteAlbumItemFromAlbumInput;
+};
+
+
+export type MutationSetCoverMediaArgs = {
+  input: SetCoverMediaInput;
+};
+
+
+export type MutationUnsetCoverMediaArgs = {
+  input: UnsetCoverMediaInput;
 };
 
 
@@ -261,6 +328,16 @@ export type MutationCreateAlbumArgs = {
 
 export type MutationCreateMediaUploadArgs = {
   input: CreateMediaUploadInput;
+};
+
+
+export type MutationDeleteAlbumArgs = {
+  input: DeleteAlbumInput;
+};
+
+
+export type MutationDeleteMediaItemArgs = {
+  input: DeleteMediaItemInput;
 };
 
 
@@ -295,6 +372,23 @@ export type Query = {
 
 export type QueryShareLinkArgs = {
   token: Scalars['String']['input'];
+};
+
+export type SetCoverMediaInput = {
+  albumId: Scalars['ID']['input'];
+  mediaItemId: Scalars['ID']['input'];
+};
+
+export type SetCoverMediaPayload = {
+  __typename?: 'SetCoverMediaPayload';
+  albumId: Scalars['ID']['output'];
+  mediaCoverId: Scalars['ID']['output'];
+};
+
+export type SetCoverMediaResponse = {
+  __typename?: 'SetCoverMediaResponse';
+  data?: Maybe<SetCoverMediaPayload>;
+  errors?: Maybe<Array<ContractError>>;
 };
 
 export type ShareLinkAccess = {
@@ -349,6 +443,21 @@ export type SortDir =
   | 'ASC'
   | 'DESC';
 
+export type UnsetCoverMediaInput = {
+  albumId: Scalars['ID']['input'];
+};
+
+export type UnsetCoverMediaPayload = {
+  __typename?: 'UnsetCoverMediaPayload';
+  albumId: Scalars['ID']['output'];
+};
+
+export type UnsetCoverMediaResponse = {
+  __typename?: 'UnsetCoverMediaResponse';
+  data?: Maybe<UnsetCoverMediaPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
 export type UploadHeader = {
   __typename?: 'UploadHeader';
   key: Scalars['String']['output'];
@@ -366,6 +475,7 @@ export type Viewer = {
   __typename?: 'Viewer';
   album?: Maybe<Album>;
   albums: AlbumCollectionPayload;
+  deleteAlbum: DeleteAlbumResponse;
   displayName: Scalars['String']['output'];
   firstName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -382,6 +492,11 @@ export type ViewerAlbumArgs = {
 
 export type ViewerAlbumsArgs = {
   input: ViewerAlbumsInput;
+};
+
+
+export type ViewerDeleteAlbumArgs = {
+  input: DeleteAlbumInput;
 };
 
 

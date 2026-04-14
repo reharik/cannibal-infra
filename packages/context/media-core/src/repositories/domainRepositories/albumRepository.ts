@@ -4,12 +4,14 @@ import type { Knex } from 'knex';
 import { Album, type AlbumRecord } from '../../domain/Album/Album';
 import type { AlbumItemRecord } from '../../domain/Album/AlbumItem';
 import type { AlbumMemberRecord } from '../../domain/Album/AlbumMember';
+import { diffCollectionById } from '../../infrastructure/repositories/diffCollectionById';
+import { RepoOptions, runInTransaction } from '../../infrastructure/repositories/runInTransaction';
 import { EntityId } from '../../types/types';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type AlbumRepository = {
   getById: (id: EntityId) => Promise<Album | undefined>;
-  save: (album: Album) => Promise<void>;
+  save: (album: Album, options?: RepoOptions) => Promise<void>;
+  delete: (album: Album, options?: RepoOptions) => Promise<void>;
 };
 
 type AlbumRepositoryDeps = {
@@ -40,32 +42,26 @@ export const buildAlbumRepository = ({ database }: AlbumRepositoryDeps): AlbumRe
     return Album.rehydrate(albumRow);
   };
 
-  const save = async (album: Album): Promise<void> => {
-    const record = album.toPersistence();
-    const { items, members, ...albumRow } = record;
+  const save = async (album: Album, options?: RepoOptions): Promise<void> => {
+    await runInTransaction(database, options, async (db) => {
+      const record = album.toPersistence();
+      const { items, members, ...albumRow } = record;
 
-    await database.transaction(async (trx: Knex.Transaction) => {
-      const existing = await trx<AlbumRecord>('album').where({ id: record.id }).first();
-
+      const existing = await db<AlbumRecord>('album').where({ id: record.id }).first();
+      if (!record.coverMediaId && existing?.coverMediaId) {
+        albumRow.coverMediaId = null;
+      }
       if (existing) {
-        await trx<AlbumRecord>('album').where({ id: record.id }).update(albumRow);
+        await db<AlbumRecord>('album').where({ id: record.id }).update(albumRow);
       } else {
-        await trx<AlbumRecord>('album').insert(albumRow);
+        await db<AlbumRecord>('album').insert(albumRow);
       }
 
-      await trx<AlbumItemRecord>('albumItem').where({ albumId: record.id }).delete();
-      if (items.length > 0) {
-        await trx<AlbumItemRecord>('albumItem').insert(
-          items.map((item) => ({
-            ...item,
-            albumId: record.id,
-          })),
-        );
-      }
+      await persistAlbumItems(db, record, items);
 
-      await trx<AlbumMemberRecord>('albumMember').where({ albumId: record.id }).delete();
+      await db<AlbumMemberRecord>('albumMember').where({ albumId: record.id }).delete();
       if (members.length > 0) {
-        await trx<AlbumMemberRecord>('albumMember').insert(
+        await db<AlbumMemberRecord>('albumMember').insert(
           members.map((member) => ({
             ...member,
             albumId: record.id,
@@ -75,8 +71,51 @@ export const buildAlbumRepository = ({ database }: AlbumRepositoryDeps): AlbumRe
     });
   };
 
+  const deleteAlbum = async (album: Album, options?: RepoOptions): Promise<void> => {
+    await runInTransaction(database, options, async (db) => {
+      await db<AlbumRecord>('album').where({ id: album.id() }).delete();
+    });
+  };
+
   return {
     getById,
     save,
+    delete: deleteAlbum,
   };
+};
+
+const persistAlbumItems = async (
+  trx: Knex | Knex.Transaction,
+  record: AlbumRecord,
+  items: AlbumItemRecord[],
+) => {
+  const existingItems = await trx<AlbumItemRecord>('albumItem').where({ albumId: record.id });
+  const { toInsert, toDelete /* toUpdate */ } = diffCollectionById(existingItems, items, {
+    hasMeaningfulChanges: (existing, item) => existing.mediaItemId !== item.mediaItemId,
+  });
+
+  if (toDelete.length > 0) {
+    await trx<AlbumItemRecord>('albumItem')
+      .whereIn(
+        'id',
+        toDelete.map((item) => item.id),
+      )
+      .delete();
+  }
+
+  if (toInsert.length > 0) {
+    await trx<AlbumItemRecord>('albumItem').insert(
+      toInsert.map((item) => ({
+        ...item,
+        albumId: record.id,
+      })),
+    );
+  }
+
+  // When we have meaningful changes, we update the item
+  // for (const { existing, item } of toUpdate) {
+  //   await trx<AlbumItemRecord>('albumItem').where({ id: existing.id }).update({
+  //     position: next.position,
+  //   });
+  // }
 };

@@ -1,6 +1,7 @@
 import {
   AppErrorCollection,
   MediaAssetKind,
+  MediaAssetStatus,
   MediaItemStatus,
   MediaKind,
 } from '@packages/contracts';
@@ -8,12 +9,11 @@ import { Readable } from 'node:stream';
 import type { MediaStorage } from '../application/media/MediaStorage';
 import { buildMediaAssetStorageKey } from '../application/media/MediaStorage';
 import { Album } from '../domain/Album/Album';
-import { MediaAsset } from '../domain/MediaAsset/MediaAsset';
 import { MediaItem } from '../domain/MediaItem/MediaItem';
+import type { MediaAssetRecord } from '../domain/MediaItem/MediaAsset';
 import type { MediaProcessingJobRepository } from '../domain/MediaProcessingJob/MediaProcessingJobRepository';
 import type { AlbumRepository } from '../repositories/domainRepositories/albumRepository';
-import type { MediaAssetRepository } from '../repositories/domainRepositories/mediaAssetRepository';
-import { MediaItemRepository } from '../repositories/domainRepositories/mediaItemRepository';
+import type { MediaItemRepository } from '../repositories/domainRepositories/mediaItemRepository';
 import type { MediaItemRow } from '../services/readServices/viewerReadServices/viewerMediaItemReadService.types';
 import { buildAddAlbumItem } from '../services/writeServices/album/addAlbumItem';
 import { buildCreateAlbum } from '../services/writeServices/album/createAlbum';
@@ -33,31 +33,14 @@ const MINIMAL_PNG_1X1 = Buffer.from([
 
 type ObjectState = { size: number; mimeType?: string; body?: Buffer };
 
-const assetCompositeKey = (mediaItemId: string, kind: MediaAssetKind): string =>
-  `${mediaItemId}:${kind.value}`;
-
-const createInMemoryMediaAssetRepository = (): MediaAssetRepository => {
-  const byKey = new Map<string, MediaAsset>();
-  return {
-    getFirstByMediaItemId: async (mediaItemId: string) => {
-      const direct = byKey.get(assetCompositeKey(mediaItemId, MediaAssetKind.original));
-      if (direct) {
-        return direct;
-      }
-      for (const asset of byKey.values()) {
-        if (asset.mediaItemId() === mediaItemId) {
-          return asset;
-        }
-      }
-      return undefined;
-    },
-    getByMediaItemIdAndKind: async (mediaItemId: string, kind: MediaAssetKind) =>
-      byKey.get(assetCompositeKey(mediaItemId, kind)),
-    save: async (asset) => {
-      byKey.set(assetCompositeKey(asset.mediaItemId(), asset.kind()), asset);
-    },
-  };
-};
+const findAssetRecord = (item: MediaItem, kind: MediaAssetKind): MediaAssetRecord | undefined =>
+  item.toPersistence().assets.find((a: MediaAssetRecord) => {
+    const k = a.kind as unknown;
+    if (typeof k === 'string') {
+      return k === kind.value;
+    }
+    return (k as { value: string }).value === kind.value;
+  });
 
 const createNoopMediaProcessingJobRepository = (): MediaProcessingJobRepository => ({
   enqueueIfNoneActive: async () => {},
@@ -81,18 +64,15 @@ const createTrackingMediaProcessingJobRepository = (): MediaProcessingJobReposit
   };
 };
 
-const createInMemoryMediaItemRepository = (
-  mediaAssetRepository: MediaAssetRepository,
-): MediaItemRepository => {
+const createInMemoryMediaItemRepository = (): MediaItemRepository => {
   const byId = new Map<string, MediaItem>();
   return {
     getById: async (id: string) => byId.get(id),
     save: async (item: MediaItem) => {
       byId.set(item.id(), item);
     },
-    saveNewWithInitialAsset: async (item, uploadAsset) => {
-      byId.set(item.id(), item);
-      await mediaAssetRepository.save(uploadAsset);
+    delete: async (item: MediaItem) => {
+      byId.delete(item.id());
     },
   };
 };
@@ -103,6 +83,9 @@ const createInMemoryAlbumRepository = (): AlbumRepository => {
     getById: async (id: string) => byId.get(id),
     save: async (album: Album) => {
       byId.set(album.id(), album);
+    },
+    delete: async (album: Album) => {
+      byId.delete(album.id());
     },
   };
 };
@@ -183,8 +166,7 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When createMediaUpload runs', () => {
     it('should persist a pending media item and return upload instructions', async () => {
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -212,13 +194,15 @@ describe('Media upload pipeline (application services)', () => {
       const persisted = stored?.toPersistence();
       expect(persisted?.originalFileName).toBe('vacation.jpg');
       expect(persisted?.title).toBeUndefined();
+      expect(findAssetRecord(stored!, MediaAssetKind.original)?.status).toBe(
+        MediaAssetStatus.pending.value,
+      );
     });
   });
 
   describe('When bytes are recorded in storage then finalize runs', () => {
     it('should transition the item to uploaded and return confirmed size and mime type', async () => {
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -226,7 +210,6 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
@@ -245,9 +228,9 @@ describe('Media upload pipeline (application services)', () => {
       if (!item) {
         return;
       }
-      const asset = await mediaAssetRepository.getFirstByMediaItemId(created.value.mediaItemId);
-      expect(asset).toBeDefined();
-      if (!asset) {
+      const originalAsset = findAssetRecord(item, MediaAssetKind.original);
+      expect(originalAsset).toBeDefined();
+      if (!originalAsset) {
         return;
       }
       mediaStorage.objects.set(
@@ -275,11 +258,11 @@ describe('Media upload pipeline (application services)', () => {
       expect(after?.status()).toBe(MediaItemStatus.uploaded);
       expect(after?.width()).toBeUndefined();
       expect(after?.height()).toBeUndefined();
+      expect(findAssetRecord(after!, MediaAssetKind.original)?.status).toBe(MediaAssetStatus.ready.value);
     });
 
     it('should enqueue a background processing job for photo media', async () => {
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const jobRepository = createTrackingMediaProcessingJobRepository();
       const createUpload = buildCreateMediaItemUpload({
@@ -288,7 +271,6 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository: jobRepository,
       } as never);
@@ -329,8 +311,7 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When finalize runs before any object exists in storage', () => {
     it('should fail and leave the media item pending', async () => {
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -338,7 +319,6 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
@@ -366,8 +346,7 @@ describe('Media upload pipeline (application services)', () => {
 
   describe('When a different viewer tries to finalize another user media', () => {
     it('should fail with not owned by viewer', async () => {
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaStorage = createTrackingMediaStorage(serverUrl);
       const createUpload = buildCreateMediaItemUpload({
         mediaItemRepository,
@@ -375,7 +354,6 @@ describe('Media upload pipeline (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
@@ -393,8 +371,8 @@ describe('Media upload pipeline (application services)', () => {
       if (!item) {
         return;
       }
-      const asset = await mediaAssetRepository.getFirstByMediaItemId(item.id());
-      if (!asset) {
+      const originalAsset = findAssetRecord(item, MediaAssetKind.original);
+      if (!originalAsset) {
         return;
       }
       mediaStorage.objects.set(
@@ -440,8 +418,7 @@ describe('Album integration (application services)', () => {
   describe('When addAlbumItem is called for pending media', () => {
     it('should fail with media not ready', async () => {
       const albumRepository = createInMemoryAlbumRepository();
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const projectionFromReadRepo = new Map<string, MediaItemRow>();
 
       const createAlbum = buildCreateAlbum({ albumRepository } as never);
@@ -495,8 +472,7 @@ describe('Album integration (application services)', () => {
   describe('When addAlbumItem is called for uploaded media', () => {
     it('should persist the album item', async () => {
       const albumRepository = createInMemoryAlbumRepository();
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const projectionFromReadRepo = new Map<string, MediaItemRow>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
@@ -513,7 +489,6 @@ describe('Album integration (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
@@ -531,8 +506,8 @@ describe('Album integration (application services)', () => {
       if (!item) {
         return;
       }
-      const asset = await mediaAssetRepository.getFirstByMediaItemId(item.id());
-      if (!asset) {
+      const originalAsset = findAssetRecord(item, MediaAssetKind.original);
+      if (!originalAsset) {
         return;
       }
       mediaStorage.objects.set(
@@ -582,8 +557,7 @@ describe('Album integration (application services)', () => {
   describe('When addAlbumItem is called twice for the same media', () => {
     it('should reject the duplicate when the aggregate disallows it', async () => {
       const albumRepository = createInMemoryAlbumRepository();
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const projectionFromReadRepo = new Map<string, MediaItemRow>();
       const mediaStorage = createTrackingMediaStorage('http://localhost:0');
 
@@ -600,7 +574,6 @@ describe('Album integration (application services)', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
       } as never);
@@ -618,8 +591,8 @@ describe('Album integration (application services)', () => {
       if (!item) {
         return;
       }
-      const asset = await mediaAssetRepository.getFirstByMediaItemId(item.id());
-      if (!asset) {
+      const originalAsset = findAssetRecord(item, MediaAssetKind.original);
+      if (!originalAsset) {
         return;
       }
       mediaStorage.objects.set(

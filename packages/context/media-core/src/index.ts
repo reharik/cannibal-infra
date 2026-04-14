@@ -6,7 +6,6 @@ export * from './application/media/resolveMediaAssetUrl';
 
 export * from './repositories/domainRepositories/albumRepository';
 export * from './repositories/domainRepositories/commentRepository';
-export * from './repositories/domainRepositories/mediaAssetRepository';
 export * from './repositories/domainRepositories/mediaItemRepository';
 export * from './repositories/domainRepositories/notificationRepository';
 export * from './repositories/domainRepositories/shareLinkRepository';
@@ -24,6 +23,8 @@ export * from './services/readServices/viewerReadServices/viewerMediaItemReadSer
 
 export * from './services/writeServices/album/addAlbumItem';
 export * from './services/writeServices/album/createAlbum';
+export * from './services/writeServices/album/deleteAlbum';
+export * from './services/writeServices/album/deleteAlbumItem';
 export * from './services/writeServices/album/writeAlbum.types';
 export * from './services/writeServices/mediaItem/createMediaItemUpload';
 export * from './services/writeServices/mediaItem/finalizeMediaItemUpload';
@@ -31,3 +32,6 @@ export * from './services/writeServices/mediaItem/writeMediaItem.types';
 export * from './services/writeServices/writeServiceBaseType';
 
 export * from './application/media/s3MediaStorage';
+export * from './services/writeServices/album/setCoverMedia';
+export * from './services/writeServices/album/unsetCoverMedia';
+export * from './services/writeServices/mediaItem/deleteMediaItem';

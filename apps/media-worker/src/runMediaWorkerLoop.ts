@@ -1,6 +1,4 @@
-import type { Logger } from '../../../packages/foundation/infrastructure/src/logger/coreLogger.js';
-import type { Config } from '../../api/src/config.ts';
-import type { ProcessNextMediaImageJob } from './application/processNextMediaImageJob.js';
+import { IocGeneratedCradle } from './di/generated/ioc-registry.types';
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {
@@ -16,11 +14,7 @@ export const buildRunMediaWorkerLoop = ({
   config,
   logger,
   processNextMediaImageJob,
-}: {
-  config: Config;
-  logger: Logger;
-  processNextMediaImageJob: ProcessNextMediaImageJob;
-}): RunMediaWorkerLoop => {
+}: IocGeneratedCradle): RunMediaWorkerLoop => {
   let running = false;
   let stopRequested = false;
 

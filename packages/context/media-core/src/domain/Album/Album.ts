@@ -19,7 +19,7 @@ export type CreateAlbumInput = {
 export type AlbumRecord = {
   id: EntityId;
   title: string;
-  coverMediaId?: EntityId;
+  coverMediaId?: EntityId | null;
   items: AlbumItemRecord[];
   members: AlbumMemberRecord[];
 } & EntityAuditRecord;
@@ -50,7 +50,7 @@ export class Album extends AggregateRoot<AlbumRecord> {
   static rehydrate(record: AlbumRecord): Album {
     const album = new Album(record.id, record.createdBy, {
       title: record.title,
-      coverMediaId: record.coverMediaId,
+      coverMediaId: record.coverMediaId ?? undefined,
     });
 
     album.rehydrateAudit(record);
@@ -66,19 +66,6 @@ export class Album extends AggregateRoot<AlbumRecord> {
       return fail(AppErrorCollection.album.MediaAlreadyInAlbum);
     }
     // TODO: check various invariants when they exist e.g. is album mutable
-    const member = this.#members.find((m) => m.userId() === actorId);
-    if (!member) {
-      return fail(AppErrorCollection.album.UserIsNotMember);
-    }
-
-    const membersWhoCanEdit: AlbumMemberRoleEnum[] = [
-      AlbumMemberRoleEnum.owner,
-      AlbumMemberRoleEnum.admin,
-      AlbumMemberRoleEnum.contributor,
-    ];
-    if (!membersWhoCanEdit.includes(member.role())) {
-      return fail(AppErrorCollection.album.MemberNotAllowedToAddItem);
-    }
 
     const albumItem = AlbumItem.create({ mediaItemId }, actorId);
     this.#items.push(albumItem);
@@ -110,6 +97,27 @@ export class Album extends AggregateRoot<AlbumRecord> {
     this.props.coverMediaId = mediaItemId;
     this.touch(actorId);
     return ok(undefined);
+  }
+
+  unsetCoverMedia(actorId: ActorId): WriteResult {
+    this.props.coverMediaId = undefined;
+    this.touch(actorId);
+    return ok(undefined);
+  }
+
+  deleteItem(mediaItemId: EntityId, actorId: ActorId): WriteResult {
+    // TODO: check various invariants when they exist e.g. is album mutable
+    const albumItem = this.#items.find((i) => i.mediaItemId() === mediaItemId);
+    if (!albumItem) {
+      return fail(AppErrorCollection.album.MediaItemNotInAlbum);
+    }
+    this.#items = this.#items.filter((i) => i.mediaItemId() !== mediaItemId);
+    this.touch(actorId);
+    return ok(undefined);
+  }
+
+  getAlbumMember(userId: EntityId): AlbumMember | undefined {
+    return this.#members.find((m) => m.userId() === userId) ?? undefined;
   }
 
   protected childEntities(): ChildEntities {

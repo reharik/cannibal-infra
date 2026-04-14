@@ -1,6 +1,5 @@
 import { MediaAssetKind } from '@packages/contracts';
 import { buildMediaAssetStorageKey, MediaStorage } from '../../../application/media/MediaStorage';
-import { MediaAsset } from '../../../domain/MediaAsset/MediaAsset';
 import { MediaItem } from '../../../domain/MediaItem/MediaItem';
 import { ok } from '../../../domain/utilities/writeResponse';
 import { MediaItemRepository } from '../../../repositories/domainRepositories/mediaItemRepository';
@@ -42,22 +41,17 @@ export const buildCreateMediaItemUpload = ({
       },
       viewerId,
     );
-
-    const initialAsset = MediaAsset.create(
-      {
-        mediaItemId: mediaItem.id(),
-        kind: MediaAssetKind.original,
-        mimeType,
-      },
-      viewerId,
-    );
+    const result = mediaItem.addAsset(MediaAssetKind.original, mimeType);
+    if (!result.success) {
+      return result;
+    }
 
     const uploadTarget = await mediaStorage.getUploadTarget({
       storageKey: buildMediaAssetStorageKey(mediaItem.storageKey(), MediaAssetKind.original),
       mimeType,
     });
 
-    await mediaItemRepository.saveNewWithInitialAsset(mediaItem, initialAsset);
+    await mediaItemRepository.save(mediaItem);
 
     return ok({
       mediaItemId: mediaItem.id(),

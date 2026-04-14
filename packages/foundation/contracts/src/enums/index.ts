@@ -1,5 +1,6 @@
 export type { Enumeration } from '@reharik/smart-enum';
-export * from './albumMemberRole';
+export { AlbumAction } from './albumAction';
+export { AlbumMemberRoleEnum } from './albumMemberRole';
 export * from './appErrorCollection';
 export * from './ContractError';
 export * from './FrontendError';

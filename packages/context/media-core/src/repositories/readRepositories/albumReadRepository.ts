@@ -30,6 +30,7 @@ export type AlbumReadRepository = {
     viewerId: string;
     collectionInfo: CollectionInfo<AlbumSortBy>;
   }) => Promise<AlbumItemWithMediaRow[]>;
+  findAlbumIdsReferencingMediaItem: ({ mediaItemId }: { mediaItemId: string }) => Promise<string[]>;
 };
 
 const mediaItemSelectColumns = [
@@ -120,5 +121,16 @@ export const buildAlbumReadRepository = ({
       .orderBy('album_item.id', 'asc') // tie-breaker
       .limit(collectionInfo.pageInfo.limit + 1)
       .offset(collectionInfo.pageInfo.offset);
+  },
+  findAlbumIdsReferencingMediaItem: async ({
+    mediaItemId,
+  }: {
+    mediaItemId: string;
+  }): Promise<string[]> => {
+    return database<{ id: string }>('album')
+      .leftJoin('albumItem', 'albumItem.albumId', 'album.id')
+      .where('albumItem.mediaItemId', mediaItemId)
+      .orWhere('album.coverMediaId', mediaItemId)
+      .distinct({ id: 'album.id' });
   },
 });

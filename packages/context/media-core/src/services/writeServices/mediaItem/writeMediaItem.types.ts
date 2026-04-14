@@ -27,3 +27,12 @@ export type CreateMediaUploadResult = {
   status: MediaItemStatus;
   uploadTarget: UploadTarget;
 };
+
+export type DeleteMediaItemCommand = {
+  viewerId: EntityId;
+  mediaItemId: EntityId;
+};
+
+export type DeleteMediaItemResult = {
+  mediaItemId: EntityId;
+};

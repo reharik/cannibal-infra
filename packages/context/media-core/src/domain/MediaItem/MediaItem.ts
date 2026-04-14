@@ -3,13 +3,28 @@
  * Encapsulates metadata; can appear in multiple albums via AlbumItem.
  */
 
-import type { ResourceTypeEnum } from '@packages/contracts';
-import { AppErrorCollection, ContractError, MediaItemStatus, MediaKind } from '@packages/contracts';
+import type { MediaAssetKind, ResourceTypeEnum } from '@packages/contracts';
+import {
+  AppErrorCollection,
+  ContractError,
+  MediaAssetStatus,
+  MediaItemStatus,
+  MediaKind,
+} from '@packages/contracts';
 import type { ActorId, EntityId, WriteResult } from '../../types/types';
 import { AggregateRoot } from '../AggregateRoot';
 import { Comment, CommentRecord } from '../Comment/Comment';
 import type { ChildEntities, EntityAuditRecord } from '../Entity';
 import { fail, ok } from '../utilities/writeResponse';
+import { MediaAsset, MediaAssetRecord } from './MediaAsset';
+
+interface AssetMetadata {
+  kind: MediaAssetKind;
+  mimeType?: string;
+  sizeBytes: number;
+  width?: number;
+  height?: number;
+}
 
 export type MediaItemProps = {
   ownerId: EntityId;
@@ -43,6 +58,7 @@ export type MediaItemRecord = {
   description?: string;
   takenAt?: Date;
   comments: CommentRecord[];
+  assets: MediaAssetRecord[];
 } & EntityAuditRecord;
 
 export type CreateMediaItemInput = {
@@ -62,6 +78,7 @@ export type CreateMediaItemInput = {
 export class MediaItem extends AggregateRoot<MediaItemRecord> {
   protected props: MediaItemProps;
   #comments: Comment[] = [];
+  #assets: MediaAsset[] = [];
 
   private constructor(id: EntityId, actorId: ActorId, props: MediaItemProps) {
     super(id, actorId);
@@ -88,7 +105,7 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
 
     mediaItem.rehydrateAudit(record);
     mediaItem.#comments = record.comments.map((r) => Comment.rehydrate(r));
-
+    mediaItem.#assets = record.assets.map((r) => MediaAsset.rehydrate(r));
     return mediaItem;
   }
 
@@ -102,6 +119,35 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   ): void {
     this.#comments.push(Comment.create(props, actorId));
     this.touch(actorId);
+  }
+
+  addAsset(kind: MediaAssetKind, mimeType: string) {
+    if (this.#assets.find((a) => a.kind() === kind)) {
+      return fail(AppErrorCollection.mediaItem.AssetKindAlreadyExists);
+    }
+
+    this.#assets.push(
+      MediaAsset.create(
+        {
+          kind,
+          mimeType,
+        },
+        this.props.ownerId,
+      ),
+    );
+    return ok(undefined);
+  }
+
+  updateAssetWithMetadata({ kind, sizeBytes, mimeType, width, height }: AssetMetadata) {
+    const asset = this.#assets.find((a) => a.kind() === kind);
+    if (!asset) {
+      return fail(AppErrorCollection.mediaItem.AssetNotFound);
+    }
+    if (asset.status() !== MediaAssetStatus.pending) {
+      return fail(AppErrorCollection.mediaItem.AssetNotPending);
+    }
+    asset.applyUploadedObjectMetadata({ sizeBytes, mimeType, width, height }, this.props.ownerId);
+    return ok(undefined);
   }
 
   updateTitle(title: string | undefined, actorId: ActorId): void {
@@ -167,33 +213,6 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   }
 
   /**
-   * After upload bytes exist: persist size, pixel dimensions, and transition pending → ready.
-   * Does not infer title from original file name.
-   */
-  completeReadyWithMetadata(
-    input: { sizeBytes: number; width: number; height: number; mimeType?: string },
-    actorId: ActorId,
-  ): WriteResult {
-    if (this.props.status !== MediaItemStatus.pending) {
-      return fail(AppErrorCollection.mediaItem.StatusNotPending);
-    }
-    const w = Math.round(input.width);
-    const h = Math.round(input.height);
-    if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
-      return fail(ContractError.InvalidMediaDimensions);
-    }
-    this.props.sizeBytes = input.sizeBytes;
-    this.props.width = w;
-    this.props.height = h;
-    if (input.mimeType !== undefined && input.mimeType.length > 0) {
-      this.props.mimeType = input.mimeType;
-    }
-    this.props.status = MediaItemStatus.ready;
-    this.touch(actorId);
-    return ok(undefined);
-  }
-
-  /**
    * After display (and thumbnail) derivatives exist in storage: uploaded → ready.
    * Item-level width/height reflect the display derivative dimensions.
    */
@@ -219,6 +238,7 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   protected childEntities(): ChildEntities {
     return {
       comments: this.#comments,
+      assets: this.#assets,
     };
   }
 }

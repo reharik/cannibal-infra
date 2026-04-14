@@ -2,7 +2,6 @@ import { MediaAssetKind, MediaAssetStatus, MediaItemStatus, MediaKind } from '@p
 import { Readable } from 'node:stream';
 
 import type {
-  MediaAssetRepository,
   MediaItemRepository,
   MediaProcessingJobRepository,
   MediaProcessingJobRow,
@@ -11,11 +10,11 @@ import {
   buildCreateMediaItemUpload,
   buildFinalizeMediaItemUpload,
   buildMediaAssetStorageKey,
-  MediaAsset,
   MediaItem,
   MediaProcessingJobStatus,
   type MediaStorage,
 } from '@packages/media-core';
+import type { MediaAssetRecord } from '../../../../packages/context/media-core/src/domain/MediaItem/MediaAsset';
 import { buildProcessNextMediaImageJob } from '../../../media-worker/src/application/processNextMediaImageJob';
 
 const MINIMAL_PNG_1X1 = Buffer.from([
@@ -27,6 +26,15 @@ const MINIMAL_PNG_1X1 = Buffer.from([
 ]);
 
 type ObjectState = { size: number; mimeType?: string; body?: Buffer };
+
+const findAssetRecord = (item: MediaItem, kind: MediaAssetKind): MediaAssetRecord | undefined =>
+  item.toPersistence().assets.find((a: MediaAssetRecord) => {
+    const k = a.kind as unknown;
+    if (typeof k === 'string') {
+      return k === kind.value;
+    }
+    return (k as { value: string }).value === kind.value;
+  });
 
 const createTrackingMediaStorage = (): MediaStorage & { objects: Map<string, ObjectState> } => {
   const objects = new Map<string, ObjectState>();
@@ -55,7 +63,7 @@ const createTrackingMediaStorage = (): MediaStorage & { objects: Map<string, Obj
     getObjectMetadata: async (storageKey) => {
       const object = objects.get(storageKey);
       if (!object) {
-        return null;
+        return undefined;
       }
       return { size: object.body?.length ?? object.size, mimeType: object.mimeType };
     },
@@ -65,7 +73,7 @@ const createTrackingMediaStorage = (): MediaStorage & { objects: Map<string, Obj
     getObjectStream: async (storageKey) => {
       const object = objects.get(storageKey);
       if (!object?.body) {
-        return null;
+        return undefined;
       }
       return {
         body: Readable.from(object.body),
@@ -75,48 +83,22 @@ const createTrackingMediaStorage = (): MediaStorage & { objects: Map<string, Obj
     getObjectBuffer: async (storageKey, maxBytes) => {
       const object = objects.get(storageKey);
       if (!object?.body) {
-        return null;
+        return undefined;
       }
       return object.body.subarray(0, Math.min(maxBytes, object.body.length));
     },
   };
 };
 
-const createInMemoryMediaAssetRepository = (): MediaAssetRepository => {
-  const byComposite = new Map<string, MediaAsset>();
-  const key = (mediaItemId: string, kind: MediaAssetKind): string => `${mediaItemId}:${kind.value}`;
-  return {
-    getFirstByMediaItemId: async (mediaItemId) => {
-      const original = byComposite.get(key(mediaItemId, MediaAssetKind.original));
-      if (original) {
-        return original;
-      }
-      for (const asset of byComposite.values()) {
-        if (asset.mediaItemId() === mediaItemId) {
-          return asset;
-        }
-      }
-      return undefined;
-    },
-    getByMediaItemIdAndKind: async (mediaItemId, kind) => byComposite.get(key(mediaItemId, kind)),
-    save: async (asset) => {
-      byComposite.set(key(asset.mediaItemId(), asset.kind()), asset);
-    },
-  };
-};
-
-const createInMemoryMediaItemRepository = (
-  mediaAssetRepository: MediaAssetRepository,
-): MediaItemRepository => {
+const createInMemoryMediaItemRepository = (): MediaItemRepository => {
   const byId = new Map<string, MediaItem>();
   return {
     getById: async (id) => byId.get(id),
     save: async (mediaItem) => {
       byId.set(mediaItem.id(), mediaItem);
     },
-    saveNewWithInitialAsset: async (mediaItem, initialAsset) => {
-      byId.set(mediaItem.id(), mediaItem);
-      await mediaAssetRepository.save(initialAsset);
+    delete: async (mediaItem) => {
+      byId.delete(mediaItem.id());
     },
   };
 };
@@ -193,8 +175,7 @@ describe('Media processing pipeline', () => {
     it('should create display + thumbnail assets and mark media item ready', async () => {
       const viewerId = 'viewer-a';
       const mediaStorage = createTrackingMediaStorage();
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaProcessingJobRepository = createInMemoryMediaProcessingJobRepository();
 
       const createUpload = buildCreateMediaItemUpload({
@@ -203,12 +184,11 @@ describe('Media processing pipeline', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository,
       } as never);
       const processNextMediaImageJob = buildProcessNextMediaImageJob({
-        mediaAssetRepository,
+        config: { s3Bucket: 'integration-test-bucket' },
         mediaItemRepository,
         mediaProcessingJobRepository,
         mediaStorage,
@@ -252,18 +232,12 @@ describe('Media processing pipeline', () => {
       const ready = await mediaItemRepository.getById(item.id());
       expect(ready?.status()).toBe(MediaItemStatus.ready);
 
-      const display = await mediaAssetRepository.getByMediaItemIdAndKind(
-        item.id(),
-        MediaAssetKind.display,
-      );
-      const thumbnail = await mediaAssetRepository.getByMediaItemIdAndKind(
-        item.id(),
-        MediaAssetKind.thumbnail,
-      );
+      const display = findAssetRecord(ready!, MediaAssetKind.display);
+      const thumbnail = findAssetRecord(ready!, MediaAssetKind.thumbnail);
       expect(display).toBeDefined();
       expect(thumbnail).toBeDefined();
-      expect(display?.status()).toBe(MediaAssetStatus.ready);
-      expect(thumbnail?.status()).toBe(MediaAssetStatus.ready);
+      expect(display?.status).toBe(MediaAssetStatus.ready.value);
+      expect(thumbnail?.status).toBe(MediaAssetStatus.ready.value);
 
       const displayObject = mediaStorage.objects.get(
         buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.display),
@@ -282,8 +256,7 @@ describe('Media processing pipeline', () => {
     it('should mark the job failed and keep media item uploaded', async () => {
       const viewerId = 'viewer-a';
       const mediaStorage = createTrackingMediaStorage();
-      const mediaAssetRepository = createInMemoryMediaAssetRepository();
-      const mediaItemRepository = createInMemoryMediaItemRepository(mediaAssetRepository);
+      const mediaItemRepository = createInMemoryMediaItemRepository();
       const mediaProcessingJobRepository = createInMemoryMediaProcessingJobRepository();
 
       const createUpload = buildCreateMediaItemUpload({
@@ -292,12 +265,11 @@ describe('Media processing pipeline', () => {
       } as never);
       const finalize = buildFinalizeMediaItemUpload({
         mediaItemRepository,
-        mediaAssetRepository,
         mediaStorage,
         mediaProcessingJobRepository,
       } as never);
       const processNextMediaImageJob = buildProcessNextMediaImageJob({
-        mediaAssetRepository,
+        config: { s3Bucket: 'integration-test-bucket' },
         mediaItemRepository,
         mediaProcessingJobRepository,
         mediaStorage,
