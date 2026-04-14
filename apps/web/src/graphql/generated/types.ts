@@ -66,6 +66,7 @@ export type AlbumItem = Node & {
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   mediaItem: MediaItem;
+  orderIndex: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -82,7 +83,8 @@ export type AlbumItemCollectionPayload = {
 };
 
 export type AlbumItemSortBy =
-  | 'CREATED_AT';
+  | 'CREATED_AT'
+  | 'ORDER_INDEX';
 
 export type AlbumSortBy =
   | 'CREATED_AT'
@@ -250,6 +252,7 @@ export type MediaItem = Node & {
   originalFileName?: Maybe<Scalars['String']['output']>;
   sizeBytes: Scalars['Int']['output'];
   status: MediaItemStatus;
+  tags: Array<Scalars['String']['output']>;
   takenAt?: Maybe<Scalars['DateTime']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
@@ -291,6 +294,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   AddMediaItemToAlbum: AddMediaItemToAlbumResponse;
   DeleteAlbumItemFromAlbum: DeleteAlbumItemFromAlbumResponse;
+  ReorderAlbumItems: ReorderAlbumItemsResponse;
   SetCoverMedia: SetCoverMediaResponse;
   UnsetCoverMedia: UnsetCoverMediaResponse;
   createAlbum: CreateAlbumResponse;
@@ -298,6 +302,8 @@ export type Mutation = {
   deleteAlbum: DeleteAlbumResponse;
   deleteMediaItem: DeleteMediaItemResponse;
   finalizeMediaUpload: FinalizeMediaUploadResponse;
+  updateMediaItemDetails: UpdateMediaItemDetailsResponse;
+  updateMediaItemTags: UpdateMediaItemTagsResponse;
 };
 
 
@@ -308,6 +314,11 @@ export type MutationAddMediaItemToAlbumArgs = {
 
 export type MutationDeleteAlbumItemFromAlbumArgs = {
   input: DeleteAlbumItemFromAlbumInput;
+};
+
+
+export type MutationReorderAlbumItemsArgs = {
+  input: ReorderAlbumItemsInput;
 };
 
 
@@ -345,6 +356,16 @@ export type MutationFinalizeMediaUploadArgs = {
   input: FinalizeMediaUploadInput;
 };
 
+
+export type MutationUpdateMediaItemDetailsArgs = {
+  input: UpdateMediaItemDetailsInput;
+};
+
+
+export type MutationUpdateMediaItemTagsArgs = {
+  input: UpdateMediaItemTagsInput;
+};
+
 /** Implemented by all entities that have an id. */
 export type Node = {
   id: Scalars['ID']['output'];
@@ -372,6 +393,22 @@ export type Query = {
 
 export type QueryShareLinkArgs = {
   token: Scalars['String']['input'];
+};
+
+export type ReorderAlbumItemsInput = {
+  albumId: Scalars['ID']['input'];
+  albumItemIds: Array<Scalars['ID']['input']>;
+};
+
+export type ReorderAlbumItemsPayload = {
+  __typename?: 'ReorderAlbumItemsPayload';
+  albumId: Scalars['ID']['output'];
+};
+
+export type ReorderAlbumItemsResponse = {
+  __typename?: 'ReorderAlbumItemsResponse';
+  data?: Maybe<ReorderAlbumItemsPayload>;
+  errors?: Maybe<Array<ContractError>>;
 };
 
 export type SetCoverMediaInput = {
@@ -455,6 +492,44 @@ export type UnsetCoverMediaPayload = {
 export type UnsetCoverMediaResponse = {
   __typename?: 'UnsetCoverMediaResponse';
   data?: Maybe<UnsetCoverMediaPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
+export type UpdateMediaItemDetailsInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  mediaItemId: Scalars['ID']['input'];
+  takenAt?: InputMaybe<Scalars['DateTime']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateMediaItemDetailsPayload = {
+  __typename?: 'UpdateMediaItemDetailsPayload';
+  description?: Maybe<Scalars['String']['output']>;
+  mediaItemId: Scalars['ID']['output'];
+  takenAt?: Maybe<Scalars['DateTime']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+export type UpdateMediaItemDetailsResponse = {
+  __typename?: 'UpdateMediaItemDetailsResponse';
+  data?: Maybe<UpdateMediaItemDetailsPayload>;
+  errors?: Maybe<Array<ContractError>>;
+};
+
+export type UpdateMediaItemTagsInput = {
+  mediaItemId: Scalars['ID']['input'];
+  tags: Array<Scalars['String']['input']>;
+};
+
+export type UpdateMediaItemTagsPayload = {
+  __typename?: 'UpdateMediaItemTagsPayload';
+  mediaItemId: Scalars['ID']['output'];
+  tags: Array<Scalars['String']['output']>;
+};
+
+export type UpdateMediaItemTagsResponse = {
+  __typename?: 'UpdateMediaItemTagsResponse';
+  data?: Maybe<UpdateMediaItemTagsPayload>;
   errors?: Maybe<Array<ContractError>>;
 };
 

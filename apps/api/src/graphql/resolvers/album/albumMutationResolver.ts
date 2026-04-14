@@ -1,5 +1,6 @@
+import type { ReorderAlbumItemsCommand } from '@packages/media-core';
 import { authenticatedResolver } from '../../context/authenticatedContext';
-import type { Resolvers } from '../../generated/types.generated';
+import type { MutationReorderAlbumItemsArgs, Resolvers } from '../../generated/types.generated';
 import { toContractErrorPayload } from '../../mappers/contractErrorMapper';
 
 const albumResolvers: Pick<Resolvers, 'Mutation'> = {
@@ -33,6 +34,20 @@ const albumResolvers: Pick<Resolvers, 'Mutation'> = {
         errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
+    ReorderAlbumItems: authenticatedResolver(
+      async (_parent, args: MutationReorderAlbumItemsArgs, ctx) => {
+        const command: ReorderAlbumItemsCommand = {
+          viewerId: ctx.viewer.id,
+          albumId: args.input.albumId,
+          albumItemIds: args.input.albumItemIds,
+        };
+        const result = await ctx.writeServices.reorderAlbumItems(command);
+        return {
+          data: result.success ? { albumId: result.value.albumId } : undefined,
+          errors: result.success ? [] : [toContractErrorPayload(result.error)],
+        };
+      },
+    ),
     DeleteAlbumItemFromAlbum: authenticatedResolver(async (_parent, args, ctx) => {
       const result = await ctx.writeServices.deleteAlbumItem({
         viewerId: ctx.viewer.id,

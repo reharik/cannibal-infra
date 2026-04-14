@@ -16,8 +16,8 @@ export const AlbumAction = enumeration('AlbumAction', {
     removeItem: {
       deniedError: ContractError.MemberNotAllowedToDeleteItem,
     },
-    setCover: {
-      deniedError: ContractError.AlbumSetCoverForbidden,
+    editCover: {
+      deniedError: ContractError.AlbumEditCoverForbidden,
     },
     delete: {
       deniedError: ContractError.MemberNotAllowedToDeleteAlbum,

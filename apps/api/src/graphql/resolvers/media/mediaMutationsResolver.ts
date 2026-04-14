@@ -1,6 +1,14 @@
 import { MediaKind } from '@packages/contracts';
+import type {
+  UpdateMediaItemDetailsCommand,
+  UpdateMediaItemTagsCommand,
+} from '@packages/media-core';
 import { authenticatedResolver } from '../../context/authenticatedContext';
-import type { Resolvers } from '../../generated/types.generated';
+import type {
+  MutationUpdateMediaItemDetailsArgs,
+  MutationUpdateMediaItemTagsArgs,
+  Resolvers,
+} from '../../generated/types.generated';
 import { toContractErrorPayload } from '../../mappers/contractErrorMapper';
 
 const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
@@ -65,6 +73,48 @@ const mediaUploadResolvers: Pick<Resolvers, 'Mutation'> = {
         errors: result.success ? [] : [toContractErrorPayload(result.error)],
       };
     }),
+    updateMediaItemDetails: authenticatedResolver(
+      async (_parent, args: MutationUpdateMediaItemDetailsArgs, ctx) => {
+        const input = args.input;
+        const command: UpdateMediaItemDetailsCommand = {
+          ...input,
+          viewerId: ctx.viewer.id,
+        };
+
+        const result = await ctx.writeServices.updateMediaItem(command);
+
+        return {
+          data: result.success
+            ? {
+                mediaItemId: result.value.mediaItemId,
+                title: result.value.title,
+                description: result.value.description,
+                takenAt: result.value.takenAt,
+              }
+            : undefined,
+          errors: result.success ? [] : [toContractErrorPayload(result.error)],
+        };
+      },
+    ),
+    updateMediaItemTags: authenticatedResolver(
+      async (_parent, args: MutationUpdateMediaItemTagsArgs, ctx) => {
+        const command: UpdateMediaItemTagsCommand = {
+          viewerId: ctx.viewer.id,
+          mediaItemId: args.input.mediaItemId,
+          tags: args.input.tags,
+        };
+        const result = await ctx.writeServices.updateMediaItemTags(command);
+        return {
+          data: result.success
+            ? {
+                mediaItemId: result.value.mediaItemId,
+                tags: result.value.tags,
+              }
+            : undefined,
+          errors: result.success ? [] : [toContractErrorPayload(result.error)],
+        };
+      },
+    ),
   },
 };
 

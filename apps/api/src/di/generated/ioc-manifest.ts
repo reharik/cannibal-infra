@@ -19,11 +19,14 @@ import * as ioc_______packages_context_media_core_src_services_writeServices_alb
 import * as ioc_______packages_context_media_core_src_services_writeServices_album_createAlbum from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_album_deleteAlbum from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_album_deleteAlbumItem from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_album_reorderAlbumItems from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_album_setCoverMedia from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_album_unsetCoverMedia from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_createMediaItemUpload from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_deleteMediaItem from '@packages/media-core';
 import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_finalizeMediaItemUpload from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_updateMediaItem from '@packages/media-core';
+import * as ioc_______packages_context_media_core_src_services_writeServices_mediaItem_updateMediaItemTags from '@packages/media-core';
 import * as ioc_src_config from '../../config.js';
 import * as ioc_src_controllers_authController from '../../controllers/authController.js';
 import * as ioc_src_graphql_context_createGraphQLContext from '../../graphql/context/createGraphQLContext.js';
@@ -82,6 +85,10 @@ type IocManifestGroupRoots = {
       readonly contractName: 'FinalizeMediaItemUpload';
       readonly registrationKey: 'finalizeMediaItemUpload';
     };
+    readonly reorderAlbumItems: {
+      readonly contractName: 'ReorderAlbumItems';
+      readonly registrationKey: 'reorderAlbumItems';
+    };
     readonly setCoverMedia: {
       readonly contractName: 'SetCoverMedia';
       readonly registrationKey: 'setCoverMedia';
@@ -89,6 +96,14 @@ type IocManifestGroupRoots = {
     readonly unsetCoverMedia: {
       readonly contractName: 'UnsetCoverMedia';
       readonly registrationKey: 'unsetCoverMedia';
+    };
+    readonly updateMediaItem: {
+      readonly contractName: 'UpdateMediaItem';
+      readonly registrationKey: 'updateMediaItem';
+    };
+    readonly updateMediaItemTags: {
+      readonly contractName: 'UpdateMediaItemTags';
+      readonly registrationKey: 'updateMediaItemTags';
     };
   };
 };
@@ -110,11 +125,14 @@ export const iocManifest = {
     ioc_______packages_context_media_core_src_services_writeServices_album_createAlbum,
     ioc_______packages_context_media_core_src_services_writeServices_album_deleteAlbum,
     ioc_______packages_context_media_core_src_services_writeServices_album_deleteAlbumItem,
+    ioc_______packages_context_media_core_src_services_writeServices_album_reorderAlbumItems,
     ioc_______packages_context_media_core_src_services_writeServices_album_setCoverMedia,
     ioc_______packages_context_media_core_src_services_writeServices_album_unsetCoverMedia,
     ioc_______packages_context_media_core_src_services_writeServices_mediaItem_createMediaItemUpload,
     ioc_______packages_context_media_core_src_services_writeServices_mediaItem_deleteMediaItem,
     ioc_______packages_context_media_core_src_services_writeServices_mediaItem_finalizeMediaItemUpload,
+    ioc_______packages_context_media_core_src_services_writeServices_mediaItem_updateMediaItem,
+    ioc_______packages_context_media_core_src_services_writeServices_mediaItem_updateMediaItemTags,
     ioc_src_config,
     ioc_src_controllers_authController,
     ioc_src_graphql_context_createGraphQLContext,
@@ -193,7 +211,7 @@ export const iocManifest = {
         contractName: 'AuthController',
         implementationName: 'authController',
         lifetime: 'singleton',
-        moduleIndex: 21,
+        moduleIndex: 24,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AuthService', 'Logger'],
@@ -208,7 +226,7 @@ export const iocManifest = {
         contractName: 'AuthMiddleware',
         implementationName: 'authMiddleware',
         lifetime: 'singleton',
-        moduleIndex: 29,
+        moduleIndex: 32,
         discoveredBy: 'naming',
         configOverridesApplied: ['name'],
         dependencyContractNames: ['AuthService', 'Logger'],
@@ -221,7 +239,7 @@ export const iocManifest = {
         contractName: 'AuthMiddleware',
         implementationName: 'optionalAuthMiddleware',
         lifetime: 'singleton',
-        moduleIndex: 29,
+        moduleIndex: 32,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['default'],
@@ -237,7 +255,7 @@ export const iocManifest = {
         contractName: 'AuthService',
         implementationName: 'authService',
         lifetime: 'singleton',
-        moduleIndex: 36,
+        moduleIndex: 39,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config', 'Knex', 'Logger'],
@@ -268,7 +286,7 @@ export const iocManifest = {
         contractName: 'Config',
         implementationName: 'config',
         lifetime: 'singleton',
-        moduleIndex: 20,
+        moduleIndex: 23,
         default: true,
         discoveredBy: 'naming',
       },
@@ -299,7 +317,7 @@ export const iocManifest = {
         contractName: 'CreateMediaUpload',
         implementationName: 'createMediaItemUpload',
         lifetime: 'singleton',
-        moduleIndex: 17,
+        moduleIndex: 18,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['MediaItemRepository', 'MediaStorage'],
@@ -347,7 +365,7 @@ export const iocManifest = {
         contractName: 'DeleteMediaItem',
         implementationName: 'deleteMediaItem',
         lifetime: 'singleton',
-        moduleIndex: 18,
+        moduleIndex: 19,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: [
@@ -367,7 +385,7 @@ export const iocManifest = {
         contractName: 'ErrorHandler',
         implementationName: 'errorHandler',
         lifetime: 'singleton',
-        moduleIndex: 30,
+        moduleIndex: 33,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Logger'],
@@ -383,7 +401,7 @@ export const iocManifest = {
         contractName: 'FinalizeMediaItemUpload',
         implementationName: 'finalizeMediaItemUpload',
         lifetime: 'singleton',
-        moduleIndex: 19,
+        moduleIndex: 20,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: [
@@ -402,7 +420,7 @@ export const iocManifest = {
         contractName: 'GraphQLContextFactory',
         implementationName: 'createGraphQLContext',
         lifetime: 'singleton',
-        moduleIndex: 22,
+        moduleIndex: 25,
         default: true,
         discoveredBy: 'naming',
       },
@@ -416,7 +434,7 @@ export const iocManifest = {
         contractName: 'GraphQLServer',
         implementationName: 'graphQLServer',
         lifetime: 'singleton',
-        moduleIndex: 23,
+        moduleIndex: 26,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['YogaApp'],
@@ -431,7 +449,7 @@ export const iocManifest = {
         contractName: 'Knex',
         implementationName: 'database',
         lifetime: 'singleton',
-        moduleIndex: 26,
+        moduleIndex: 29,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['accessKey'],
@@ -448,7 +466,7 @@ export const iocManifest = {
         contractName: 'KnexConfig',
         implementationName: 'knexConfig',
         lifetime: 'singleton',
-        moduleIndex: 27,
+        moduleIndex: 30,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -463,7 +481,7 @@ export const iocManifest = {
         contractName: 'KoaServer',
         implementationName: 'koaServer',
         lifetime: 'singleton',
-        moduleIndex: 28,
+        moduleIndex: 31,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: [
@@ -487,7 +505,7 @@ export const iocManifest = {
         contractName: 'Logger',
         implementationName: 'logger',
         lifetime: 'singleton',
-        moduleIndex: 24,
+        moduleIndex: 27,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -552,7 +570,7 @@ export const iocManifest = {
         contractName: 'MediaProcessingJobRepository',
         implementationName: 'mediaProcessingJobRepository',
         lifetime: 'scoped',
-        moduleIndex: 32,
+        moduleIndex: 35,
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
@@ -568,7 +586,7 @@ export const iocManifest = {
         contractName: 'MediaStorage',
         implementationName: 'mediaStorage',
         lifetime: 'singleton',
-        moduleIndex: 25,
+        moduleIndex: 28,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config'],
@@ -590,6 +608,22 @@ export const iocManifest = {
         dependencyContractNames: ['Knex'],
       },
     },
+    ReorderAlbumItems: {
+      reorderAlbumItems: {
+        exportName: 'buildReorderAlbumItems',
+        registrationKey: 'reorderAlbumItems',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/album/reorderAlbumItems.ts',
+        relImport: '@packages/media-core',
+        contractName: 'ReorderAlbumItems',
+        implementationName: 'reorderAlbumItems',
+        lifetime: 'singleton',
+        moduleIndex: 15,
+        default: true,
+        discoveredBy: 'naming',
+        dependencyContractNames: ['AlbumRepository'],
+      },
+    },
     RequestLogger: {
       requestLogger: {
         exportName: 'buildRequestLogger',
@@ -599,7 +633,7 @@ export const iocManifest = {
         contractName: 'RequestLogger',
         implementationName: 'requestLogger',
         lifetime: 'singleton',
-        moduleIndex: 31,
+        moduleIndex: 34,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Logger'],
@@ -614,7 +648,7 @@ export const iocManifest = {
         contractName: 'RootRouter',
         implementationName: 'apiRoutes',
         lifetime: 'singleton',
-        moduleIndex: 33,
+        moduleIndex: 36,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Router'],
@@ -629,7 +663,7 @@ export const iocManifest = {
         contractName: 'Router',
         implementationName: 'router',
         lifetime: 'singleton',
-        moduleIndex: 34,
+        moduleIndex: 37,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AuthController'],
@@ -644,7 +678,7 @@ export const iocManifest = {
         contractName: 'Server',
         implementationName: 'server',
         lifetime: 'singleton',
-        moduleIndex: 35,
+        moduleIndex: 38,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['Config', 'KoaServer', 'Logger'],
@@ -660,7 +694,7 @@ export const iocManifest = {
         contractName: 'SetCoverMedia',
         implementationName: 'setCoverMedia',
         lifetime: 'singleton',
-        moduleIndex: 15,
+        moduleIndex: 16,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AlbumRepository', 'MediaItemReadRepository'],
@@ -692,10 +726,42 @@ export const iocManifest = {
         contractName: 'UnsetCoverMedia',
         implementationName: 'unsetCoverMedia',
         lifetime: 'singleton',
-        moduleIndex: 16,
+        moduleIndex: 17,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['AlbumRepository'],
+      },
+    },
+    UpdateMediaItem: {
+      updateMediaItem: {
+        exportName: 'buildUpdateMediaItem',
+        registrationKey: 'updateMediaItem',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/mediaItem/updateMediaItem.ts',
+        relImport: '@packages/media-core',
+        contractName: 'UpdateMediaItem',
+        implementationName: 'updateMediaItem',
+        lifetime: 'singleton',
+        moduleIndex: 21,
+        default: true,
+        discoveredBy: 'naming',
+        dependencyContractNames: ['MediaItemRepository'],
+      },
+    },
+    UpdateMediaItemTags: {
+      updateMediaItemTags: {
+        exportName: 'buildUpdateMediaItemTags',
+        registrationKey: 'updateMediaItemTags',
+        modulePath:
+          '../../packages/context/media-core/src/services/writeServices/mediaItem/updateMediaItemTags.ts',
+        relImport: '@packages/media-core',
+        contractName: 'UpdateMediaItemTags',
+        implementationName: 'updateMediaItemTags',
+        lifetime: 'singleton',
+        moduleIndex: 22,
+        default: true,
+        discoveredBy: 'naming',
+        dependencyContractNames: ['MediaItemRepository'],
       },
     },
     UserRepository: {
@@ -728,7 +794,7 @@ export const iocManifest = {
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
-        dependencyContractNames: ['AlbumReadRepository'],
+        dependencyContractNames: ['AlbumReadRepository', 'MediaItemReadRepository'],
       },
     },
     ViewerMediaItemReadServiceFactory: {
@@ -761,7 +827,7 @@ export const iocManifest = {
         contractName: 'YogaApp',
         implementationName: 'yogaApp',
         lifetime: 'singleton',
-        moduleIndex: 23,
+        moduleIndex: 26,
         default: true,
         discoveredBy: 'naming',
         dependencyContractNames: ['GraphQLContextFactory'],
@@ -810,6 +876,10 @@ export const iocManifest = {
       contractName: 'FinalizeMediaItemUpload',
       registrationKey: 'finalizeMediaItemUpload',
     },
+    reorderAlbumItems: {
+      contractName: 'ReorderAlbumItems',
+      registrationKey: 'reorderAlbumItems',
+    },
     setCoverMedia: {
       contractName: 'SetCoverMedia',
       registrationKey: 'setCoverMedia',
@@ -817,6 +887,14 @@ export const iocManifest = {
     unsetCoverMedia: {
       contractName: 'UnsetCoverMedia',
       registrationKey: 'unsetCoverMedia',
+    },
+    updateMediaItem: {
+      contractName: 'UpdateMediaItem',
+      registrationKey: 'updateMediaItem',
+    },
+    updateMediaItemTags: {
+      contractName: 'UpdateMediaItemTags',
+      registrationKey: 'updateMediaItemTags',
     },
   },
 } as const satisfies IocGeneratedContainerManifest<IocManifestGroupRoots>;

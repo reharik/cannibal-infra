@@ -10,7 +10,12 @@ import type { Knex } from 'knex';
 import type { CommentRecord } from '../../domain/Comment/Comment';
 import { MediaAssetRecord } from '../../domain/MediaItem/MediaAsset';
 import { MediaItem, type MediaItemRecord } from '../../domain/MediaItem/MediaItem';
-import { RepoOptions, runInTransaction } from '../../infrastructure/repositories/runInTransaction';
+import { mediaItemTagLabelKey } from '../../domain/MediaItem/MediaItemTag';
+import {
+  type DbExecutor,
+  RepoOptions,
+  runInTransaction,
+} from '../../infrastructure/repositories/runInTransaction';
 import type { EntityId } from '../../types/types';
 
 export type MediaItemRepository = {
@@ -20,6 +25,13 @@ export type MediaItemRepository = {
 };
 
 type MediaItemRepositoryDeps = { database: Knex };
+
+type UserTagRow = {
+  id: EntityId;
+  userId: EntityId;
+  label: string;
+  labelKey: string;
+};
 
 export const buildMediaItemRepository = ({
   database,
@@ -50,15 +62,54 @@ export const buildMediaItemRepository = ({
       { strict: true },
     );
 
+    const tagLabelRows = await database('mediaItemTag')
+      .join('userTag', 'mediaItemTag.userTagId', 'userTag.id')
+      .where('mediaItemTag.mediaItemId', id)
+      .select<{ label: string }[]>('userTag.label')
+      .orderBy('userTag.label', 'asc');
+
     mediaItemRow.comments = commentRows;
     mediaItemRow.assets = assetRows;
+    mediaItemRow.tags = tagLabelRows.map((r) => r.label);
     return MediaItem.rehydrate(mediaItemRow);
+  };
+
+  const ensureUserTagId = async (
+    trx: DbExecutor,
+    { userId, label, actorId }: { userId: EntityId; label: string; actorId: EntityId },
+  ): Promise<EntityId> => {
+    const labelKey = mediaItemTagLabelKey(label);
+    const existing = await trx<UserTagRow>('userTag').where({ userId, labelKey }).first();
+    if (existing) {
+      return existing.id;
+    }
+    const id = crypto.randomUUID();
+    const now = new Date();
+    try {
+      await trx('userTag').insert({
+        id,
+        userId,
+        label,
+        labelKey,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: actorId,
+        updatedBy: actorId,
+      });
+      return id;
+    } catch (err: unknown) {
+      const retry = await trx<UserTagRow>('userTag').where({ userId, labelKey }).first();
+      if (retry) {
+        return retry.id;
+      }
+      throw err;
+    }
   };
 
   const save = async (mediaItem: MediaItem, options?: RepoOptions): Promise<void> => {
     await runInTransaction(database, options, async (trx) => {
       const record = mediaItem.toPersistence();
-      const { comments, assets, ...mediaItemRow } = record;
+      const { comments, assets, tags: tagLabels, ...mediaItemRow } = record;
 
       const existing = await trx<MediaItemRecord>('mediaItem').where({ id: record.id }).first();
 
@@ -86,6 +137,29 @@ export const buildMediaItemRepository = ({
             resourceId: record.id,
           })),
         );
+      }
+
+      await trx('mediaItemTag').where({ mediaItemId: record.id }).delete();
+
+      const ownerId = record.ownerId;
+      const actorId = record.updatedBy;
+      const now = new Date();
+
+      for (const label of tagLabels) {
+        const userTagId = await ensureUserTagId(trx, {
+          userId: ownerId,
+          label,
+          actorId,
+        });
+        await trx('mediaItemTag').insert({
+          id: crypto.randomUUID(),
+          mediaItemId: record.id,
+          userTagId,
+          createdAt: now,
+          updatedAt: now,
+          createdBy: actorId,
+          updatedBy: actorId,
+        });
       }
     });
   };

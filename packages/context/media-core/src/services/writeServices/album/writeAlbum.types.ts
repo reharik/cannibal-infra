@@ -32,6 +32,17 @@ export type DeleteAlbumItemResult = {
   mediaItemId: EntityId;
 };
 
+export type ReorderAlbumItemsCommand = {
+  viewerId: EntityId;
+  albumId: EntityId;
+  /** Desired order (album item ids, complete permutation of the album’s items). */
+  albumItemIds: EntityId[];
+};
+
+export type ReorderAlbumItemsResult = {
+  albumId: EntityId;
+};
+
 export type DeleteAlbumCommand = {
   viewerId: EntityId;
   albumId: EntityId;

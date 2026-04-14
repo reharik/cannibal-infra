@@ -1,12 +1,12 @@
 import { describe, expect, it } from '@jest/globals';
+import { AppErrorCollection, MediaItemStatus, MediaKind } from '@packages/contracts';
 import {
-  AlbumMemberRoleEnum,
-  AppErrorCollection,
-  MediaItemStatus,
-  MediaKind,
-} from '@packages/contracts';
-import { Album, MediaItem } from '@packages/media-core';
-import { TEST_OWNER_1_ID, TEST_USER_A_ID, TEST_VIEWER_ONLY_ID } from './testViewerIds';
+  ALBUM_ITEM_ORDER_GAP,
+  ALBUM_ITEM_ORDER_INITIAL,
+  Album,
+  MediaItem,
+} from '@packages/media-core';
+import { TEST_OWNER_1_ID, TEST_USER_A_ID } from './testViewerIds';
 
 describe('MediaItem (domain)', () => {
   describe('When created', () => {
@@ -55,12 +55,12 @@ describe('MediaItem (domain)', () => {
       const ownerId = TEST_USER_A_ID;
       const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
       const result = item.markReadyAfterDerivatives({ displayWidth: 1, displayHeight: 1 }, ownerId);
-      expect(result.success).toBe(false);
-      let code = '';
-      if (!result.success) {
-        code = result.error.code;
-      }
-      expect(code).toBe(AppErrorCollection.mediaItem.StatusNotPending.code);
+      expect(result).toEqual({
+        success: false,
+        error: expect.objectContaining({
+          code: AppErrorCollection.mediaItem.StatusNotPending.code,
+        }),
+      });
     });
   });
 
@@ -69,15 +69,21 @@ describe('MediaItem (domain)', () => {
       const ownerId = TEST_USER_A_ID;
       const item = MediaItem.create({ kind: MediaKind.photo, mimeType: 'image/jpeg' }, ownerId);
       item.completeUploadedWithMetadata({ sizeBytes: 1, mimeType: 'image/jpeg' }, ownerId);
-      const first = item.markReadyAfterDerivatives({ displayWidth: 10, displayHeight: 10 }, ownerId);
+      const first = item.markReadyAfterDerivatives(
+        { displayWidth: 10, displayHeight: 10 },
+        ownerId,
+      );
       expect(first.success).toBe(true);
-      const second = item.markReadyAfterDerivatives({ displayWidth: 20, displayHeight: 20 }, ownerId);
-      expect(second.success).toBe(false);
-      let code = '';
-      if (!second.success) {
-        code = second.error.code;
-      }
-      expect(code).toBe(AppErrorCollection.mediaItem.StatusNotPending.code);
+      const second = item.markReadyAfterDerivatives(
+        { displayWidth: 20, displayHeight: 20 },
+        ownerId,
+      );
+      expect(second).toEqual({
+        success: false,
+        error: expect.objectContaining({
+          code: AppErrorCollection.mediaItem.StatusNotPending.code,
+        }),
+      });
     });
   });
 });
@@ -91,13 +97,32 @@ describe('Album (domain)', () => {
       const mediaId = 'media-1';
       const first = album.addItem(mediaId, ownerId);
       expect(first.success).toBe(true);
-      const second = album.addItem(mediaId, ownerId);
-      expect(second.success).toBe(false);
-      let code = '';
-      if (!second.success) {
-        code = second.error.code;
+      if (!first.success) {
+        throw new Error('expected first addItem to succeed');
       }
-      expect(code).toBe(AppErrorCollection.album.MediaAlreadyInAlbum.code);
+      expect(first.value.orderIndex()).toBe(ALBUM_ITEM_ORDER_INITIAL);
+      const second = album.addItem(mediaId, ownerId);
+      expect(second).toEqual({
+        success: false,
+        error: expect.objectContaining({
+          code: AppErrorCollection.album.MediaAlreadyInAlbum.code,
+        }),
+      });
+    });
+  });
+
+  describe('When addItem is called twice for different media', () => {
+    it('should assign increasing sparse order indices', () => {
+      const album = Album.create({ title: 'Trip' }, ownerId);
+      const a = album.addItem('media-a', ownerId);
+      const b = album.addItem('media-b', ownerId);
+      expect(a.success).toBe(true);
+      expect(b.success).toBe(true);
+      if (!a.success || !b.success) {
+        throw new Error('expected both addItem calls to succeed');
+      }
+      expect(a.value.orderIndex()).toBe(ALBUM_ITEM_ORDER_INITIAL);
+      expect(b.value.orderIndex()).toBe(ALBUM_ITEM_ORDER_INITIAL + ALBUM_ITEM_ORDER_GAP);
     });
   });
 
@@ -105,12 +130,12 @@ describe('Album (domain)', () => {
     it('should fail without an independent readiness check in the aggregate API', () => {
       const album = Album.create({ title: 'Trip' }, ownerId);
       const r = album.setCoverMedia('not-in-album', ownerId);
-      expect(r.success).toBe(false);
-      let code = '';
-      if (!r.success) {
-        code = r.error.code;
-      }
-      expect(code).toBe(AppErrorCollection.album.CoverMediaNotPartOfAlbum.code);
+      expect(r).toEqual({
+        success: false,
+        error: expect.objectContaining({
+          code: AppErrorCollection.album.CoverMediaNotPartOfAlbum.code,
+        }),
+      });
     });
   });
 
@@ -125,19 +150,25 @@ describe('Album (domain)', () => {
     });
   });
 
-  describe('When a viewer member without add privileges tries to add an item', () => {
-    it('should fail with member not allowed to add item', () => {
+  describe('When reorderItems is called with a full permutation', () => {
+    it('should assign new sparse indices in list order', () => {
       const album = Album.create({ title: 'Trip' }, ownerId);
-      const viewerId = TEST_VIEWER_ONLY_ID;
-      const addMember = album.addMember(viewerId, AlbumMemberRoleEnum.viewer, ownerId);
-      expect(addMember.success).toBe(true);
-      const r = album.addItem('media-x', viewerId);
-      expect(r.success).toBe(false);
-      let code = '';
-      if (!r.success) {
-        code = r.error.code;
+      const a = album.addItem('m1', ownerId);
+      const b = album.addItem('m2', ownerId);
+      const c = album.addItem('m3', ownerId);
+      expect(a.success && b.success && c.success).toBe(true);
+      if (!a.success || !b.success || !c.success) {
+        throw new Error('expected all addItem calls to succeed');
       }
-      expect(code).toBe(AppErrorCollection.album.MemberNotAllowedToAddItem.code);
+      const id1 = a.value.id();
+      const id2 = b.value.id();
+      const id3 = c.value.id();
+      const r = album.reorderItems([id3, id1, id2], ownerId);
+      expect(r.success).toBe(true);
+      const items = album.toPersistence().items as { id: string; orderIndex: string }[];
+      const byId = new Map(items.map((it) => [it.id, it.orderIndex]));
+      expect(byId.get(id3)! < byId.get(id1)!).toBe(true);
+      expect(byId.get(id1)! < byId.get(id2)!).toBe(true);
     });
   });
 });

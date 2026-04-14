@@ -1,0 +1,151 @@
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
+import type { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
+import { buildRunMediaWorkerLoop } from '../runMediaWorkerLoop';
+
+describe('buildRunMediaWorkerLoop', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  describe('When a job returns processed', () => {
+    it('should poll again immediately without waiting for the interval', async () => {
+      const processNextMediaImageJob = jest
+        .fn()
+        .mockResolvedValueOnce('processed')
+        .mockResolvedValueOnce('idle');
+      const logger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        http: jest.fn(),
+        verbose: jest.fn(),
+      };
+
+      const loop = buildRunMediaWorkerLoop({
+        config: { mediaWorkerPollIntervalMs: 10_000 } as IocGeneratedCradle['config'],
+        logger,
+        processNextMediaImageJob,
+      } as IocGeneratedCradle);
+
+      const done = loop.start();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(processNextMediaImageJob).toHaveBeenCalledTimes(2);
+
+      loop.stop();
+      await jest.runOnlyPendingTimersAsync();
+      await done;
+    });
+  });
+
+  describe('When jobs stay idle', () => {
+    it('should poll on the configured interval until stopped', async () => {
+      const processNextMediaImageJob = jest.fn().mockResolvedValue('idle');
+      const logger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        http: jest.fn(),
+        verbose: jest.fn(),
+      };
+
+      const loop = buildRunMediaWorkerLoop({
+        config: { mediaWorkerPollIntervalMs: 100 } as IocGeneratedCradle['config'],
+        logger,
+        processNextMediaImageJob,
+      } as IocGeneratedCradle);
+
+      const done = loop.start();
+      await Promise.resolve();
+      expect(processNextMediaImageJob).toHaveBeenCalled();
+
+      await jest.advanceTimersByTimeAsync(100);
+      await Promise.resolve();
+      await jest.advanceTimersByTimeAsync(100);
+      await Promise.resolve();
+
+      expect(processNextMediaImageJob.mock.calls.length).toBeGreaterThanOrEqual(3);
+
+      loop.stop();
+      await jest.runOnlyPendingTimersAsync();
+      await done;
+
+      expect(logger.info).toHaveBeenCalledWith('Media worker stopped');
+    });
+  });
+
+  describe('When processNextMediaImageJob throws', () => {
+    it('should log and continue after the poll interval', async () => {
+      const processNextMediaImageJob = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('boom'))
+        .mockResolvedValue('idle');
+      const logger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        http: jest.fn(),
+        verbose: jest.fn(),
+      };
+
+      const loop = buildRunMediaWorkerLoop({
+        config: { mediaWorkerPollIntervalMs: 50 } as IocGeneratedCradle['config'],
+        logger,
+        processNextMediaImageJob,
+      } as IocGeneratedCradle);
+
+      const done = loop.start();
+      await Promise.resolve();
+
+      await jest.advanceTimersByTimeAsync(50);
+      await Promise.resolve();
+
+      expect(logger.error).toHaveBeenCalledWith('Media worker loop error', expect.any(Error));
+      expect(processNextMediaImageJob.mock.calls.length).toBeGreaterThanOrEqual(2);
+
+      loop.stop();
+      await jest.runOnlyPendingTimersAsync();
+      await done;
+    });
+  });
+
+  describe('When start is called twice while the loop is already running', () => {
+    it('should only log Media worker started once', async () => {
+      const processNextMediaImageJob = jest.fn().mockResolvedValue('idle');
+      const logger = {
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        http: jest.fn(),
+        verbose: jest.fn(),
+      };
+
+      const loop = buildRunMediaWorkerLoop({
+        config: { mediaWorkerPollIntervalMs: 10 } as IocGeneratedCradle['config'],
+        logger,
+        processNextMediaImageJob,
+      } as IocGeneratedCradle);
+
+      const first = loop.start();
+      loop.start();
+      await Promise.resolve();
+
+      const startedMessages = logger.info.mock.calls.filter((c) => c[0] === 'Media worker started');
+      expect(startedMessages).toHaveLength(1);
+
+      loop.stop();
+      await jest.runOnlyPendingTimersAsync();
+      await first;
+    });
+  });
+});

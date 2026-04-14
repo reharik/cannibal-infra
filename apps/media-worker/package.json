@@ -12,7 +12,9 @@
     "ioc:bundles": "ioc bundles",
     "ioc:inspect": "ioc inspect",
     "ioc:inspect:discovery": "ioc inspect --discovery",
-    "start": "node dist/main.js"
+    "lint": "nx lint media-worker",
+    "start": "node dist/main.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' nx test media-worker"
   },
   "dependencies": {
     "@packages/contracts": "*",

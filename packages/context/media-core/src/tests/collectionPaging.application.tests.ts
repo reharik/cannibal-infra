@@ -8,15 +8,14 @@ import {
   type AlbumItemWithMediaRow,
   type AlbumReadRepository,
   type AlbumWithCoverRow,
-  type MediaAssetProjection,
 } from '@packages/media-core';
 
 describe('ViewerAlbumReadService (collection paging)', () => {
   const viewerId = 'viewer-paging-1';
   const albumId = 'album-paging-1';
 
-  const noopMediaAssetReadRepository = {
-    listByMediaItemIds: async (): Promise<Map<string, MediaAssetProjection[]>> => new Map(),
+  const noopMediaItemReadRepository = {
+    listTagsForMediaItemIds: async (): Promise<Map<string, string[]>> => new Map(),
   };
 
   describe('When listAlbums is called with no collectionInfo fields', () => {
@@ -33,7 +32,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
 
       const factory = buildViewerAlbumReadServiceFactory({
         albumReadRepository,
-        mediaAssetReadRepository: noopMediaAssetReadRepository,
+        mediaItemReadRepository: noopMediaItemReadRepository,
       } as never);
       const service = factory({ viewerId });
 
@@ -64,7 +63,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
 
       const factory = buildViewerAlbumReadServiceFactory({
         albumReadRepository,
-        mediaAssetReadRepository: noopMediaAssetReadRepository,
+        mediaItemReadRepository: noopMediaItemReadRepository,
       } as never);
       const service = factory({ viewerId });
 
@@ -124,7 +123,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
 
       const factory = buildViewerAlbumReadServiceFactory({
         albumReadRepository,
-        mediaAssetReadRepository: noopMediaAssetReadRepository,
+        mediaItemReadRepository: noopMediaItemReadRepository,
       } as never);
       const service = factory({ viewerId });
 
@@ -147,7 +146,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
         async (_params: {
           albumId: string;
           viewerId: string;
-          collectionInfo: CollectionInfo<AlbumSortBy>;
+          collectionInfo: CollectionInfo<AlbumItemSortBy>;
         }): Promise<AlbumItemWithMediaRow[]> => [],
       );
       const albumReadRepository: Pick<AlbumReadRepository, 'getAlbumItemsForViewer'> = {
@@ -156,7 +155,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
 
       const factory = buildViewerAlbumReadServiceFactory({
         albumReadRepository,
-        mediaAssetReadRepository: noopMediaAssetReadRepository,
+        mediaItemReadRepository: noopMediaItemReadRepository,
       } as never);
       const service = factory({ viewerId });
 
@@ -183,7 +182,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
         async (_params: {
           albumId: string;
           viewerId: string;
-          collectionInfo: CollectionInfo<AlbumSortBy>;
+          collectionInfo: CollectionInfo<AlbumItemSortBy>;
         }): Promise<AlbumItemWithMediaRow[]> => [],
       );
       const albumReadRepository: Pick<AlbumReadRepository, 'getAlbumItemsForViewer'> = {
@@ -192,7 +191,7 @@ describe('ViewerAlbumReadService (collection paging)', () => {
 
       const factory = buildViewerAlbumReadServiceFactory({
         albumReadRepository,
-        mediaAssetReadRepository: noopMediaAssetReadRepository,
+        mediaItemReadRepository: noopMediaItemReadRepository,
       } as never);
       const service = factory({ viewerId });
 

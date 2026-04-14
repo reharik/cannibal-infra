@@ -50,8 +50,14 @@ const createKnexConfig = (config: Config): KnexConfig => {
     client: 'pg',
     connection,
     ...knexStringcase({
-      appPostProcessResponse: (result: unknown, queryContext?: unknown) =>
-        smartEnumPostProcessResponse?.(convertNullsToUndefined(result), queryContext),
+      appPostProcessResponse: (result: unknown, queryContext?: unknown): unknown => {
+        const processed = convertNullsToUndefined(result);
+        const fn = smartEnumPostProcessResponse;
+        if (fn === undefined) {
+          return undefined;
+        }
+        return fn(processed, queryContext) as unknown;
+      },
     }),
     migrations: {
       directory: MIGRATIONS_DIR,

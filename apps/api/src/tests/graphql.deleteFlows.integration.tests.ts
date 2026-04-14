@@ -137,6 +137,23 @@ const deleteMediaItemMutation = `
   }
 `;
 
+const updateMediaItemDetailsMutation = `
+  mutation UpdateMediaItemDetails($input: UpdateMediaItemDetailsInput!) {
+    updateMediaItemDetails(input: $input) {
+      data {
+        mediaItemId
+        title
+        description
+        takenAt
+      }
+      errors {
+        code
+        message
+      }
+    }
+  }
+`;
+
 const listCollection = `
   collectionInfo: {
     pageInfo: { limit: 50, offset: 0 }
@@ -195,6 +212,7 @@ const insertAlbumItem = async (
     id: randomUUID(),
     albumId,
     mediaItemId,
+    orderIndex: '1000000000000',
     createdAt: now,
     updatedAt: now,
     createdBy: TEST_VIEWER_A_ID,
@@ -784,6 +802,115 @@ describe('deleteMediaItem', () => {
 
       const albumItems = await database('albumItem').where({ mediaItemId });
       expect(albumItems).toHaveLength(0);
+    });
+  });
+});
+
+describe('updateMediaItemDetails', () => {
+  let executeGraphQL: ReturnType<typeof createExecuteGraphQL>;
+  let container: AwilixContainer<IocGeneratedCradle>;
+  let database: Knex;
+  let integrationTestMediaStorage: IntegrationTestMediaStorage;
+
+  beforeAll(async () => {
+    const setup = await setupGraphqlIntegrationTests();
+    container = setup.container;
+    executeGraphQL = setup.executeGraphQL;
+    database = container.resolve('database');
+    integrationTestMediaStorage = setup.integrationTestMediaStorage;
+  });
+
+  afterEach(async () => {
+    await resetIntegrationTestDb(database, undefined, () => integrationTestMediaStorage.clear());
+  });
+
+  describe('When the viewer owns the media item', () => {
+    it('should update title, description, and takenAt', async () => {
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
+        executeGraphQL,
+        database,
+        integrationTestMediaStorage,
+      });
+      const takenAtIso = '2024-01-15T12:00:00.000Z';
+
+      const updated = await executeGraphQL<{
+        updateMediaItemDetails: WriteMutationResponse<{
+          mediaItemId: string;
+          title?: string;
+          description?: string;
+          takenAt?: string;
+        }>;
+      }>({
+        query: updateMediaItemDetailsMutation,
+        variables: {
+          input: {
+            mediaItemId,
+            title: 'Sunset',
+            description: 'At the beach',
+            takenAt: takenAtIso,
+          },
+        },
+        context: loggedInViewer1,
+      });
+      expect(updated.json.errors).toBeUndefined();
+      expect(updated.json.data?.updateMediaItemDetails.errors).toEqual([]);
+      expect(updated.json.data?.updateMediaItemDetails.data?.title).toBe('Sunset');
+      expect(updated.json.data?.updateMediaItemDetails.data?.description).toBe('At the beach');
+      expect(updated.json.data?.updateMediaItemDetails.data?.takenAt).toBe(takenAtIso);
+
+      const row = await database('mediaItem').where({ id: mediaItemId }).first();
+      expect(row?.title).toBe('Sunset');
+      expect(row?.description).toBe('At the beach');
+      expect(row?.takenAt).toEqual(new Date(takenAtIso));
+    });
+  });
+
+  describe('When the input omits all optional fields', () => {
+    it('should return MediaItemUpdateNoFieldsProvided', async () => {
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
+        executeGraphQL,
+        database,
+        integrationTestMediaStorage,
+      });
+
+      const result = await executeGraphQL<{
+        updateMediaItemDetails: WriteMutationResponse<unknown>;
+      }>({
+        query: updateMediaItemDetailsMutation,
+        variables: { input: { mediaItemId } },
+        context: loggedInViewer1,
+      });
+      expect(result.json.errors).toBeUndefined();
+      expect(result.json.data?.updateMediaItemDetails.data).toBeFalsy();
+      expect(result.json.data?.updateMediaItemDetails.errors[0]?.code).toBe(
+        AppErrorCollection.mediaItem.MediaItemUpdateNoFieldsProvided.code,
+      );
+    });
+  });
+
+  describe('When another user attempts to update the media item', () => {
+    it('should fail with media item not owned by viewer', async () => {
+      const mediaItemId = await createUploadedMediaItemViaGraphQL({
+        executeGraphQL,
+        database,
+        integrationTestMediaStorage,
+        context: loggedInViewer1,
+      });
+
+      const result = await executeGraphQL<{
+        updateMediaItemDetails: WriteMutationResponse<unknown>;
+      }>({
+        query: updateMediaItemDetailsMutation,
+        variables: {
+          input: { mediaItemId, title: 'Nope' },
+        },
+        context: loggedInViewerA,
+      });
+      expect(result.json.errors).toBeUndefined();
+      expect(result.json.data?.updateMediaItemDetails.data).toBeFalsy();
+      expect(result.json.data?.updateMediaItemDetails.errors[0]?.code).toBe(
+        AppErrorCollection.mediaItem.MediaItemNotOwnedByViewer.code,
+      );
     });
   });
 });

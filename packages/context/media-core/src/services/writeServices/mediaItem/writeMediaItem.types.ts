@@ -36,3 +36,30 @@ export type DeleteMediaItemCommand = {
 export type DeleteMediaItemResult = {
   mediaItemId: EntityId;
 };
+
+export type UpdateMediaItemDetailsCommand = {
+  viewerId: EntityId;
+  mediaItemId: EntityId;
+  title?: string | null;
+  description?: string | null;
+  /** ISO string or Date (transport may pass either). */
+  takenAt?: Date | string | null;
+};
+
+export type UpdateMediaItemDetailsResult = {
+  mediaItemId: EntityId;
+  title?: string;
+  description?: string;
+  takenAt?: Date;
+};
+
+export type UpdateMediaItemTagsCommand = {
+  viewerId: EntityId;
+  mediaItemId: EntityId;
+  tags: string[];
+};
+
+export type UpdateMediaItemTagsResult = {
+  mediaItemId: EntityId;
+  tags: string[];
+};

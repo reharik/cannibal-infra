@@ -7,7 +7,7 @@ export const albumRolePermissions: Record<AlbumMemberRoleEnum['key'], readonly A
     AlbumAction.editDetails,
     AlbumAction.addItem,
     AlbumAction.removeItem,
-    AlbumAction.setCover,
+    AlbumAction.editCover,
     AlbumAction.delete,
   ],
   admin: [
@@ -15,7 +15,7 @@ export const albumRolePermissions: Record<AlbumMemberRoleEnum['key'], readonly A
     AlbumAction.editDetails,
     AlbumAction.addItem,
     AlbumAction.removeItem,
-    AlbumAction.setCover,
+    AlbumAction.editCover,
     AlbumAction.delete,
   ],
   contributor: [AlbumAction.view, AlbumAction.addItem, AlbumAction.removeItem],

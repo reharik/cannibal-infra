@@ -17,6 +17,10 @@ export type MediaItemReadRepository = {
     viewerId: EntityId;
     collectionInfo: MediaItemCollectionInfo;
   }): Promise<MediaItemRow[]>;
+  listTagsForMediaItemIds: (args: {
+    viewerId: EntityId;
+    mediaItemIds: EntityId[];
+  }) => Promise<Map<EntityId, string[]>>;
 };
 
 type MediaItemReadRepositoryDeps = { database: Knex };
@@ -73,5 +77,38 @@ export const buildMediaItemReadRepository = ({
       .limit(collectionInfo.pageInfo.limit + 1)
       .offset(collectionInfo.pageInfo.offset);
     return rows;
+  },
+  listTagsForMediaItemIds: async ({
+    viewerId,
+    mediaItemIds,
+  }: {
+    viewerId: EntityId;
+    mediaItemIds: EntityId[];
+  }): Promise<Map<EntityId, string[]>> => {
+    const result = new Map<EntityId, string[]>();
+    if (mediaItemIds.length === 0) {
+      return result;
+    }
+    const rows = await database('mediaItemTag')
+      .join('mediaItem', 'mediaItemTag.mediaItemId', 'mediaItem.id')
+      .join('userTag', 'mediaItemTag.userTagId', 'userTag.id')
+      .where('mediaItem.ownerId', viewerId)
+      .whereIn('mediaItemTag.mediaItemId', mediaItemIds)
+      .select<
+        { mediaItemId: EntityId; label: string }[]
+      >('mediaItemTag.mediaItemId', 'userTag.label')
+      .orderBy('mediaItemTag.mediaItemId', 'asc')
+      .orderBy('userTag.label', 'asc');
+
+    for (const id of mediaItemIds) {
+      result.set(id, []);
+    }
+    for (const row of rows) {
+      const list = result.get(row.mediaItemId);
+      if (list) {
+        list.push(row.label);
+      }
+    }
+    return result;
   },
 });

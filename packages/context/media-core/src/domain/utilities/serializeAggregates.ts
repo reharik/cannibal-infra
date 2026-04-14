@@ -6,6 +6,8 @@ import { isEntity } from './entityGuard';
 export const serializeValue = (value: unknown): unknown => {
   if (value == null) return value;
 
+  if (typeof value === 'bigint') return value.toString();
+
   // primitives
   if (typeof value !== 'object') return value;
 

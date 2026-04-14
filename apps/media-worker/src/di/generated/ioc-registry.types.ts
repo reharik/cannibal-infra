@@ -18,9 +18,12 @@ import type {
   MediaItemRepository,
   MediaStorage,
   NotificationRepository,
+  ReorderAlbumItems,
   SetCoverMedia,
   ShareLinkRepository,
   UnsetCoverMedia,
+  UpdateMediaItem,
+  UpdateMediaItemTags,
   UserRepository,
   ViewerAlbumReadServiceFactory,
   ViewerMediaItemReadServiceFactory,
@@ -54,10 +57,13 @@ export interface IocGeneratedTypes {
   mediaStorage: MediaStorage;
   notificationRepository: NotificationRepository;
   processNextMediaImageJob: ProcessNextMediaImageJob;
+  reorderAlbumItems: ReorderAlbumItems;
   runMediaWorkerLoop: RunMediaWorkerLoop;
   setCoverMedia: SetCoverMedia;
   shareLinkRepository: ShareLinkRepository;
   unsetCoverMedia: UnsetCoverMedia;
+  updateMediaItem: UpdateMediaItem;
+  updateMediaItemTags: UpdateMediaItemTags;
   userRepository: UserRepository;
   viewerAlbumReadServiceFactory: ViewerAlbumReadServiceFactory;
   viewerMediaItemReadServiceFactory: ViewerMediaItemReadServiceFactory;
@@ -73,8 +79,11 @@ export interface IocGeneratedTypes {
     deleteAlbumItem: DeleteAlbumItem;
     deleteMediaItem: DeleteMediaItem;
     finalizeMediaItemUpload: FinalizeMediaItemUpload;
+    reorderAlbumItems: ReorderAlbumItems;
     setCoverMedia: SetCoverMedia;
     unsetCoverMedia: UnsetCoverMedia;
+    updateMediaItem: UpdateMediaItem;
+    updateMediaItemTags: UpdateMediaItemTags;
   };
 }
 

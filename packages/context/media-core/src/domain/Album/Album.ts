@@ -2,9 +2,11 @@ import { AlbumMemberRoleEnum, AppErrorCollection } from '@packages/contracts';
 import type { ActorId, EntityId, WriteResult } from '../../types/types';
 import { AggregateRoot } from '../AggregateRoot';
 import type { ChildEntities, EntityAuditRecord } from '../Entity';
+import { reorderAlbumItems } from '../utilities/reorderAlbumItems';
 import { fail, ok } from '../utilities/writeResponse';
 import type { AlbumItemRecord } from './AlbumItem';
 import { AlbumItem } from './AlbumItem';
+import { ALBUM_ITEM_ORDER_GAP, ALBUM_ITEM_ORDER_INITIAL } from './albumItemOrder';
 import { AlbumMember, AlbumMemberRecord } from './AlbumMember';
 
 export type AlbumProps = {
@@ -61,16 +63,41 @@ export class Album extends AggregateRoot<AlbumRecord> {
     return album;
   }
 
+  private nextOrderIndex(): bigint {
+    if (this.#items.length === 0) {
+      return ALBUM_ITEM_ORDER_INITIAL;
+    }
+    let max = 0n;
+    for (const item of this.#items) {
+      const o = item.orderIndex();
+      if (o > max) {
+        max = o;
+      }
+    }
+    return max + ALBUM_ITEM_ORDER_GAP;
+  }
+
   addItem(mediaItemId: EntityId, actorId: ActorId): WriteResult<AlbumItem> {
     if (this.#items.some((i) => i.mediaItemId() === mediaItemId)) {
       return fail(AppErrorCollection.album.MediaAlreadyInAlbum);
     }
     // TODO: check various invariants when they exist e.g. is album mutable
 
-    const albumItem = AlbumItem.create({ mediaItemId }, actorId);
+    const albumItem = AlbumItem.create({ mediaItemId, orderIndex: this.nextOrderIndex() }, actorId);
     this.#items.push(albumItem);
     this.touch(actorId);
     return ok(albumItem);
+  }
+
+  reorderItems(orderedAlbumItemIds: EntityId[], actorId: ActorId): WriteResult {
+    const reorder = reorderAlbumItems(orderedAlbumItemIds, this.#items, actorId);
+    if (!reorder.success) {
+      return reorder;
+    }
+
+    this.#items = reorder.value ?? [];
+    this.touch(actorId);
+    return ok(undefined);
   }
 
   addMember(userId: EntityId, role: AlbumMemberRoleEnum, actorId: ActorId): WriteResult {
@@ -81,7 +108,9 @@ export class Album extends AggregateRoot<AlbumRecord> {
     this.touch(actorId);
     return ok(undefined);
   }
-
+  coverMediaId(): EntityId | undefined {
+    return this.props.coverMediaId;
+  }
   /* Currently the rule is that album cover must be a reference to a 
   media item that is part of the album.  This is an easier implementation for now. 
   If we decide to open that up there are two ways to do it.  We could add a 

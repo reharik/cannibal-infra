@@ -2,6 +2,8 @@ type Mutation {
   createMediaUpload(input: CreateMediaUploadInput!): CreateMediaUploadResponse!
   finalizeMediaUpload(input: FinalizeMediaUploadInput!): FinalizeMediaUploadResponse!
   deleteMediaItem(input: DeleteMediaItemInput!): DeleteMediaItemResponse!
+  updateMediaItemDetails(input: UpdateMediaItemDetailsInput!): UpdateMediaItemDetailsResponse!
+  updateMediaItemTags(input: UpdateMediaItemTagsInput!): UpdateMediaItemTagsResponse!
 }
 
 input CreateMediaUploadInput {
@@ -25,6 +27,18 @@ input DeleteMediaItemInput {
   mediaItemId: ID!
 }
 
+input UpdateMediaItemDetailsInput {
+  mediaItemId: ID!
+  title: String
+  description: String
+  takenAt: DateTime
+}
+
+input UpdateMediaItemTagsInput {
+  mediaItemId: ID!
+  tags: [String!]!
+}
+
 type DeleteMediaItemResponse {
   data: DeleteMediaItemPayload
   errors: [ContractError!]
@@ -32,6 +46,28 @@ type DeleteMediaItemResponse {
 
 type DeleteMediaItemPayload {
   mediaItemId: ID!
+}
+
+type UpdateMediaItemDetailsResponse {
+  data: UpdateMediaItemDetailsPayload
+  errors: [ContractError!]
+}
+
+type UpdateMediaItemDetailsPayload {
+  mediaItemId: ID!
+  title: String
+  description: String
+  takenAt: DateTime
+}
+
+type UpdateMediaItemTagsResponse {
+  data: UpdateMediaItemTagsPayload
+  errors: [ContractError!]
+}
+
+type UpdateMediaItemTagsPayload {
+  mediaItemId: ID!
+  tags: [String!]!
 }
 
 type CreateMediaUploadResponse {

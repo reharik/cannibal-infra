@@ -1,4 +1,5 @@
 import {
+  AlbumMemberRoleEnum,
   AppErrorCollection,
   MediaAssetKind,
   MediaAssetStatus,
@@ -9,8 +10,8 @@ import { Readable } from 'node:stream';
 import type { MediaStorage } from '../application/media/MediaStorage';
 import { buildMediaAssetStorageKey } from '../application/media/MediaStorage';
 import { Album } from '../domain/Album/Album';
-import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaAssetRecord } from '../domain/MediaItem/MediaAsset';
+import { MediaItem } from '../domain/MediaItem/MediaItem';
 import type { MediaProcessingJobRepository } from '../domain/MediaProcessingJob/MediaProcessingJobRepository';
 import type { AlbumRepository } from '../repositories/domainRepositories/albumRepository';
 import type { MediaItemRepository } from '../repositories/domainRepositories/mediaItemRepository';
@@ -20,7 +21,7 @@ import { buildCreateAlbum } from '../services/writeServices/album/createAlbum';
 import { buildCreateMediaItemUpload } from '../services/writeServices/mediaItem/createMediaItemUpload';
 import { buildFinalizeMediaItemUpload } from '../services/writeServices/mediaItem/finalizeMediaItemUpload';
 import { EntityId } from '../types/types';
-import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID } from './testViewerIds';
+import { TEST_VIEWER_A_ID, TEST_VIEWER_B_ID, TEST_VIEWER_ONLY_ID } from './testViewerIds';
 
 /** 1×1 PNG — used so finalize can read width/height from uploaded bytes. */
 const MINIMAL_PNG_1X1 = Buffer.from([
@@ -258,7 +259,9 @@ describe('Media upload pipeline (application services)', () => {
       expect(after?.status()).toBe(MediaItemStatus.uploaded);
       expect(after?.width()).toBeUndefined();
       expect(after?.height()).toBeUndefined();
-      expect(findAssetRecord(after!, MediaAssetKind.original)?.status).toBe(MediaAssetStatus.ready.value);
+      expect(findAssetRecord(after!, MediaAssetKind.original)?.status).toBe(
+        MediaAssetStatus.ready.value,
+      );
     });
 
     it('should enqueue a background processing job for photo media', async () => {
@@ -466,6 +469,99 @@ describe('Album integration (application services)', () => {
         code = add.error.code;
       }
       expect(code).toBe(AppErrorCollection.mediaItem.MediaItemNotReady.code);
+    });
+  });
+
+  describe('When addAlbumItem is called by an album member with viewer role', () => {
+    it('should fail with member not allowed to add item', async () => {
+      const ownerId = TEST_VIEWER_A_ID;
+      const viewerOnlyId = TEST_VIEWER_ONLY_ID;
+      const albumRepository = createInMemoryAlbumRepository();
+      const mediaItemRepository = createInMemoryMediaItemRepository();
+      const projectionFromReadRepo = new Map<string, MediaItemRow>();
+      const mediaStorage = createTrackingMediaStorage('http://localhost:0');
+
+      const createAlbum = buildCreateAlbum({ albumRepository } as never);
+      const albumResult = await createAlbum({ viewerId: ownerId, title: 'Summer' });
+      expect(albumResult.success).toBe(true);
+      if (!albumResult.success) {
+        return;
+      }
+
+      const album = await albumRepository.getById(albumResult.value.albumId);
+      if (!album) {
+        return;
+      }
+      const memberResult = album.addMember(viewerOnlyId, AlbumMemberRoleEnum.viewer, ownerId);
+      expect(memberResult.success).toBe(true);
+      await albumRepository.save(album);
+
+      const createUpload = buildCreateMediaItemUpload({
+        mediaItemRepository,
+        mediaStorage,
+      } as never);
+      const finalize = buildFinalizeMediaItemUpload({
+        mediaItemRepository,
+        mediaStorage,
+        mediaProcessingJobRepository: createNoopMediaProcessingJobRepository(),
+      } as never);
+
+      const mediaResult = await createUpload({
+        viewerId: viewerOnlyId,
+        kind: MediaKind.photo,
+        mimeType: 'image/jpeg',
+      });
+      expect(mediaResult.success).toBe(true);
+      if (!mediaResult.success) {
+        return;
+      }
+      const item = await mediaItemRepository.getById(mediaResult.value.mediaItemId);
+      if (!item) {
+        return;
+      }
+      const originalAsset = findAssetRecord(item, MediaAssetKind.original);
+      if (!originalAsset) {
+        return;
+      }
+      mediaStorage.objects.set(
+        buildMediaAssetStorageKey(item.storageKey(), MediaAssetKind.original),
+        {
+          size: MINIMAL_PNG_1X1.length,
+          mimeType: 'image/png',
+          body: MINIMAL_PNG_1X1,
+        },
+      );
+      const fin = await finalize({ viewerId: viewerOnlyId, mediaItemId: item.id() });
+      expect(fin.success).toBe(true);
+      if (!fin.success) {
+        return;
+      }
+      const readyItem = await mediaItemRepository.getById(item.id());
+      if (!readyItem) {
+        return;
+      }
+      projectionFromReadRepo.set(readyItem.id(), projectionFromAggregate(readyItem));
+
+      const addAlbumItem = buildAddAlbumItem({
+        albumRepository,
+        mediaItemReadRepository: {
+          // eslint-disable-next-line @typescript-eslint/require-await
+          getForViewer: async ({ mediaItemId }: { mediaItemId: EntityId }) =>
+            projectionFromReadRepo.get(mediaItemId),
+        },
+      } as never);
+
+      const add = await addAlbumItem({
+        viewerId: viewerOnlyId,
+        albumId: albumResult.value.albumId,
+        mediaItemId: readyItem.id(),
+      });
+      expect(add.success).toBe(false);
+      let code = '';
+      if (!add.success) {
+        code = add.error.code;
+      }
+      expect(code).toBe(AppErrorCollection.album.MemberNotAllowedToAddItem.code);
     });
   });
 

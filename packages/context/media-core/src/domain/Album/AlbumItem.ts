@@ -8,11 +8,14 @@ import { Entity, type EntityAuditRecord } from '../Entity';
 
 export type AlbumItemProps = {
   mediaItemId: EntityId;
+  orderIndex: bigint;
 };
 
 export type AlbumItemRecord = {
   id: EntityId;
   mediaItemId: EntityId;
+  /** Stored as string in persistence (DB bigint / JSON-safe). */
+  orderIndex: string;
 } & EntityAuditRecord;
 
 export class AlbumItem extends Entity<AlbumItemRecord> {
@@ -23,13 +26,17 @@ export class AlbumItem extends Entity<AlbumItemRecord> {
     this.props = props;
   }
 
-  static create(props: AlbumItemProps, actorId: ActorId): AlbumItem {
-    return new AlbumItem(crypto.randomUUID(), actorId, props);
+  static create(props: { mediaItemId: EntityId; orderIndex: bigint }, actorId: ActorId): AlbumItem {
+    return new AlbumItem(crypto.randomUUID(), actorId, {
+      mediaItemId: props.mediaItemId,
+      orderIndex: props.orderIndex,
+    });
   }
 
   static rehydrate(record: AlbumItemRecord): AlbumItem {
     const item = new AlbumItem(record.id, record.createdBy, {
       mediaItemId: record.mediaItemId,
+      orderIndex: BigInt(String(record.orderIndex)),
     });
 
     item.rehydrateAudit(record);
@@ -38,6 +45,15 @@ export class AlbumItem extends Entity<AlbumItemRecord> {
 
   mediaItemId(): EntityId {
     return this.props.mediaItemId;
+  }
+
+  orderIndex(): bigint {
+    return this.props.orderIndex;
+  }
+
+  setOrderIndex(orderIndex: bigint, actorId: ActorId): void {
+    this.props.orderIndex = orderIndex;
+    this.touch(actorId);
   }
 
   hasMediaItem(id: EntityId): boolean {

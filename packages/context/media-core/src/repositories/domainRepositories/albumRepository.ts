@@ -28,7 +28,8 @@ export const buildAlbumRepository = ({ database }: AlbumRepositoryDeps): AlbumRe
 
     const itemRows = await database<AlbumItemRecord>('albumItem')
       .where({ albumId: id })
-      .orderBy('createdAt', 'asc');
+      .orderBy('orderIndex', 'asc')
+      .orderBy('id', 'asc');
 
     const memberRows = await withEnumRevival(
       database<AlbumMemberRecord>('albumMember').where({ albumId: id }).orderBy('createdAt', 'asc'),
@@ -90,8 +91,10 @@ const persistAlbumItems = async (
   items: AlbumItemRecord[],
 ) => {
   const existingItems = await trx<AlbumItemRecord>('albumItem').where({ albumId: record.id });
-  const { toInsert, toDelete /* toUpdate */ } = diffCollectionById(existingItems, items, {
-    hasMeaningfulChanges: (existing, item) => existing.mediaItemId !== item.mediaItemId,
+  const { toInsert, toDelete, toUpdate } = diffCollectionById(existingItems, items, {
+    hasMeaningfulChanges: (existing, item) =>
+      existing.mediaItemId !== item.mediaItemId ||
+      String(existing.orderIndex ?? '') !== String(item.orderIndex ?? ''),
   });
 
   if (toDelete.length > 0) {
@@ -112,10 +115,12 @@ const persistAlbumItems = async (
     );
   }
 
-  // When we have meaningful changes, we update the item
-  // for (const { existing, item } of toUpdate) {
-  //   await trx<AlbumItemRecord>('albumItem').where({ id: existing.id }).update({
-  //     position: next.position,
-  //   });
-  // }
+  for (const { item } of toUpdate) {
+    await trx<AlbumItemRecord>('albumItem').where({ id: item.id }).update({
+      mediaItemId: item.mediaItemId,
+      orderIndex: item.orderIndex,
+      updatedAt: item.updatedAt,
+      updatedBy: item.updatedBy,
+    });
+  }
 };

@@ -24,6 +24,8 @@ export type AlbumProjection = {
 
 export type AlbumItemProjection = {
   id: string;
+  /** Sparse bigint order index as string (GraphQL-safe). */
+  orderIndex: string;
   mediaItem: MediaItemProjection;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +60,7 @@ export type AlbumWithCoverRow = {
 
 export type AlbumItemWithMediaRow = {
   id: EntityId;
+  albumItemOrderIndex: string;
   createdAt: Date;
   updatedAt: Date;
 } & NamespacedMediaItemRow;

@@ -4,10 +4,14 @@ import { fail } from '../../domain/utilities/writeResponse';
 import { EntityId } from '../../types/types';
 import { ensureAlbumPermission } from '../authorization/albumAuthorization';
 
-export const ensureMemberCanEditAlbum = (album: Album, viewerId: EntityId) => {
+export const ensureMemberCanEditAlbum = (
+  album: Album,
+  albumAction: AlbumAction,
+  viewerId: EntityId,
+) => {
   const member = album.getAlbumMember(viewerId);
   if (!member) {
     return fail(AppErrorCollection.album.UserIsNotMember);
   }
-  return ensureAlbumPermission(member.role(), AlbumAction.editDetails);
+  return ensureAlbumPermission(member.role(), albumAction);
 };

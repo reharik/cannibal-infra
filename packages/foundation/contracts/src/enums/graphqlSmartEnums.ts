@@ -7,7 +7,7 @@
 
 import { enumeration, type Enumeration } from '@reharik/smart-enum';
 
-const albumItemSortByInput = { 'createdAt': { column: 'created_at' } } as const;
+const albumItemSortByInput = { 'createdAt': { column: 'created_at' }, 'orderIndex': { column: 'order_index' } } as const;
 const albumSortByInput = { 'createdAt': { column: 'created_at' }, 'title': { column: 'title' } } as const;
 const errorCategoryInput = ['auth', 'conflict', 'domain', 'system', 'validation'] as const;
 const mediaAssetKindInput = ['display', 'original', 'thumbnail'] as const;

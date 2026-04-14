@@ -42,10 +42,12 @@ type AlbumItemCollectionPayload {
 type AlbumItem implements Node {
   id: ID!
   mediaItem: MediaItem!
+  orderIndex: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
 
 enum AlbumItemSortBy {
   CREATED_AT @enumMeta(props: [{ name: "column", value: "created_at" }])
+  ORDER_INDEX @enumMeta(props: [{ name: "column", value: "order_index" }])
 }

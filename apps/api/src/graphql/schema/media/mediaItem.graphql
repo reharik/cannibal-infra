@@ -13,6 +13,7 @@ type MediaItem implements Node {
   title: String
   description: String
   takenAt: DateTime
+  tags: [String!]!
   createdAt: DateTime!
   updatedAt: DateTime!
 }

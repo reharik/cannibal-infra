@@ -16,9 +16,7 @@ const expectGraphQLMutationRejectedForAuth = (
   fieldName: 'createMediaUpload' | 'finalizeMediaUpload',
 ): void => {
   expect(
-    json.errors?.some((e) =>
-      authRequiredMutationErrorMessages.some((m) => m === e.message),
-    ),
+    json.errors?.some((e) => authRequiredMutationErrorMessages.some((m) => m === e.message)),
   ).toBe(true);
 
   if (json.data === null || json.data === undefined) {

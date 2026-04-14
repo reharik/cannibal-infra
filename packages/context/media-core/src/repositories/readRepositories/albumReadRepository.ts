@@ -1,4 +1,4 @@
-import { AlbumSortBy } from '@packages/contracts';
+import { AlbumItemSortBy, AlbumSortBy } from '@packages/contracts';
 import type { Knex } from 'knex';
 import {
   AlbumItemWithMediaRow,
@@ -28,7 +28,7 @@ export type AlbumReadRepository = {
   }: {
     albumId: string;
     viewerId: string;
-    collectionInfo: CollectionInfo<AlbumSortBy>;
+    collectionInfo: CollectionInfo<AlbumItemSortBy>;
   }) => Promise<AlbumItemWithMediaRow[]>;
   findAlbumIdsReferencingMediaItem: ({ mediaItemId }: { mediaItemId: string }) => Promise<string[]>;
 };
@@ -60,7 +60,11 @@ const albumWithCoverSelectColumns = [
   ...mediaItemSelectColumns,
 ];
 
-const albumItemWithMediaSelectColumns = ['albumItem.id', ...mediaItemSelectColumns];
+const albumItemWithMediaSelectColumns = [
+  'albumItem.id',
+  'albumItem.orderIndex as albumItemOrderIndex',
+  ...mediaItemSelectColumns,
+];
 
 type AlbumReadRepositoryDeps = { database: Knex };
 
@@ -108,7 +112,7 @@ export const buildAlbumReadRepository = ({
   }: {
     albumId: string;
     viewerId: string;
-    collectionInfo: CollectionInfo<AlbumSortBy>;
+    collectionInfo: CollectionInfo<AlbumItemSortBy>;
   }): Promise<AlbumItemWithMediaRow[]> => {
     return database<AlbumItemWithMediaRow>('albumItem')
       .innerJoin('album', 'albumItem.albumId', 'album.id')
@@ -117,8 +121,8 @@ export const buildAlbumReadRepository = ({
       .where('albumMember.userId', viewerId)
       .andWhere('album.id', albumId)
       .select<AlbumItemWithMediaRow[]>(...albumItemWithMediaSelectColumns)
-      .orderBy(`album_item.${collectionInfo.sortBy.column}`, collectionInfo.sortDir.value)
-      .orderBy('album_item.id', 'asc') // tie-breaker
+      .orderBy(`albumItem.${collectionInfo.sortBy.column}`, collectionInfo.sortDir.value)
+      .orderBy('albumItem.id', 'asc') // tie-breaker
       .limit(collectionInfo.pageInfo.limit + 1)
       .offset(collectionInfo.pageInfo.offset);
   },

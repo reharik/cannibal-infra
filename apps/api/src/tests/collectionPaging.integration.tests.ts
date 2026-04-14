@@ -91,6 +91,7 @@ describe('AlbumReadRepository (Knex collection paging)', () => {
       id: params.id,
       albumId: params.albumId,
       mediaItemId: params.mediaItemId,
+      orderIndex: '1000000000000',
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
       createdBy: viewerId,

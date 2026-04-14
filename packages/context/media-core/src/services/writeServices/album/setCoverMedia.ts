@@ -1,3 +1,4 @@
+import { AlbumAction } from '@packages/contracts';
 import { ensureMemberCanEditAlbum } from '../../../application/support/albumguard';
 import {
   ensureMediaItemInReadyState,
@@ -44,7 +45,7 @@ export const buildSetCoverMedia = ({
     if (!r3.success) {
       return r3;
     }
-    const r4 = ensureMemberCanEditAlbum(album, viewerId);
+    const r4 = ensureMemberCanEditAlbum(album, AlbumAction.editCover, viewerId);
     if (!r4.success) {
       return r4;
     }

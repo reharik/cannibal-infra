@@ -1,5 +1,6 @@
 import { StandardEnumItem } from '@reharik/smart-enum';
 import { AlbumReadRepository } from '../../../repositories/readRepositories/albumReadRepository';
+import { MediaItemReadRepository } from '../../../repositories/readRepositories/mediaItemReadRepository';
 import { ReadServiceFactoryBase } from '../readServiceBaseType';
 import {
   AlbumCollectionInfo,
@@ -24,7 +25,9 @@ export interface ViewerAlbumReadServiceFactory extends ReadServiceFactoryBase {
   (args: { viewerId: string }): ViewerAlbumReadService;
 }
 
-const mapMediaItemRowToParent = (mediaItem: NamespacedMediaItemRow): MediaItemProjection => {
+const mapMediaItemRowToParent = (
+  mediaItem: NamespacedMediaItemRow,
+): Omit<MediaItemProjection, 'tags'> => {
   const id = mediaItem.mediaItemId ?? '';
   return {
     id,
@@ -50,67 +53,96 @@ export type SortableEnum = StandardEnumItem & { column: string };
 
 type ViewerAlbumReadServiceFactoryDeps = {
   albumReadRepository: AlbumReadRepository;
+  mediaItemReadRepository: MediaItemReadRepository;
 };
 
 export const buildViewerAlbumReadServiceFactory = ({
   albumReadRepository,
+  mediaItemReadRepository,
 }: ViewerAlbumReadServiceFactoryDeps): ViewerAlbumReadServiceFactory => {
-  return ({ viewerId }: { viewerId: string }) => ({
-    listAlbums: async (collectionInfo: AlbumCollectionInfo): Promise<AlbumListProjection> => {
-      const albums = await albumReadRepository.listByViewerId({
-        viewerId,
-        collectionInfo,
-      });
-      const nodes = albums.map((album) => ({
-        id: album.id,
-        title: album.title,
-        createdAt: album.createdAt,
-        updatedAt: album.updatedAt,
-        coverMedia: album.mediaItemId != null ? mapMediaItemRowToParent(album) : undefined,
-      }));
-
-      return {
-        nodes,
-        pageInfo: collectionInfo.pageInfo,
-      };
-    },
-
-    getAlbum: async (albumId: string): Promise<AlbumProjection | undefined> => {
-      const row = await albumReadRepository.getAlbumForViewer({ albumId, viewerId });
-      if (!row) {
-        return undefined;
+  return ({ viewerId }: { viewerId: string }) => {
+    const enrichWithTags = async (
+      items: Omit<MediaItemProjection, 'tags'>[],
+    ): Promise<MediaItemProjection[]> => {
+      if (items.length === 0) {
+        return [];
       }
-      return {
-        id: row.id,
-        title: row.title,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        coverMedia: row.mediaItemId != null ? mapMediaItemRowToParent(row) : undefined,
-      };
-    },
-
-    getAlbumItems: async ({
-      albumId,
-      collectionInfo,
-    }: {
-      albumId: string;
-      collectionInfo: AlbumItemCollectionInfo;
-    }): Promise<AlbumItemListProjection> => {
-      const albumItems = await albumReadRepository.getAlbumItemsForViewer({
-        albumId,
+      const tagMap = await mediaItemReadRepository.listTagsForMediaItemIds({
         viewerId,
-        collectionInfo,
+        mediaItemIds: items.map((i) => i.id),
       });
-      const nodes = albumItems.map((albumItem) => ({
-        id: albumItem.id,
-        mediaItem: mapMediaItemRowToParent(albumItem),
-        createdAt: albumItem.createdAt,
-        updatedAt: albumItem.updatedAt,
-      }));
-      return {
-        nodes,
-        pageInfo: collectionInfo.pageInfo,
-      };
-    },
-  });
+      return items.map((item) => ({ ...item, tags: tagMap.get(item.id) ?? [] }));
+    };
+
+    return {
+      listAlbums: async (collectionInfo: AlbumCollectionInfo): Promise<AlbumListProjection> => {
+        const albums = await albumReadRepository.listByViewerId({
+          viewerId,
+          collectionInfo,
+        });
+        const coverBases = albums
+          .filter((album) => album.mediaItemId != null)
+          .map((album) => mapMediaItemRowToParent(album));
+        const coversEnriched = await enrichWithTags(coverBases);
+        const coverById = new Map(coversEnriched.map((c) => [c.id, c]));
+        const nodes = albums.map((album) => ({
+          id: album.id,
+          title: album.title,
+          createdAt: album.createdAt,
+          updatedAt: album.updatedAt,
+          coverMedia: album.mediaItemId != null ? coverById.get(album.mediaItemId) : undefined,
+        }));
+
+        return {
+          nodes,
+          pageInfo: collectionInfo.pageInfo,
+        };
+      },
+
+      getAlbum: async (albumId: string): Promise<AlbumProjection | undefined> => {
+        const row = await albumReadRepository.getAlbumForViewer({ albumId, viewerId });
+        if (!row) {
+          return undefined;
+        }
+        const cover =
+          row.mediaItemId != null
+            ? (await enrichWithTags([mapMediaItemRowToParent(row)]))[0]
+            : undefined;
+        return {
+          id: row.id,
+          title: row.title,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          coverMedia: cover,
+        };
+      },
+
+      getAlbumItems: async ({
+        albumId,
+        collectionInfo,
+      }: {
+        albumId: string;
+        collectionInfo: AlbumItemCollectionInfo;
+      }): Promise<AlbumItemListProjection> => {
+        const albumItems = await albumReadRepository.getAlbumItemsForViewer({
+          albumId,
+          viewerId,
+          collectionInfo,
+        });
+        const mediaBases = albumItems.map((albumItem) => mapMediaItemRowToParent(albumItem));
+        const mediaEnriched = await enrichWithTags(mediaBases);
+        const nodes = albumItems.map((albumItem, index) => ({
+          id: albumItem.id,
+          orderIndex: albumItem.albumItemOrderIndex,
+          mediaItem: mediaEnriched[index],
+          createdAt: albumItem.createdAt,
+          updatedAt: albumItem.updatedAt,
+        }));
+        return {
+          nodes,
+          pageInfo: collectionInfo.pageInfo,
+        };
+      },
+    };
+  };
 };

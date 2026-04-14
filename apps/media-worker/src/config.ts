@@ -48,8 +48,6 @@ const ensureEnvLoaded = (): DotenvConfigOutput | undefined => {
   });
 };
 
-const warnings: string[] = [];
-
 const createConfigFromEnv = (): Config => {
   const nodeEnv = getValidValue<NodeEnv>(process.env.NODE_ENV || 'development', nodeEnvs);
 

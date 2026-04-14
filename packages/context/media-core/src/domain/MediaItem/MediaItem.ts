@@ -17,6 +17,7 @@ import { Comment, CommentRecord } from '../Comment/Comment';
 import type { ChildEntities, EntityAuditRecord } from '../Entity';
 import { fail, ok } from '../utilities/writeResponse';
 import { MediaAsset, MediaAssetRecord } from './MediaAsset';
+import { normalizeMediaItemTagLabels } from './MediaItemTag';
 
 interface AssetMetadata {
   kind: MediaAssetKind;
@@ -37,9 +38,9 @@ export type MediaItemProps = {
   height?: number;
   durationSeconds?: number;
   originalFileName?: string;
-  title?: string;
-  description?: string;
-  takenAt?: Date;
+  title?: string | null;
+  description?: string | null;
+  takenAt?: Date | null;
 };
 
 export type MediaItemRecord = {
@@ -59,6 +60,8 @@ export type MediaItemRecord = {
   takenAt?: Date;
   comments: CommentRecord[];
   assets: MediaAssetRecord[];
+  /** Normalized display labels (mapped to `user_tag` + `media_item_tag` in persistence). */
+  tags: string[];
 } & EntityAuditRecord;
 
 export type CreateMediaItemInput = {
@@ -79,6 +82,7 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
   protected props: MediaItemProps;
   #comments: Comment[] = [];
   #assets: MediaAsset[] = [];
+  #tags: string[] = [];
 
   private constructor(id: EntityId, actorId: ActorId, props: MediaItemProps) {
     super(id, actorId);
@@ -106,6 +110,7 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     mediaItem.rehydrateAudit(record);
     mediaItem.#comments = record.comments.map((r) => Comment.rehydrate(r));
     mediaItem.#assets = record.assets.map((r) => MediaAsset.rehydrate(r));
+    mediaItem.#tags = [...(record.tags ?? [])];
     return mediaItem;
   }
 
@@ -150,14 +155,45 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     return ok(undefined);
   }
 
-  updateTitle(title: string | undefined, actorId: ActorId): void {
-    this.props.title = title;
+  replaceTags(rawLabels: string[], actorId: ActorId): WriteResult {
+    const normalized = normalizeMediaItemTagLabels(rawLabels);
+    if (normalized === null) {
+      return fail(ContractError.InvalidMediaItemTags);
+    }
+    this.#tags = [...normalized.labels];
     this.touch(actorId);
+    return ok(undefined);
   }
 
-  updateDescription(description: string | undefined, actorId: ActorId): void {
+  tags(): readonly string[] {
+    return this.#tags;
+  }
+
+  updateItemDetails(
+    {
+      title,
+      description,
+      takenAt,
+    }: { title?: string | null; description?: string | null; takenAt?: Date | null },
+    actorId: ActorId,
+  ): WriteResult {
+    this.props.title = title;
     this.props.description = description;
+    this.props.takenAt = takenAt;
     this.touch(actorId);
+    return ok(undefined);
+  }
+
+  title(): string | undefined {
+    return this.props.title ?? undefined;
+  }
+
+  description(): string | undefined {
+    return this.props.description ?? undefined;
+  }
+
+  takenAt(): Date | undefined {
+    return this.props.takenAt ?? undefined;
   }
 
   ownerId(): EntityId {
@@ -233,6 +269,13 @@ export class MediaItem extends AggregateRoot<MediaItemRecord> {
     this.props.status = MediaItemStatus.ready;
     this.touch(actorId);
     return ok(undefined);
+  }
+
+  public override persistenceState(): Record<string, unknown> {
+    return {
+      ...super.persistenceState(),
+      tags: this.#tags,
+    };
   }
 
   protected childEntities(): ChildEntities {

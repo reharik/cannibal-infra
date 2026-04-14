@@ -46,9 +46,9 @@ export const buildDeleteMediaItem = ({
             continue;
           }
           album.deleteItem(mediaItemId, viewerId);
-          /* when cover media is implemented do this and set
-           the next available cover media as active, or wtf based on rules */
-          // album.deleteCoverMedia(mediaItemId, viewerId);
+          if (album.coverMediaId() === mediaItemId) {
+            album.unsetCoverMedia(viewerId);
+          }
           await albumRepository.save(album, { trx });
         }
       }
