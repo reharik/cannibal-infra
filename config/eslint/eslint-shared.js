@@ -19,6 +19,7 @@ export const commonTypeScriptRules = {
   "@typescript-eslint/no-unsafe-member-access": "warn",
   "@typescript-eslint/no-unsafe-return": "warn",
   "@typescript-eslint/no-unsafe-argument": "warn",
+  "@typescript-eslint/require-await": "warn",
 };
 
 // Common Prettier rules
@@ -27,6 +28,13 @@ export const commonPrettierRules = {
   "prettier/prettier": "warn",
 };
 
+const defaultIgnores = [
+  "**/dist/**",
+  "**/build/**",
+  "**/node_modules/**",
+  "**/coverage/**",
+];
+
 // Base TypeScript configuration
 export const createBaseTypeScriptConfig = async (options = {}) => {
   const jest = await import("eslint-plugin-jest");
@@ -34,32 +42,44 @@ export const createBaseTypeScriptConfig = async (options = {}) => {
   const {
     globals: customGlobals = globals.node,
     ecmaVersion = "latest",
-    ignores = [
-      "**/dist/**",
-      "**/build/**",
-      "**/node_modules/**",
-      "**/coverage/**",
-    ],
+    tsconfigRootDir = import.meta.dirname,
+    ignores: extraIgnores = [],
+    files = ["**/*.ts"],
     additionalRules = {},
     additionalPlugins = {},
+    /**
+     * When set, use classic `project` mode instead of `projectService` (e.g. for `tsconfig.spec.json`
+     * so test files excluded from the main tsconfig stay type-aware under ESLint).
+     */
+    parserOptionsOverride,
   } = options;
 
+  const parserOptions =
+    parserOptionsOverride !== undefined
+      ? {
+          ecmaVersion,
+          sourceType: "module",
+          tsconfigRootDir,
+          ...parserOptionsOverride,
+        }
+      : {
+          ecmaVersion,
+          sourceType: "module",
+          projectService: true,
+          tsconfigRootDir,
+        };
+
   return defineConfig(
-    { ignores },
+    { ignores: [...defaultIgnores, ...extraIgnores] },
     {
-      files: ["**/*.ts"],
+      files,
       extends: [
         js.configs.recommended,
         ...tseslint.configs.recommendedTypeChecked,
       ],
       languageOptions: {
         globals: customGlobals,
-        parserOptions: {
-          ecmaVersion,
-          sourceType: "module",
-          projectService: true,
-          tsconfigRootDir: import.meta.dirname,
-        },
+        parserOptions,
       },
       plugins: {
         prettier: prettierPlugin,
