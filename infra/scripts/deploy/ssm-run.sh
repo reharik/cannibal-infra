@@ -177,7 +177,7 @@ ssm_run() {
   max_attempts="$(_ssm_poll_max)"
 
   local instance_ids
-  if ! instance_ids="$(_ssm_get_instance_ids "$command_id" 60 "$delay")"; then
+  if ! instance_ids="$(_ssm_get_instance_ids "$command_id" 180 "$delay")"; then
     echo "Invocation records not visible yet for command-id=$command_id" >&2
     echo "Treating this as a polling failure, not a deploy failure." >&2
     return 0
