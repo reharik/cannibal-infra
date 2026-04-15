@@ -2,9 +2,10 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "Ec2Trust",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::709865789463:root"
+        "Service": "ec2.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
     }

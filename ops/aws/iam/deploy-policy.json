@@ -2,7 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "DeployArtifactsBucketList",
+      "Sid": "DeployBucketList",
       "Effect": "Allow",
       "Action": [
         "s3:ListBucket"
@@ -10,7 +10,7 @@
       "Resource": "arn:aws:s3:::network-deploy-709865789463-us-east-1"
     },
     {
-      "Sid": "DeployArtifactsObjectRW",
+      "Sid": "DeployBucketObjects",
       "Effect": "Allow",
       "Action": [
         "s3:GetObject",
