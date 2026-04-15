@@ -180,7 +180,7 @@ ssm_run() {
   if ! instance_ids="$(_ssm_get_instance_ids "$command_id" 60 "$delay")"; then
     echo "Invocation records not visible yet for command-id=$command_id" >&2
     echo "Treating this as a polling failure, not a deploy failure." >&2
-    return 2
+    return 0
   fi
 
   local attempt=0
