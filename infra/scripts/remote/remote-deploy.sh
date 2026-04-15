@@ -27,9 +27,9 @@ REMOTE_COMPOSE_NAME="${REMOTE_COMPOSE_NAME:-docker-compose.yml}"
 REMOTE_ENV_NAME="${REMOTE_ENV_NAME:-env.env}"
 
 # Local paths
-WORK_DIR="/tmp/${APP_NAME}-${SHA}"
-mkdir -p "${WORK_DIR}"
-trap 'rm -rf "$WORK_DIR"' EXIT
+WORK_DIR="${WORK_DIR:-${APP_ROOT}/tmp/${SHA}}"
+sudo mkdir -p "${WORK_DIR}"
+trap 'sudo rm -rf "$WORK_DIR"' EXIT
 
 echo "Remote deploy starting"
 echo "  APP_NAME=${APP_NAME}"
@@ -39,18 +39,23 @@ echo "  APP_ROOT=${APP_ROOT}"
 echo "  S3=${S3_URI}"
 echo "  DEPLOY_BACKEND=${DEPLOY_BACKEND}"
 echo "  DEPLOY_FRONTEND=${DEPLOY_FRONTEND}"
+echo "  WORK_DIR=${WORK_DIR}"
 
 # Compose uses env_file: /opt/${APP_NAME}/env/${ENV}.env; that path must exist even when
 # env.env is not shipped from S3 (secrets provisioned manually on the host).
-sudo mkdir -p "${APP_ROOT}/env" "${APP_ROOT}/compose"
+sudo mkdir -p "${APP_ROOT}/env" "${APP_ROOT}/compose" "${APP_ROOT}/tmp"
 
 download_if_exists() {
   local remote_name="$1"
   local local_path="$2"
 
   if aws s3 ls "${S3_URI}/${remote_name}" --region "${AWS_REGION}" >/dev/null 2>&1; then
-    echo "Downloading ${remote_name}"
+    echo "Downloading ${remote_name} -> ${local_path}"
     aws s3 cp "${S3_URI}/${remote_name}" "${local_path}" --region "${AWS_REGION}"
+    [[ -f "${local_path}" ]] || {
+      echo "Download failed: ${local_path} not found after copy" >&2
+      return 1
+    }
     return 0
   fi
   return 1
@@ -61,7 +66,7 @@ download_prefix_if_exists() {
   local local_dir="$2"
 
   if aws s3 ls "${S3_URI}/${remote_prefix}/" --region "${AWS_REGION}" >/dev/null 2>&1; then
-    echo "Downloading prefix ${remote_prefix}/"
+    echo "Downloading prefix ${remote_prefix}/ -> ${local_dir}/"
     mkdir -p "${local_dir}"
     aws s3 cp "${S3_URI}/${remote_prefix}/" "${local_dir}/" --recursive --region "${AWS_REGION}"
     return 0
@@ -87,7 +92,6 @@ fi
 if download_prefix_if_exists "compose" "${WORK_DIR}/compose"; then
   echo "Installing compose directory to ${COMPOSE_DIR}"
   sudo mkdir -p "${COMPOSE_DIR}"
-  # Copy any yml/yaml files that exist in the downloaded prefix
   shopt -s nullglob
   files=( "${WORK_DIR}/compose/"*.yml "${WORK_DIR}/compose/"*.yaml )
   shopt -u nullglob
@@ -126,13 +130,11 @@ else
   COMPOSE_FILE_DEFAULT_3="${APP_ROOT}/docker-compose.yml"
   COMPOSE_FILE="${COMPOSE_FILE:-${COMPOSE_FILE_DEFAULT_1}}"
 
-  # If CI uploaded a single compose file, install it as docker-compose.yml
   if download_if_exists "${REMOTE_COMPOSE_NAME}" "${WORK_DIR}/${REMOTE_COMPOSE_NAME}"; then
     echo "Installing compose file to ${APP_ROOT}/docker-compose.yml"
     sudo install -m 0644 "${WORK_DIR}/${REMOTE_COMPOSE_NAME}" "${APP_ROOT}/docker-compose.yml"
     COMPOSE_FILE="${APP_ROOT}/docker-compose.yml"
   else
-    # Pick first existing compose file if we didn't download one
     if [[ -f "${COMPOSE_FILE_DEFAULT_1}" ]]; then
       COMPOSE_FILE="${COMPOSE_FILE_DEFAULT_1}"
     elif [[ -f "${COMPOSE_FILE_DEFAULT_2}" ]]; then
@@ -151,8 +153,19 @@ fi
 # ------------------------------------------------------------------------------
 if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
   if download_if_exists "${BACKEND_TAR}" "${WORK_DIR}/${BACKEND_TAR}"; then
-    echo "Loading backend image from ${BACKEND_TAR}"
-    gunzip -c "${WORK_DIR}/${BACKEND_TAR}" | sudo docker load
+    echo "Preparing backend image from ${BACKEND_TAR}"
+    IMAGE_TAR="${WORK_DIR}/backend.tar"
+
+    gunzip -c "${WORK_DIR}/${BACKEND_TAR}" > "${IMAGE_TAR}"
+    [[ -f "${IMAGE_TAR}" ]] || {
+      echo "Decompression failed: ${IMAGE_TAR} missing" >&2
+      exit 1
+    }
+
+    echo "Loading backend image from ${IMAGE_TAR}"
+    sudo docker load -i "${IMAGE_TAR}"
+
+    rm -f "${IMAGE_TAR}" "${WORK_DIR}/${BACKEND_TAR}"
   else
     echo "No backend artifact (${BACKEND_TAR}) found; skipping backend load"
   fi
