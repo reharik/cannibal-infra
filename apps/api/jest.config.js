@@ -3,12 +3,14 @@ export default {
   preset: '../../infra/config/jest/jest.preset.cjs',
   testEnvironment: 'node',
   /**
-   * One worker only: integration tests share a real Postgres DB and a singleton IoC container.
-   * Parallel test files will race on TRUNCATE/inserts and produce flaky (3–6 random) failures.
+   * Unit tests only: no process boundaries (no real DB, HTTP to other services, etc.).
+   * Files named `*.integration.test.ts` or `*.integration.tests.ts` are integration tests;
+   * run them with `nx run api:test-integration` (see jest.integration.config.js).
    */
-  maxWorkers: 1,
-  /** Integration tests leave the Knex pool and sometimes an HTTP server open; exit cleanly. */
-  forceExit: true,
+  testPathIgnorePatterns: [
+    '\\.integration\\.tests\\.ts$',
+    '\\.integration\\.test\\.ts$',
+  ],
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.(ts|tsx|js|mjs)$': [

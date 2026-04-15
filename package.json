@@ -45,6 +45,7 @@
     "seed:dev-admin": "npm run seed:dev-admin --workspace=@app/api",
     "test": "NODE_OPTIONS='--experimental-vm-modules' nx run-many -t test --all",
     "test:ci": "NODE_OPTIONS='--experimental-vm-modules' nx run-many -t test --all -- --runInBand",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' nx run api:test-integration",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' nx run-many -t test --all -- --watch"
   },
   "dependencies": {
