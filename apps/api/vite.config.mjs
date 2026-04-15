@@ -91,8 +91,9 @@ export default defineConfig(({ mode }) => {
           if (/^node:/.test(id)) {
             return true;
           }
-          // Bundle workspace packages (like @packages/contracts) instead of externalizing
-          if (id.startsWith('@app/')) {
+          // Bundle monorepo workspaces so production Docker only needs app dist + npm deps (no
+          // per-package COPY in the Dockerfile).
+          if (id.startsWith('@app/') || id.startsWith('@packages/')) {
             return false;
           }
           // Externalize non-workspace node_modules

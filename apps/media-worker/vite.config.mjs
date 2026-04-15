@@ -87,8 +87,8 @@ export default defineConfig(({ mode }) => {
           if (/^node:/.test(id)) {
             return true;
           }
-          // Bundle workspace packages (like @packages/contracts) instead of externalizing
-          if (id.startsWith('@app/')) {
+          // Bundle all @packages/* into dist (one rule; no per-library Vite files under packages/).
+          if (id.startsWith('@app/') || id.startsWith('@packages/')) {
             return false;
           }
           // Externalize non-workspace node_modules

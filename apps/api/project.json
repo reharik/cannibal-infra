@@ -33,6 +33,7 @@
         "clean",
         "contracts:build",
         "infrastructure:build",
+        "media-core:build",
         "gen:container",
         "gen:graphql",
         "build:knexfile"
