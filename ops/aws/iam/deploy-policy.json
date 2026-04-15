@@ -2,16 +2,33 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "DeployBucketList",
+      "Sid": "DeployArtifactsBucketList",
       "Effect": "Allow",
-      "Action": ["s3:ListBucket"],
-      "Resource": "arn:aws:s3:::YOUR_DEPLOY_BUCKET"
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::network-deploy-709865789463-us-east-1"
     },
     {
-      "Sid": "DeployObjectWrite",
+      "Sid": "DeployArtifactsObjectRW",
       "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::YOUR_DEPLOY_BUCKET/*"
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::network-deploy-709865789463-us-east-1/*"
+    },
+    {
+      "Sid": "RunShellScriptViaSSM",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:SendCommand"
+      ],
+      "Resource": [
+        "arn:aws:ssm:us-east-1::document/AWS-RunShellScript",
+        "arn:aws:ec2:us-east-1:709865789463:instance/*"
+      ]
     }
   ]
 }
