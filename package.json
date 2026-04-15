@@ -23,6 +23,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "gen:all": "npm run gen:ioc; npm run gen:gql; npm run gen:enums",
+    "gen:container": "npm run gen:all",
     "gen:enums": "npm run gen:graphql:enums --workspace=@packages/contracts",
     "gen:gql": "npm run gen:graphql --workspace=@app/api; npm run codegen --workspace=@app/web",
     "gen:gql:be": "npm run gen:graphql --workspace=@app/api",
