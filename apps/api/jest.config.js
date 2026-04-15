@@ -7,10 +7,7 @@ export default {
    * Files named `*.integration.test.ts` or `*.integration.tests.ts` are integration tests;
    * run them with `nx run api:test-integration` (see jest.integration.config.js).
    */
-  testPathIgnorePatterns: [
-    '\\.integration\\.tests\\.ts$',
-    '\\.integration\\.test\\.ts$',
-  ],
+  testPathIgnorePatterns: ['\\.integration\\.tests\\.ts$', '\\.integration\\.test\\.ts$'],
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.(ts|tsx|js|mjs)$': [

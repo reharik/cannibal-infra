@@ -4,17 +4,21 @@ export type InputMaybe<T> = T | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = {
+  [_ in K]?: never;
+};
+export type Incremental<T> =
+  | T
+  | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
-  Date: { input: any; output: any; }
-  DateTime: { input: any; output: any; }
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+  Date: { input: any; output: any };
+  DateTime: { input: any; output: any };
 };
 
 export type AddMediaItemToAlbumInput = {
@@ -43,7 +47,6 @@ export type Album = Node & {
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
-
 
 export type AlbumItemsArgs = {
   input: ViewerAlbumItemsInput;
@@ -82,13 +85,9 @@ export type AlbumItemCollectionPayload = {
   pageInfo: PageInfo;
 };
 
-export type AlbumItemSortBy =
-  | 'CREATED_AT'
-  | 'ORDER_INDEX';
+export type AlbumItemSortBy = 'CREATED_AT' | 'ORDER_INDEX';
 
-export type AlbumSortBy =
-  | 'CREATED_AT'
-  | 'TITLE';
+export type AlbumSortBy = 'CREATED_AT' | 'TITLE';
 
 export type ContractError = {
   __typename?: 'ContractError';
@@ -187,12 +186,7 @@ export type EnumMetaPropInput = {
   value: Scalars['String']['input'];
 };
 
-export type ErrorCategory =
-  | 'AUTH'
-  | 'CONFLICT'
-  | 'DOMAIN'
-  | 'SYSTEM'
-  | 'VALIDATION';
+export type ErrorCategory = 'AUTH' | 'CONFLICT' | 'DOMAIN' | 'SYSTEM' | 'VALIDATION';
 
 export type FinalizeMediaUploadInput = {
   mediaItemId: Scalars['ID']['input'];
@@ -227,16 +221,9 @@ export type MediaAsset = Node & {
   width?: Maybe<Scalars['Int']['output']>;
 };
 
-export type MediaAssetKind =
-  | 'DISPLAY'
-  | 'ORIGINAL'
-  | 'THUMBNAIL';
+export type MediaAssetKind = 'DISPLAY' | 'ORIGINAL' | 'THUMBNAIL';
 
-export type MediaAssetStatus =
-  | 'FAILED'
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'READY';
+export type MediaAssetStatus = 'FAILED' | 'PENDING' | 'PROCESSING' | 'READY';
 
 export type MediaItem = Node & {
   __typename?: 'MediaItem';
@@ -277,19 +264,11 @@ export type MediaItemDerivedUrls = {
   thumbnail: Scalars['String']['output'];
 };
 
-export type MediaItemSortBy =
-  | 'CREATED_AT';
+export type MediaItemSortBy = 'CREATED_AT';
 
-export type MediaItemStatus =
-  | 'FAILED'
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'READY'
-  | 'UPLOADED';
+export type MediaItemStatus = 'FAILED' | 'PENDING' | 'PROCESSING' | 'READY' | 'UPLOADED';
 
-export type MediaKind =
-  | 'PHOTO'
-  | 'VIDEO';
+export type MediaKind = 'PHOTO' | 'VIDEO';
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -307,61 +286,49 @@ export type Mutation = {
   updateMediaItemTags: UpdateMediaItemTagsResponse;
 };
 
-
 export type MutationAddMediaItemToAlbumArgs = {
   input: AddMediaItemToAlbumInput;
 };
-
 
 export type MutationDeleteAlbumItemFromAlbumArgs = {
   input: DeleteAlbumItemFromAlbumInput;
 };
 
-
 export type MutationReorderAlbumItemsArgs = {
   input: ReorderAlbumItemsInput;
 };
-
 
 export type MutationSetCoverMediaArgs = {
   input: SetCoverMediaInput;
 };
 
-
 export type MutationUnsetCoverMediaArgs = {
   input: UnsetCoverMediaInput;
 };
-
 
 export type MutationCreateAlbumArgs = {
   input: CreateAlbumInput;
 };
 
-
 export type MutationCreateMediaUploadArgs = {
   input: CreateMediaUploadInput;
 };
-
 
 export type MutationDeleteAlbumArgs = {
   input: DeleteAlbumInput;
 };
 
-
 export type MutationDeleteMediaItemArgs = {
   input: DeleteMediaItemInput;
 };
-
 
 export type MutationFinalizeMediaUploadArgs = {
   input: FinalizeMediaUploadInput;
 };
 
-
 export type MutationUpdateMediaItemDetailsArgs = {
   input: UpdateMediaItemDetailsInput;
 };
-
 
 export type MutationUpdateMediaItemTagsArgs = {
   input: UpdateMediaItemTagsInput;
@@ -390,7 +357,6 @@ export type Query = {
   shareLink?: Maybe<ShareLinkAccess>;
   viewer?: Maybe<Viewer>;
 };
-
 
 export type QueryShareLinkArgs = {
   token: Scalars['String']['input'];
@@ -438,11 +404,7 @@ export type ShareLinkAccess = {
 
 export type ShareLinkTarget = SharedAlbum | SharedMediaItem;
 
-export type ShareViewerRelationship =
-  | 'ANONYMOUS'
-  | 'AUTHENTICATED'
-  | 'MEMBER'
-  | 'OWNER';
+export type ShareViewerRelationship = 'ANONYMOUS' | 'AUTHENTICATED' | 'MEMBER' | 'OWNER';
 
 export type SharedAlbum = Node & {
   __typename?: 'SharedAlbum';
@@ -450,7 +412,6 @@ export type SharedAlbum = Node & {
   items: SharedAlbumItemConnection;
   title: Scalars['String']['output'];
 };
-
 
 export type SharedAlbumItemsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
@@ -477,9 +438,7 @@ export type SharedMediaItem = Node & {
   width?: Maybe<Scalars['Int']['output']>;
 };
 
-export type SortDir =
-  | 'ASC'
-  | 'DESC';
+export type SortDir = 'ASC' | 'DESC';
 
 export type UnsetCoverMediaInput = {
   albumId: Scalars['ID']['input'];
@@ -560,26 +519,21 @@ export type Viewer = {
   mediaItems: MediaItemCollectionPayload;
 };
 
-
 export type ViewerAlbumArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type ViewerAlbumsArgs = {
   input: ViewerAlbumsInput;
 };
 
-
 export type ViewerDeleteAlbumArgs = {
   input: DeleteAlbumInput;
 };
 
-
 export type ViewerMediaItemArgs = {
   id: Scalars['ID']['input'];
 };
-
 
 export type ViewerMediaItemsArgs = {
   input: ViewerMediaItemsInput;
@@ -601,80 +555,1357 @@ export type CreateAlbumMutationVariables = Exact<{
   input: CreateAlbumInput;
 }>;
 
-
-export type CreateAlbumMutation = { __typename?: 'Mutation', createAlbum: { __typename?: 'CreateAlbumResponse', data?: { __typename?: 'CreateAlbumPayload', albumId: string } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
+export type CreateAlbumMutation = {
+  __typename?: 'Mutation';
+  createAlbum: {
+    __typename?: 'CreateAlbumResponse';
+    data?: { __typename?: 'CreateAlbumPayload'; albumId: string } | undefined;
+    errors?:
+      | Array<{
+          __typename?: 'ContractError';
+          code: string;
+          message: string;
+          field?: string | undefined;
+          category: ErrorCategory;
+          retryable: boolean;
+        }>
+      | undefined;
+  };
+};
 
 export type AddMediaItemToAlbumMutationVariables = Exact<{
   input: AddMediaItemToAlbumInput;
 }>;
 
-
-export type AddMediaItemToAlbumMutation = { __typename?: 'Mutation', AddMediaItemToAlbum: { __typename?: 'AddMediaItemToAlbumResponse', data?: { __typename?: 'AddMediaItemToAlbumPayload', albumId: string, albumItemId: string } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
+export type AddMediaItemToAlbumMutation = {
+  __typename?: 'Mutation';
+  AddMediaItemToAlbum: {
+    __typename?: 'AddMediaItemToAlbumResponse';
+    data?:
+      | { __typename?: 'AddMediaItemToAlbumPayload'; albumId: string; albumItemId: string }
+      | undefined;
+    errors?:
+      | Array<{
+          __typename?: 'ContractError';
+          code: string;
+          message: string;
+          field?: string | undefined;
+          category: ErrorCategory;
+          retryable: boolean;
+        }>
+      | undefined;
+  };
+};
 
 export type CreateMediaUploadMutationVariables = Exact<{
   input: CreateMediaUploadInput;
 }>;
 
-
-export type CreateMediaUploadMutation = { __typename?: 'Mutation', createMediaUpload: { __typename?: 'CreateMediaUploadResponse', data?: { __typename?: 'CreateMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, uploadInstructions: { __typename?: 'UploadInstructions', method: string, url: string, headers: Array<{ __typename?: 'UploadHeader', key: string, value: string }> } } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
+export type CreateMediaUploadMutation = {
+  __typename?: 'Mutation';
+  createMediaUpload: {
+    __typename?: 'CreateMediaUploadResponse';
+    data?:
+      | {
+          __typename?: 'CreateMediaUploadPayload';
+          mediaItemId: string;
+          status: MediaItemStatus;
+          uploadInstructions: {
+            __typename?: 'UploadInstructions';
+            method: string;
+            url: string;
+            headers: Array<{ __typename?: 'UploadHeader'; key: string; value: string }>;
+          };
+        }
+      | undefined;
+    errors?:
+      | Array<{
+          __typename?: 'ContractError';
+          code: string;
+          message: string;
+          field?: string | undefined;
+          category: ErrorCategory;
+          retryable: boolean;
+        }>
+      | undefined;
+  };
+};
 
 export type FinalizeMediaUploadMutationVariables = Exact<{
   input: FinalizeMediaUploadInput;
 }>;
 
-
-export type FinalizeMediaUploadMutation = { __typename?: 'Mutation', finalizeMediaUpload: { __typename?: 'FinalizeMediaUploadResponse', data?: { __typename?: 'FinalizeMediaUploadPayload', mediaItemId: string, status: MediaItemStatus, size: number, kind: MediaKind } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
+export type FinalizeMediaUploadMutation = {
+  __typename?: 'Mutation';
+  finalizeMediaUpload: {
+    __typename?: 'FinalizeMediaUploadResponse';
+    data?:
+      | {
+          __typename?: 'FinalizeMediaUploadPayload';
+          mediaItemId: string;
+          status: MediaItemStatus;
+          size: number;
+          kind: MediaKind;
+        }
+      | undefined;
+    errors?:
+      | Array<{
+          __typename?: 'ContractError';
+          code: string;
+          message: string;
+          field?: string | undefined;
+          category: ErrorCategory;
+          retryable: boolean;
+        }>
+      | undefined;
+  };
+};
 
 export type UpdateMediaItemDetailsMutationVariables = Exact<{
   input: UpdateMediaItemDetailsInput;
 }>;
 
+export type UpdateMediaItemDetailsMutation = {
+  __typename?: 'Mutation';
+  updateMediaItemDetails: {
+    __typename?: 'UpdateMediaItemDetailsResponse';
+    data?:
+      | {
+          __typename?: 'UpdateMediaItemDetailsPayload';
+          mediaItemId: string;
+          title?: string | undefined;
+          description?: string | undefined;
+          takenAt?: any | undefined;
+        }
+      | undefined;
+    errors?:
+      | Array<{
+          __typename?: 'ContractError';
+          code: string;
+          message: string;
+          field?: string | undefined;
+          category: ErrorCategory;
+          retryable: boolean;
+        }>
+      | undefined;
+  };
+};
 
-export type UpdateMediaItemDetailsMutation = { __typename?: 'Mutation', updateMediaItemDetails: { __typename?: 'UpdateMediaItemDetailsResponse', data?: { __typename?: 'UpdateMediaItemDetailsPayload', mediaItemId: string, title?: string | undefined, description?: string | undefined, takenAt?: any | undefined } | undefined, errors?: Array<{ __typename?: 'ContractError', code: string, message: string, field?: string | undefined, category: ErrorCategory, retryable: boolean }> | undefined } };
+export type ViewerQueryVariables = Exact<{ [key: string]: never }>;
 
-export type ViewerQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ViewerQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, firstName?: string | undefined, lastName?: string | undefined, displayName: string } | undefined };
+export type ViewerQuery = {
+  __typename?: 'Query';
+  viewer?:
+    | {
+        __typename?: 'Viewer';
+        id: string;
+        firstName?: string | undefined;
+        lastName?: string | undefined;
+        displayName: string;
+      }
+    | undefined;
+};
 
 export type ViewerAlbumDetailQueryVariables = Exact<{
   albumId: Scalars['ID']['input'];
 }>;
 
+export type ViewerAlbumDetailQuery = {
+  __typename?: 'Query';
+  viewer?:
+    | {
+        __typename?: 'Viewer';
+        id: string;
+        album?:
+          | {
+              __typename?: 'Album';
+              id: string;
+              title: string;
+              createdAt: any;
+              updatedAt: any;
+              coverMedia?:
+                | {
+                    __typename?: 'MediaItem';
+                    id: string;
+                    kind: MediaKind;
+                    status: MediaItemStatus;
+                    title?: string | undefined;
+                    derivedUrls: {
+                      __typename?: 'MediaItemDerivedUrls';
+                      thumbnail: string;
+                      display: string;
+                    };
+                  }
+                | undefined;
+              items: {
+                __typename?: 'AlbumItemCollectionPayload';
+                nodes: Array<{
+                  __typename?: 'AlbumItem';
+                  id: string;
+                  mediaItem: {
+                    __typename?: 'MediaItem';
+                    id: string;
+                    kind: MediaKind;
+                    status: MediaItemStatus;
+                    mimeType: string;
+                    title?: string | undefined;
+                    description?: string | undefined;
+                    originalFileName?: string | undefined;
+                    takenAt?: any | undefined;
+                    createdAt: any;
+                    derivedUrls: {
+                      __typename?: 'MediaItemDerivedUrls';
+                      thumbnail: string;
+                      display: string;
+                    };
+                  };
+                }>;
+                pageInfo: { __typename?: 'PageInfo'; limit: number; offset: number };
+              };
+            }
+          | undefined;
+      }
+    | undefined;
+};
 
-export type ViewerAlbumDetailQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, album?: { __typename?: 'Album', id: string, title: string, createdAt: any, updatedAt: any, coverMedia?: { __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, title?: string | undefined, derivedUrls: { __typename?: 'MediaItemDerivedUrls', thumbnail: string, display: string } } | undefined, items: { __typename?: 'AlbumItemCollectionPayload', nodes: Array<{ __typename?: 'AlbumItem', id: string, mediaItem: { __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, mimeType: string, title?: string | undefined, description?: string | undefined, originalFileName?: string | undefined, takenAt?: any | undefined, createdAt: any, derivedUrls: { __typename?: 'MediaItemDerivedUrls', thumbnail: string, display: string } } }>, pageInfo: { __typename?: 'PageInfo', limit: number, offset: number } } } | undefined } | undefined };
+export type ViewerAlbumsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type ViewerAlbumsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ViewerAlbumsQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, albums: { __typename?: 'AlbumCollectionPayload', nodes: Array<{ __typename?: 'Album', id: string, title: string, createdAt: any, updatedAt: any, coverMedia?: { __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, derivedUrls: { __typename?: 'MediaItemDerivedUrls', thumbnail: string, display: string } } | undefined }>, pageInfo: { __typename?: 'PageInfo', limit: number, offset: number } } } | undefined };
+export type ViewerAlbumsQuery = {
+  __typename?: 'Query';
+  viewer?:
+    | {
+        __typename?: 'Viewer';
+        id: string;
+        albums: {
+          __typename?: 'AlbumCollectionPayload';
+          nodes: Array<{
+            __typename?: 'Album';
+            id: string;
+            title: string;
+            createdAt: any;
+            updatedAt: any;
+            coverMedia?:
+              | {
+                  __typename?: 'MediaItem';
+                  id: string;
+                  kind: MediaKind;
+                  status: MediaItemStatus;
+                  derivedUrls: {
+                    __typename?: 'MediaItemDerivedUrls';
+                    thumbnail: string;
+                    display: string;
+                  };
+                }
+              | undefined;
+          }>;
+          pageInfo: { __typename?: 'PageInfo'; limit: number; offset: number };
+        };
+      }
+    | undefined;
+};
 
 export type ViewerMediaItemDetailQueryVariables = Exact<{
   mediaItemId: Scalars['ID']['input'];
 }>;
 
+export type ViewerMediaItemDetailQuery = {
+  __typename?: 'Query';
+  viewer?:
+    | {
+        __typename?: 'Viewer';
+        id: string;
+        mediaItem?:
+          | {
+              __typename?: 'MediaItem';
+              id: string;
+              kind: MediaKind;
+              mimeType: string;
+              title?: string | undefined;
+              description?: string | undefined;
+              originalFileName?: string | undefined;
+              createdAt: any;
+              takenAt?: any | undefined;
+              derivedUrls: {
+                __typename?: 'MediaItemDerivedUrls';
+                thumbnail: string;
+                display: string;
+              };
+            }
+          | undefined;
+      }
+    | undefined;
+};
 
-export type ViewerMediaItemDetailQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, mediaItem?: { __typename?: 'MediaItem', id: string, kind: MediaKind, mimeType: string, title?: string | undefined, description?: string | undefined, originalFileName?: string | undefined, createdAt: any, takenAt?: any | undefined, derivedUrls: { __typename?: 'MediaItemDerivedUrls', thumbnail: string, display: string } } | undefined } | undefined };
+export type ViewerMediaPickerQueryVariables = Exact<{ [key: string]: never }>;
 
-export type ViewerMediaPickerQueryVariables = Exact<{ [key: string]: never; }>;
+export type ViewerMediaPickerQuery = {
+  __typename?: 'Query';
+  viewer?:
+    | {
+        __typename?: 'Viewer';
+        id: string;
+        mediaItems: {
+          __typename?: 'MediaItemCollectionPayload';
+          nodes: Array<{
+            __typename?: 'MediaItem';
+            id: string;
+            kind: MediaKind;
+            status: MediaItemStatus;
+            title?: string | undefined;
+          }>;
+        };
+      }
+    | undefined;
+};
 
+export type ViewerRecentMediaQueryVariables = Exact<{ [key: string]: never }>;
 
-export type ViewerMediaPickerQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, mediaItems: { __typename?: 'MediaItemCollectionPayload', nodes: Array<{ __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, title?: string | undefined }> } } | undefined };
+export type ViewerRecentMediaQuery = {
+  __typename?: 'Query';
+  viewer?:
+    | {
+        __typename?: 'Viewer';
+        id: string;
+        mediaItems: {
+          __typename?: 'MediaItemCollectionPayload';
+          nodes: Array<{
+            __typename?: 'MediaItem';
+            id: string;
+            kind: MediaKind;
+            status: MediaItemStatus;
+            mimeType: string;
+            title?: string | undefined;
+            description?: string | undefined;
+            originalFileName?: string | undefined;
+            takenAt?: any | undefined;
+            width?: number | undefined;
+            height?: number | undefined;
+            createdAt: any;
+            derivedUrls: {
+              __typename?: 'MediaItemDerivedUrls';
+              thumbnail: string;
+              display: string;
+            };
+          }>;
+          pageInfo: { __typename?: 'PageInfo'; limit: number; offset: number };
+        };
+      }
+    | undefined;
+};
 
-export type ViewerRecentMediaQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ViewerRecentMediaQuery = { __typename?: 'Query', viewer?: { __typename?: 'Viewer', id: string, mediaItems: { __typename?: 'MediaItemCollectionPayload', nodes: Array<{ __typename?: 'MediaItem', id: string, kind: MediaKind, status: MediaItemStatus, mimeType: string, title?: string | undefined, description?: string | undefined, originalFileName?: string | undefined, takenAt?: any | undefined, width?: number | undefined, height?: number | undefined, createdAt: any, derivedUrls: { __typename?: 'MediaItemDerivedUrls', thumbnail: string, display: string } }>, pageInfo: { __typename?: 'PageInfo', limit: number, offset: number } } } | undefined };
-
-
-export const CreateAlbumDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateAlbum"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateAlbumInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createAlbum"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"albumId"}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<CreateAlbumMutation, CreateAlbumMutationVariables>;
-export const AddMediaItemToAlbumDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddMediaItemToAlbum"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"AddMediaItemToAlbumInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"AddMediaItemToAlbum"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"albumId"}},{"kind":"Field","name":{"kind":"Name","value":"albumItemId"}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<AddMediaItemToAlbumMutation, AddMediaItemToAlbumMutationVariables>;
-export const CreateMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"uploadInstructions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"method"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"headers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"value"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<CreateMediaUploadMutation, CreateMediaUploadMutationVariables>;
-export const FinalizeMediaUploadDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"FinalizeMediaUpload"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FinalizeMediaUploadInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"finalizeMediaUpload"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<FinalizeMediaUploadMutation, FinalizeMediaUploadMutationVariables>;
-export const UpdateMediaItemDetailsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateMediaItemDetails"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateMediaItemDetailsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateMediaItemDetails"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"mediaItemId"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"takenAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"errors"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"message"}},{"kind":"Field","name":{"kind":"Name","value":"field"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"retryable"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateMediaItemDetailsMutation, UpdateMediaItemDetailsMutationVariables>;
-export const ViewerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}}]}}]}}]} as unknown as DocumentNode<ViewerQuery, ViewerQueryVariables>;
-export const ViewerAlbumDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerAlbumDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"albumId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"album"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"albumId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"coverMedia"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"derivedUrls"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"display"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"items"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"collectionInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pageInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"100"}},{"kind":"ObjectField","name":{"kind":"Name","value":"offset"},"value":{"kind":"IntValue","value":"0"}}]}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortBy"},"value":{"kind":"EnumValue","value":"CREATED_AT"}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortDir"},"value":{"kind":"EnumValue","value":"DESC"}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaItem"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"derivedUrls"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"display"}}]}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"originalFileName"}},{"kind":"Field","name":{"kind":"Name","value":"takenAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"offset"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerAlbumDetailQuery, ViewerAlbumDetailQueryVariables>;
-export const ViewerAlbumsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerAlbums"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"albums"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"collectionInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pageInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"50"}},{"kind":"ObjectField","name":{"kind":"Name","value":"offset"},"value":{"kind":"IntValue","value":"0"}}]}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortBy"},"value":{"kind":"EnumValue","value":"CREATED_AT"}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortDir"},"value":{"kind":"EnumValue","value":"DESC"}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"coverMedia"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"derivedUrls"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"display"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"offset"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerAlbumsQuery, ViewerAlbumsQueryVariables>;
-export const ViewerMediaItemDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerMediaItemDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"mediaItemId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaItem"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"mediaItemId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"originalFileName"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"takenAt"}},{"kind":"Field","name":{"kind":"Name","value":"derivedUrls"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"display"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerMediaItemDetailQuery, ViewerMediaItemDetailQueryVariables>;
-export const ViewerMediaPickerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerMediaPicker"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaItems"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"collectionInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pageInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"40"}},{"kind":"ObjectField","name":{"kind":"Name","value":"offset"},"value":{"kind":"IntValue","value":"0"}}]}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortBy"},"value":{"kind":"EnumValue","value":"CREATED_AT"}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortDir"},"value":{"kind":"EnumValue","value":"DESC"}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"title"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerMediaPickerQuery, ViewerMediaPickerQueryVariables>;
-export const ViewerRecentMediaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ViewerRecentMedia"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"viewer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mediaItems"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"collectionInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"pageInfo"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"limit"},"value":{"kind":"IntValue","value":"10"}},{"kind":"ObjectField","name":{"kind":"Name","value":"offset"},"value":{"kind":"IntValue","value":"0"}}]}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortBy"},"value":{"kind":"EnumValue","value":"CREATED_AT"}},{"kind":"ObjectField","name":{"kind":"Name","value":"sortDir"},"value":{"kind":"EnumValue","value":"DESC"}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"derivedUrls"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"display"}}]}},{"kind":"Field","name":{"kind":"Name","value":"mimeType"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"originalFileName"}},{"kind":"Field","name":{"kind":"Name","value":"takenAt"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"limit"}},{"kind":"Field","name":{"kind":"Name","value":"offset"}}]}}]}}]}}]}}]} as unknown as DocumentNode<ViewerRecentMediaQuery, ViewerRecentMediaQueryVariables>;
+export const CreateAlbumDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateAlbum' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CreateAlbumInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createAlbum' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'data' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [{ kind: 'Field', name: { kind: 'Name', value: 'albumId' } }],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errors' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'field' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'retryable' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateAlbumMutation, CreateAlbumMutationVariables>;
+export const AddMediaItemToAlbumDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'AddMediaItemToAlbum' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'AddMediaItemToAlbumInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'AddMediaItemToAlbum' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'data' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'albumId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'albumItemId' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errors' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'field' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'retryable' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<AddMediaItemToAlbumMutation, AddMediaItemToAlbumMutationVariables>;
+export const CreateMediaUploadDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateMediaUpload' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'CreateMediaUploadInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createMediaUpload' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'data' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'mediaItemId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'uploadInstructions' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'method' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'headers' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'key' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'value' } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errors' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'field' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'retryable' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateMediaUploadMutation, CreateMediaUploadMutationVariables>;
+export const FinalizeMediaUploadDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'FinalizeMediaUpload' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'FinalizeMediaUploadInput' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'finalizeMediaUpload' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'data' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'mediaItemId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errors' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'field' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'retryable' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<FinalizeMediaUploadMutation, FinalizeMediaUploadMutationVariables>;
+export const UpdateMediaItemDetailsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateMediaItemDetails' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'UpdateMediaItemDetailsInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateMediaItemDetails' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'data' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'mediaItemId' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'takenAt' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'errors' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'field' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'retryable' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdateMediaItemDetailsMutation,
+  UpdateMediaItemDetailsMutationVariables
+>;
+export const ViewerDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Viewer' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'viewer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ViewerQuery, ViewerQueryVariables>;
+export const ViewerAlbumDetailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ViewerAlbumDetail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'albumId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'viewer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'album' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'id' },
+                      value: { kind: 'Variable', name: { kind: 'Name', value: 'albumId' } },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'coverMedia' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'derivedUrls' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'display' } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'items' },
+                        arguments: [
+                          {
+                            kind: 'Argument',
+                            name: { kind: 'Name', value: 'input' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'collectionInfo' },
+                                  value: {
+                                    kind: 'ObjectValue',
+                                    fields: [
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'pageInfo' },
+                                        value: {
+                                          kind: 'ObjectValue',
+                                          fields: [
+                                            {
+                                              kind: 'ObjectField',
+                                              name: { kind: 'Name', value: 'limit' },
+                                              value: { kind: 'IntValue', value: '100' },
+                                            },
+                                            {
+                                              kind: 'ObjectField',
+                                              name: { kind: 'Name', value: 'offset' },
+                                              value: { kind: 'IntValue', value: '0' },
+                                            },
+                                          ],
+                                        },
+                                      },
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'sortBy' },
+                                        value: { kind: 'EnumValue', value: 'CREATED_AT' },
+                                      },
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'sortDir' },
+                                        value: { kind: 'EnumValue', value: 'DESC' },
+                                      },
+                                    ],
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'nodes' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'mediaItem' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                        { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                                        { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'mimeType' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'derivedUrls' },
+                                          selectionSet: {
+                                            kind: 'SelectionSet',
+                                            selections: [
+                                              {
+                                                kind: 'Field',
+                                                name: { kind: 'Name', value: 'thumbnail' },
+                                              },
+                                              {
+                                                kind: 'Field',
+                                                name: { kind: 'Name', value: 'display' },
+                                              },
+                                            ],
+                                          },
+                                        },
+                                        { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'description' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'originalFileName' },
+                                        },
+                                        { kind: 'Field', name: { kind: 'Name', value: 'takenAt' } },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'createdAt' },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'pageInfo' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'limit' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'offset' } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ViewerAlbumDetailQuery, ViewerAlbumDetailQueryVariables>;
+export const ViewerAlbumsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ViewerAlbums' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'viewer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'albums' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'input' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'collectionInfo' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'pageInfo' },
+                                  value: {
+                                    kind: 'ObjectValue',
+                                    fields: [
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'limit' },
+                                        value: { kind: 'IntValue', value: '50' },
+                                      },
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'offset' },
+                                        value: { kind: 'IntValue', value: '0' },
+                                      },
+                                    ],
+                                  },
+                                },
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'sortBy' },
+                                  value: { kind: 'EnumValue', value: 'CREATED_AT' },
+                                },
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'sortDir' },
+                                  value: { kind: 'EnumValue', value: 'DESC' },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodes' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'coverMedia' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'derivedUrls' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'thumbnail' },
+                                        },
+                                        { kind: 'Field', name: { kind: 'Name', value: 'display' } },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'limit' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'offset' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ViewerAlbumsQuery, ViewerAlbumsQueryVariables>;
+export const ViewerMediaItemDetailDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ViewerMediaItemDetail' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'mediaItemId' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'viewer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mediaItem' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'id' },
+                      value: { kind: 'Variable', name: { kind: 'Name', value: 'mediaItemId' } },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'mimeType' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'originalFileName' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'takenAt' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'derivedUrls' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'display' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ViewerMediaItemDetailQuery, ViewerMediaItemDetailQueryVariables>;
+export const ViewerMediaPickerDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ViewerMediaPicker' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'viewer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mediaItems' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'input' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'collectionInfo' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'pageInfo' },
+                                  value: {
+                                    kind: 'ObjectValue',
+                                    fields: [
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'limit' },
+                                        value: { kind: 'IntValue', value: '40' },
+                                      },
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'offset' },
+                                        value: { kind: 'IntValue', value: '0' },
+                                      },
+                                    ],
+                                  },
+                                },
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'sortBy' },
+                                  value: { kind: 'EnumValue', value: 'CREATED_AT' },
+                                },
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'sortDir' },
+                                  value: { kind: 'EnumValue', value: 'DESC' },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodes' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ViewerMediaPickerQuery, ViewerMediaPickerQueryVariables>;
+export const ViewerRecentMediaDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'ViewerRecentMedia' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'viewer' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mediaItems' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'input' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'collectionInfo' },
+                            value: {
+                              kind: 'ObjectValue',
+                              fields: [
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'pageInfo' },
+                                  value: {
+                                    kind: 'ObjectValue',
+                                    fields: [
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'limit' },
+                                        value: { kind: 'IntValue', value: '10' },
+                                      },
+                                      {
+                                        kind: 'ObjectField',
+                                        name: { kind: 'Name', value: 'offset' },
+                                        value: { kind: 'IntValue', value: '0' },
+                                      },
+                                    ],
+                                  },
+                                },
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'sortBy' },
+                                  value: { kind: 'EnumValue', value: 'CREATED_AT' },
+                                },
+                                {
+                                  kind: 'ObjectField',
+                                  name: { kind: 'Name', value: 'sortDir' },
+                                  value: { kind: 'EnumValue', value: 'DESC' },
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodes' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'derivedUrls' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                                  { kind: 'Field', name: { kind: 'Name', value: 'display' } },
+                                ],
+                              },
+                            },
+                            { kind: 'Field', name: { kind: 'Name', value: 'mimeType' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'originalFileName' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'takenAt' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pageInfo' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'limit' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'offset' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ViewerRecentMediaQuery, ViewerRecentMediaQueryVariables>;

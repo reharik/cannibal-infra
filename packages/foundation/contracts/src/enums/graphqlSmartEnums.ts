@@ -7,12 +7,18 @@
 
 import { enumeration, type Enumeration } from '@reharik/smart-enum';
 
-const albumItemSortByInput = { 'createdAt': { column: 'created_at' }, 'orderIndex': { column: 'order_index' } } as const;
-const albumSortByInput = { 'createdAt': { column: 'created_at' }, 'title': { column: 'title' } } as const;
+const albumItemSortByInput = {
+  createdAt: { column: 'created_at' },
+  orderIndex: { column: 'order_index' },
+} as const;
+const albumSortByInput = {
+  createdAt: { column: 'created_at' },
+  title: { column: 'title' },
+} as const;
 const errorCategoryInput = ['auth', 'conflict', 'domain', 'system', 'validation'] as const;
 const mediaAssetKindInput = ['display', 'original', 'thumbnail'] as const;
 const mediaAssetStatusInput = ['failed', 'pending', 'processing', 'ready'] as const;
-const mediaItemSortByInput = { 'createdAt': { column: 'created_at' } } as const;
+const mediaItemSortByInput = { createdAt: { column: 'created_at' } } as const;
 const mediaItemStatusInput = ['failed', 'pending', 'processing', 'ready', 'uploaded'] as const;
 const mediaKindInput = ['photo', 'video'] as const;
 const shareViewerRelationshipInput = ['anonymous', 'authenticated', 'member', 'owner'] as const;
@@ -29,13 +35,30 @@ export type MediaKind = Enumeration<typeof MediaKind>;
 export type ShareViewerRelationship = Enumeration<typeof ShareViewerRelationship>;
 export type SortDir = Enumeration<typeof SortDir>;
 
-export const AlbumItemSortBy = enumeration<typeof albumItemSortByInput>('AlbumItemSortBy', { input: albumItemSortByInput });
-export const AlbumSortBy = enumeration<typeof albumSortByInput>('AlbumSortBy', { input: albumSortByInput });
-export const ErrorCategory = enumeration<typeof errorCategoryInput>('ErrorCategory', { input: errorCategoryInput });
-export const MediaAssetKind = enumeration<typeof mediaAssetKindInput>('MediaAssetKind', { input: mediaAssetKindInput });
-export const MediaAssetStatus = enumeration<typeof mediaAssetStatusInput>('MediaAssetStatus', { input: mediaAssetStatusInput });
-export const MediaItemSortBy = enumeration<typeof mediaItemSortByInput>('MediaItemSortBy', { input: mediaItemSortByInput });
-export const MediaItemStatus = enumeration<typeof mediaItemStatusInput>('MediaItemStatus', { input: mediaItemStatusInput });
+export const AlbumItemSortBy = enumeration<typeof albumItemSortByInput>('AlbumItemSortBy', {
+  input: albumItemSortByInput,
+});
+export const AlbumSortBy = enumeration<typeof albumSortByInput>('AlbumSortBy', {
+  input: albumSortByInput,
+});
+export const ErrorCategory = enumeration<typeof errorCategoryInput>('ErrorCategory', {
+  input: errorCategoryInput,
+});
+export const MediaAssetKind = enumeration<typeof mediaAssetKindInput>('MediaAssetKind', {
+  input: mediaAssetKindInput,
+});
+export const MediaAssetStatus = enumeration<typeof mediaAssetStatusInput>('MediaAssetStatus', {
+  input: mediaAssetStatusInput,
+});
+export const MediaItemSortBy = enumeration<typeof mediaItemSortByInput>('MediaItemSortBy', {
+  input: mediaItemSortByInput,
+});
+export const MediaItemStatus = enumeration<typeof mediaItemStatusInput>('MediaItemStatus', {
+  input: mediaItemStatusInput,
+});
 export const MediaKind = enumeration<typeof mediaKindInput>('MediaKind', { input: mediaKindInput });
-export const ShareViewerRelationship = enumeration<typeof shareViewerRelationshipInput>('ShareViewerRelationship', { input: shareViewerRelationshipInput });
+export const ShareViewerRelationship = enumeration<typeof shareViewerRelationshipInput>(
+  'ShareViewerRelationship',
+  { input: shareViewerRelationshipInput },
+);
 export const SortDir = enumeration<typeof sortDirInput>('SortDir', { input: sortDirInput });
