@@ -4,9 +4,11 @@
     "composite": false,
     "noEmit": true,
     "types": ["jest", "node"],
+    "baseUrl": "../../..",
     "paths": {
-      "@packages/contracts": ["../../foundation/contracts/src/index.ts"],
-      "@packages/media-core": ["./src/index.ts"]
+      "@packages/contracts": ["packages/foundation/contracts/src/index.ts"],
+      "@packages/infrastructure": ["packages/foundation/infrastructure/src/index.ts"],
+      "@packages/media-core": ["packages/context/media-core/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "jest.config.js"],

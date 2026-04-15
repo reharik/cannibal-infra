@@ -21,4 +21,7 @@ export default {
   coverageDirectory: '<rootDir>/coverage',
   setupFiles: [],
   testMatch: ['**/src/tests/**/*.tests.ts'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@reharik/smart-enum|@reharik/smart-enum-knex|case-anything)/)',
+  ],
 };
