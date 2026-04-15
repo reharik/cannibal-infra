@@ -44,7 +44,7 @@ ENV NX_DAEMON=false
 RUN npx nx reset || true
 
 # Generate container types (run from repo root so npm finds package.json)
-RUN npm run gen:container --workspace=@app/$(basename "${APP_WORKSPACE_PATH}")
+RUN npm run gen:all
 
 # Verify IoC generated artifacts exist
 RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
