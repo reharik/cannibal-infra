@@ -104,9 +104,17 @@ COMPOSE_FILES=()
 if [[ -f "${COMPOSE_DIR}/base.yml" && -f "${COMPOSE_DIR}/${ENV}.yml" ]]; then
   COMPOSE_FILES=( -f "${COMPOSE_DIR}/base.yml" -f "${COMPOSE_DIR}/${ENV}.yml" )
   echo "Using compose dir files: ${COMPOSE_DIR}/base.yml + ${COMPOSE_DIR}/${ENV}.yml"
+  if [[ -f "${COMPOSE_DIR}/prod.extend.yml" ]]; then
+    COMPOSE_FILES+=( -f "${COMPOSE_DIR}/prod.extend.yml" )
+    echo "Also: ${COMPOSE_DIR}/prod.extend.yml"
+  fi
 elif [[ -f "${COMPOSE_DIR}/base.yml" && -f "${COMPOSE_DIR}/prod.yml" ]]; then
   COMPOSE_FILES=( -f "${COMPOSE_DIR}/base.yml" -f "${COMPOSE_DIR}/prod.yml" )
   echo "Using compose dir files: ${COMPOSE_DIR}/base.yml + ${COMPOSE_DIR}/prod.yml"
+  if [[ -f "${COMPOSE_DIR}/prod.extend.yml" ]]; then
+    COMPOSE_FILES+=( -f "${COMPOSE_DIR}/prod.extend.yml" )
+    echo "Also: ${COMPOSE_DIR}/prod.extend.yml"
+  fi
 else
   # Legacy compose file convention
   COMPOSE_FILE_DEFAULT_1="${APP_ROOT}/docker-compose.${ENV}.yml"

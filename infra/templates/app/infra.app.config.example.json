@@ -8,9 +8,7 @@
   "ssmPoll": { "delaySeconds": 2, "maxAttempts": 120 },
   "docker": {
     "nodeVersion": 22,
-    "apiWorkspacePath": "apps/api",
-    "nxProject": "api",
-    "devWorkspaceName": "@app/api",
+    "appWorkspacePath": "apps/api",
     "nodeEntrypoint": "apps/api/dist/index.js"
   },
   "requiredSecrets": {

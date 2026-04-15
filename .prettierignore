@@ -13,3 +13,4 @@ package-lock.json
 # **/di/generated/ioc-registry.types.ts
 **/*.generated.ts
 /infra/**
+/ops/**

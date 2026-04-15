@@ -1,10 +1,8 @@
 ARG NODE_VERSION=22
-# Path under repo root (e.g. apps/api, apps/worker) — used for COPY paths and prod CMD.
+# Monorepo path under repo root (e.g. apps/api). Nx project name and npm --workspace name are
+# derived as basename(APP_WORKSPACE_PATH) → nx run <leaf>; npm --workspace=@app/<leaf>.
+
 ARG APP_WORKSPACE_PATH=apps/api
-# npm workspace name from root package.json workspaces (e.g. @app/api).
-ARG APP_WORKSPACE_NAME=@app/api
-# Nx project name for `nx build` (see apps/<name>/project.json "name" or nx.json).
-ARG NX_PROJECT_NAME=api
 
 # =============================================================================
 # BASE IMAGE SETUP
@@ -39,8 +37,6 @@ RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 
 FROM base AS build
 ARG APP_WORKSPACE_PATH=apps/api
-ARG APP_WORKSPACE_NAME=@app/api
-ARG NX_PROJECT_NAME=api
 WORKDIR /repo
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
@@ -48,7 +44,7 @@ ENV NX_DAEMON=false
 RUN npx nx reset || true
 
 # Generate container types (run from repo root so npm finds package.json)
-RUN npm run gen:container --workspace=${APP_WORKSPACE_NAME}
+RUN npm run gen:container --workspace=@app/$(basename "${APP_WORKSPACE_PATH}")
 
 # Verify IoC generated artifacts exist
 RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
@@ -56,15 +52,15 @@ RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
 RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts || \
   (echo "ERROR: ioc-registry.types.ts was not generated" && exit 1)
 
-RUN npx nx build ${NX_PROJECT_NAME} --configuration=production
+RUN npx nx build "$(basename "${APP_WORKSPACE_PATH}")" --configuration=production
 
 # =============================================================================
 # RUNTIME STAGES
 # =============================================================================
 
 FROM node:${NODE_VERSION}-slim AS dev
-ARG APP_WORKSPACE_NAME=@app/api
-ENV APP_WORKSPACE_NAME=${APP_WORKSPACE_NAME}
+ARG APP_WORKSPACE_PATH=apps/api
+ENV APP_WORKSPACE_PATH=${APP_WORKSPACE_PATH}
 ENV NODE_ENV=development
 WORKDIR /app
 RUN apt-get update && apt-get install -y git vim && rm -rf /var/lib/apt/lists/*
@@ -72,7 +68,7 @@ COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
 RUN npm install -g nodemon
 EXPOSE 3000
-CMD ["sh", "-c", "npm run dev --workspace=${APP_WORKSPACE_NAME}"]
+CMD ["sh", "-c", "npm run dev --workspace=@app/$(basename \"$APP_WORKSPACE_PATH\")"]
 
 FROM node:${NODE_VERSION}-slim AS production
 ARG APP_WORKSPACE_PATH=apps/api

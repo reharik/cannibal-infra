@@ -35,7 +35,9 @@ eval "$(./infra/scripts/deploy/load-infra-app-config.sh)"         # local export
 - **Consumer**: repo root `infra.app.config.json` (app-owned; copy from `infra/templates/app/infra.app.config.example.json` and set `appName`, `s3Bucket`, etc.).
 - **Merge**: `load-infra-app-config.sh` runs `jq -s '.[0] * .[1]' defaults.json consumer.json` and outputs `KEY=VALUE` lines. If the consumer file is missing, defaults alone are used (deploy will fail later if e.g. `s3Bucket` is empty).
 
-Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`, `s3Bucket`, `ssm.*`, `ssmPoll.*`, `docker.*`, and `requiredSecrets` (metadata only: lists secret **names** the app must configure—no values). See `config/infra.app.config.defaults.json`: `requiredSecrets.backendDeploy` and `requiredSecrets.frontendBuild` are the lists to add in GitHub Settings → Secrets and to pass when using `workflow_call`.
+Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`, `s3Bucket`, `ssm.*`, `ssmPoll.*`, `docker.*`, and `requiredSecrets` (metadata only: lists secret **names** the app must configure—no values). Under `docker`, set `appWorkspacePath` (e.g. `apps/api`) for the primary backend image; the Dockerfile derives npm `--workspace=@app/<leaf>` and `nx build <leaf>` from `basename(appWorkspacePath)`. Legacy key `apiWorkspacePath` is still accepted by the loader.
+
+See `config/infra.app.config.defaults.json`: `requiredSecrets.backendDeploy` and `requiredSecrets.frontendBuild` are the lists to add in GitHub Settings → Secrets and to pass when using `workflow_call`.
 
 ## Required env / secrets (app-owned)
 
@@ -53,6 +55,16 @@ Schema (all optional in consumer; defaults apply): `appName`, `env`, `awsRegion`
 - App root: e.g. `/opt/{app}/` (app-specific).
 - Shared: `/opt/shared/Caddyfile` for shared Caddy.
 - Scripts and env files are app-owned or deployed from S3 per run.
+
+## Optional extra services (consumer app)
+
+To run more than one container from the same repo:
+
+1. **`ops/deploy/build-extra-images.sh`** (optional) — If this file exists, the backend deploy job runs it after the default API image build. The script should build any extra images and append **one `image:tag` per line** to `artifacts/extra-image-tags.txt`. Those references are included in the same `backend.tar.gz` as the API image pair.
+
+2. **Compose overlay** — If **`ops/deploy/prod.compose.extend.yml`** or **`infra/config/docker-compose/prod.extend.yml`** exists, it is uploaded as `compose/prod.extend.yml`. On EC2, `remote-deploy.sh` adds `-f prod.extend.yml` after `base.yml` and `prod.yml` when that file is present.
+
+Infra does not define app-specific services or image names; those stay in the consuming repository.
 
 ## Risks / TODOs
 

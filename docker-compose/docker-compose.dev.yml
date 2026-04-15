@@ -12,8 +12,6 @@ services:
       args:
         NODE_VERSION: '22'
         APP_WORKSPACE_PATH: 'apps/api'
-        APP_WORKSPACE_NAME: '@app/api'
-        NX_PROJECT_NAME: 'api'
     ports:
       - '3001:3001'
     env_file:
@@ -45,8 +43,6 @@ services:
       args:
         NODE_VERSION: '22'
         APP_WORKSPACE_PATH: 'apps/media-worker'
-        APP_WORKSPACE_NAME: '@app/media-worker'
-        NX_PROJECT_NAME: 'media-worker'
     env_file:
       - ./apps/media-worker/.env
     depends_on: !override
