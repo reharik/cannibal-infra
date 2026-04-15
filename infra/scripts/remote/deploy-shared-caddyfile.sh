@@ -1,5 +1,21 @@
 needs_reload=0
 
+tmp="$(mktemp /tmp/shared-caddy.XXXXXX)"
+trap 'rm -f "$tmp"' EXIT
+
+# write the candidate config into "$tmp"
+# example:
+# aws s3 cp "$S3_URI" "$tmp"
+# or:
+# cat >"$tmp" <<'EOF'
+# ...
+# EOF
+
+if [[ ! -f "$tmp" ]]; then
+  echo "candidate Caddyfile missing: ${tmp}" >&2
+  exit 1
+fi
+
 # ... compute old_hash/new_hash ...
 
 if [[ -z "$old_hash" || "$old_hash" != "$new_hash" ]]; then
@@ -22,11 +38,10 @@ else
     -v /opt/chore-tracker/frontend:/srv/chore-tracker:ro \
     -v /opt/photo-app/frontend:/srv/photo-app:ro \
     -v caddy_data_shared:/data \
-    -v caddy_config_shared:/data \
+    -v caddy_config_shared:/config \
     caddy:2-alpine
 fi
 
-# Reload only when changed (or if you prefer: always reload, cheap)
 if [[ "$needs_reload" -eq 1 ]]; then
-  docker exec shared-proxy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile || true
+  docker exec shared-proxy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 fi
