@@ -40,6 +40,10 @@ echo "  S3=${S3_URI}"
 echo "  DEPLOY_BACKEND=${DEPLOY_BACKEND}"
 echo "  DEPLOY_FRONTEND=${DEPLOY_FRONTEND}"
 
+# Compose uses env_file: /opt/${APP_NAME}/env/${ENV}.env; that path must exist even when
+# env.env is not shipped from S3 (secrets provisioned manually on the host).
+sudo mkdir -p "${APP_ROOT}/env" "${APP_ROOT}/compose"
+
 download_if_exists() {
   local remote_name="$1"
   local local_path="$2"

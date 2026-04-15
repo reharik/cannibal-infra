@@ -20,6 +20,7 @@ else
     -v /opt/shared/Caddyfile:/etc/caddy/Caddyfile:ro \
     -v /opt/network/frontend:/srv/network:ro \
     -v /opt/chore-tracker/frontend:/srv/chore-tracker:ro \
+    -v /opt/photo-app/frontend:/srv/photo-app:ro \
     -v caddy_data_shared:/data \
     -v caddy_config_shared:/data \
     caddy:2-alpine
