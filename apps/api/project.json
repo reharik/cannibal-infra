@@ -31,23 +31,18 @@
       "dependsOn": [
         "ts-patch:install",
         "clean",
-        "contracts:build",
-        "infrastructure:build",
-        "media-core:build",
-        "gen:container",
-        "gen:graphql",
-        "build:knexfile"
+        "gen:container"
       ],
       "options": {
-        "command": "vite build --config vite.config.mjs",
+        "command": "vite build --config vite.config.mjs && mkdir -p dist/db && npx tsc -p tsconfig.db.json",
         "cwd": "{projectRoot}"
       },
       "configurations": {
         "development": {
-          "command": "vite build --config vite.config.mjs --mode development"
+          "command": "vite build --config vite.config.mjs --mode development && mkdir -p dist/db && npx tsc -p tsconfig.db.json"
         },
         "production": {
-          "command": "vite build --config vite.config.mjs --mode production"
+          "command": "vite build --config vite.config.mjs --mode production && mkdir -p dist/db && npx tsc -p tsconfig.db.json"
         }
       }
     },
@@ -120,7 +115,7 @@
     },
     "gen:container": {
       "executor": "nx:run-commands",
-      "dependsOn": ["contracts:build", "infrastructure:build"],
+      "dependsOn": ["contracts:build", "infrastructure:build", "media-core:build"],
       "options": {
         "command": "tsx src/di/gen-ioc-manifest.ts",
         "cwd": "{projectRoot}"

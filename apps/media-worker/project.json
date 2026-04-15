@@ -3,10 +3,25 @@
   "projectType": "application",
   "sourceRoot": "{projectRoot}/src",
   "targets": {
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx rimraf dist",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "gen:container": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["api:gen:container"],
+      "options": {
+        "command": "tsx src/di/gen-ioc-manifest.ts",
+        "cwd": "{projectRoot}"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/dist"],
-      "dependsOn": ["contracts:build", "api:gen:container"],
+      "dependsOn": ["clean", "gen:container"],
       "options": {
         "command": "vite build --config vite.config.mjs",
         "cwd": "{projectRoot}"

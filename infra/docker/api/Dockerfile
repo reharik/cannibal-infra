@@ -43,16 +43,13 @@ COPY . .
 ENV NX_DAEMON=false
 RUN npx nx reset || true
 
-# Generate container types (run from repo root so npm finds package.json)
-RUN npm run gen:all
+# Codegen (GraphQL, contracts enums, IoC) is driven by the api Nx task graph — no separate gen:all.
+RUN npx nx build "$(basename "${APP_WORKSPACE_PATH}")" --configuration=production
 
-# Verify IoC generated artifacts exist
 RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-manifest.ts || \
   (echo "ERROR: ioc-manifest.ts was not generated" && exit 1)
 RUN test -f ${APP_WORKSPACE_PATH}/src/di/generated/ioc-registry.types.ts || \
   (echo "ERROR: ioc-registry.types.ts was not generated" && exit 1)
-
-RUN npx nx build "$(basename "${APP_WORKSPACE_PATH}")" --configuration=production
 
 # =============================================================================
 # RUNTIME STAGES

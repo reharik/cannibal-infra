@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => {
     plugins: [tsconfigPaths()],
     build: {
       outDir: 'dist',
-      emptyOutDir: false, // Keep knexfile.js and db directory from build:knexfile
+      // Nx runs clean before vite; migrations/seeds are compiled to dist/db after vite (project.json).
+      emptyOutDir: true,
       ssr: true, // Server-side rendering mode for Node.js
       target: 'node22',
       format: 'esm',
