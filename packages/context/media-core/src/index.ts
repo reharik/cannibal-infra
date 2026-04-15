@@ -2,6 +2,7 @@ export * from './domain';
 export * from './types/types';
 
 export * from './application/media/MediaStorage';
+export * from './application/media/buildDerivedMediaItemUrls';
 export * from './application/media/resolveMediaAssetUrl';
 
 export * from './repositories/domainRepositories/albumRepository';

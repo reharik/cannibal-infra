@@ -1,5 +1,6 @@
 query ViewerMediaItemDetail($mediaItemId: ID!) {
   viewer {
+    id
     mediaItem(id: $mediaItemId) {
       id
       kind
@@ -9,16 +10,9 @@ query ViewerMediaItemDetail($mediaItemId: ID!) {
       originalFileName
       createdAt
       takenAt
-
-      displayAsset: asset(kind: DISPLAY) {
-        url
-      }
-
-      originalAsset: asset(kind: ORIGINAL) {
-        mimeType
-        width
-        height
-        fileSizeBytes
+      derivedUrls {
+        thumbnail
+        display
       }
     }
   }

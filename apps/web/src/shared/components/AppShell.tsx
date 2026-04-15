@@ -74,6 +74,8 @@ const SCAppTitle = styled(Link)`
 
 const MainContent = styled.main`
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 `;

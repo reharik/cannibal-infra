@@ -4,15 +4,12 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { ViewerDocument } from '../graphql/generated/types';
 import { useApiFetchBase } from '../hooks/apiFetch/useApiFetch';
 
+type AuthActionResult = { ok: true } | { ok: false; message: string };
+
 interface AuthContextType {
   user: User | undefined;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (
-    email: string,
-    password: string,
-    name: string,
-    role?: 'adult' | 'kid',
-  ) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<AuthActionResult>;
+  signup: (email: string, password: string, name: string) => Promise<AuthActionResult>;
 
   logout: () => void;
   isLoading: boolean;
@@ -63,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [viewerError]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<AuthActionResult> => {
     try {
       const data = await apiFetch<{ user: User; token: string }>(`/auth/login`, {
         method: 'POST',
@@ -74,12 +71,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('authToken', data.data.token);
         setHasToken(true);
         await refetchViewer();
-        return true;
+        return { ok: true };
       }
-      return false;
+      return { ok: false, message: data.error };
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      return { ok: false, message: error instanceof Error ? error.message : 'Login failed' };
     }
   };
 
@@ -87,26 +84,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     email: string,
     password: string,
     name: string,
-    role?: 'adult' | 'kid',
-  ): Promise<boolean> => {
+  ): Promise<AuthActionResult> => {
     try {
       const data = await apiFetch<{ user: User; token: string }>(`/auth/signup`, {
         method: 'POST',
-        body: { email, password, name, role },
+        body: { email, password, name },
       });
 
       if (data.success) {
         localStorage.setItem('authToken', data.data.token);
         setHasToken(true);
         await refetchViewer();
-        return true;
-      } else {
-        console.error('Signup failed:', data.error);
-        return false;
+        return { ok: true };
       }
+      return { ok: false, message: data.error };
     } catch (error) {
       console.error('Signup exception:', error);
-      return false;
+      return { ok: false, message: error instanceof Error ? error.message : 'Signup failed' };
     }
   };
 

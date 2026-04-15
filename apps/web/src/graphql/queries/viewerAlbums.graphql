@@ -15,10 +15,9 @@ query ViewerAlbums {
           id
           kind
           status
-          asset(kind: THUMBNAIL) {
-            kind
-            url
-            status
+          derivedUrls {
+            thumbnail
+            display
           }
         }
       }

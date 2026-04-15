@@ -15,7 +15,10 @@ import {
 export const AlbumsListScreen = () => {
   const navigate = useNavigate();
   const client = useApolloClient();
-  const { data, loading, error, refetch } = useQuery(ViewerAlbumsDocument);
+  const { data, loading, error, refetch } = useQuery(ViewerAlbumsDocument, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [appErrors, setAppErrors] = useState<AppError[]>([]);
@@ -100,13 +103,16 @@ export const AlbumsListScreen = () => {
             {nodes.map((album) => (
               <AlbumCard key={album.id} to={`/albums/${album.id}`}>
                 <AlbumThumb>
-                  {album.coverMedia?.asset?.url ? (
-                    <ThumbImage src={album.coverMedia.asset.url} alt={album.title} />
-                  ) : (
-                    <ThumbIcon aria-hidden>
-                      {album.coverMedia?.kind === 'VIDEO' ? '🎬' : '🖼️'}
-                    </ThumbIcon>
-                  )}
+                  {(() => {
+                    const u = album.coverMedia ? album.coverMedia.derivedUrls.thumbnail : undefined;
+                    return u != null && u !== '' ? (
+                      <ThumbImage src={u} alt={album.title} />
+                    ) : (
+                      <ThumbIcon aria-hidden>
+                        {album.coverMedia?.kind === 'VIDEO' ? '🎬' : '🖼️'}
+                      </ThumbIcon>
+                    );
+                  })()}
                 </AlbumThumb>
                 <AlbumInfo>
                   <AlbumName>{album.title}</AlbumName>

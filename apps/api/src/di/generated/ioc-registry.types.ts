@@ -15,6 +15,7 @@ import type {
   DeleteMediaItem,
   FinalizeMediaItemUpload,
   MediaAssetReadRepository,
+  MediaItemDerivedUrlsProjection,
   MediaItemReadRepository,
   MediaItemRepository,
   MediaStorage,
@@ -68,6 +69,7 @@ export interface IocGeneratedTypes {
   koaServer: KoaServer;
   logger: Logger;
   mediaAssetReadRepository: MediaAssetReadRepository;
+  mediaItemDerivedUrlsProjection: MediaItemDerivedUrlsProjection;
   mediaItemReadRepository: MediaItemReadRepository;
   mediaItemRepository: MediaItemRepository;
   mediaProcessingJobRepository: MediaProcessingJobRepository;

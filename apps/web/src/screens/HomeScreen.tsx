@@ -1,12 +1,17 @@
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { DateTime } from 'luxon';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import type { MediaItemLocationState } from '../app/mediaItemNavigationState';
 import { mediaItemDetailPath } from '../app/paths';
 import { AppError } from '../application/errors/types';
 import { mediaUploadWorkflow } from '../application/media/mediaUploadWorkflow';
 import { ViewerRecentMediaDocument } from '../graphql/generated/types';
+import { useMultiSelectIds } from '../hooks/useMultiSelectIds';
+import { GallerySelectionBar } from '../shared/components/gallery/GallerySelectionBar';
+import { SelectionThumbOverlay } from '../shared/components/gallery/SelectionCornerCheck';
+import { SelectionToggleControl } from '../shared/components/gallery/SelectionToggleControl';
 
 export const HomeScreen = () => {
   const navigate = useNavigate();
@@ -15,10 +20,17 @@ export const HomeScreen = () => {
   const [appErrors, setAppErrors] = useState<AppError[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data, loading, error, refetch } = useQuery(ViewerRecentMediaDocument);
+  const { data, loading, error, refetch } = useQuery(ViewerRecentMediaDocument, {
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
+  });
 
-  const nodes = data?.viewer?.mediaItems.nodes ?? [];
+  const nodes = useMemo(() => data?.viewer?.mediaItems.nodes ?? [], [data]);
   const hasItems = nodes.length > 0;
+
+  const orderedMediaIds = useMemo(() => nodes.map((n) => n.id), [nodes]);
+  const { selectionCount, isSelected, handleModifierClick, toggleSelectAt, clearSelection } =
+    useMultiSelectIds(orderedMediaIds);
 
   const startUploadPick = () => {
     setAppErrors([]);
@@ -45,7 +57,9 @@ export const HomeScreen = () => {
     }
 
     await refetch();
-    await navigate(mediaItemDetailPath(result.data.mediaItemId));
+    await navigate(mediaItemDetailPath(result.data.mediaItemId), {
+      state: { mediaGalleryIds: [result.data.mediaItemId] } satisfies MediaItemLocationState,
+    });
   };
 
   const formatCreatedAt = (value: unknown): string => {
@@ -79,12 +93,18 @@ export const HomeScreen = () => {
       />
 
       <Header>
-        <Title>Recent Media</Title>
-        <HeaderActions>
-          <UploadButton type="button" onClick={startUploadPick} disabled={isUploading}>
-            {isUploading ? 'Uploading…' : 'Upload Media'}
-          </UploadButton>
-        </HeaderActions>
+        {selectionCount > 0 ? (
+          <GallerySelectionBar count={selectionCount} onClear={clearSelection} />
+        ) : (
+          <>
+            <Title>Recent Media</Title>
+            <HeaderActions>
+              <UploadButton type="button" onClick={startUploadPick} disabled={isUploading}>
+                {isUploading ? 'Uploading…' : 'Upload Media'}
+              </UploadButton>
+            </HeaderActions>
+          </>
+        )}
       </Header>
 
       {appErrors
@@ -98,29 +118,58 @@ export const HomeScreen = () => {
           <StatusMessage role="alert">Could not load media. {error.message}</StatusMessage>
         ) : hasItems ? (
           <MediaGrid>
-            {nodes.map((item) => (
-              <MediaGridItem key={item.id} to={mediaItemDetailPath(item.id)}>
-                <MediaThumb>
-                  {item.asset?.url ? (
-                    <ThumbImage
-                      src={item.asset.url}
-                      alt={item.title?.trim() || kindLabel(item.kind)}
+            {nodes.map((item, index) => {
+              const thumbUrl = item.derivedUrls.thumbnail;
+              const itemLinkState = {
+                mediaGalleryIds: nodes.map((n) => n.id),
+              } satisfies MediaItemLocationState;
+              return (
+                <MediaGridItem key={item.id}>
+                  <MediaThumb data-selectable-thumb="">
+                    <ThumbLink
+                      to={mediaItemDetailPath(item.id)}
+                      state={itemLinkState}
+                      onClickCapture={(e) => {
+                        handleModifierClick(e, item.id, index);
+                      }}
+                    >
+                      <SelectionThumbOverlay visible={isSelected(item.id)} />
+                      {thumbUrl != null && thumbUrl !== '' ? (
+                        <ThumbImage
+                          src={thumbUrl}
+                          alt={item.title?.trim() || kindLabel(item.kind)}
+                        />
+                      ) : (
+                        <ThumbIcon aria-hidden>{item.kind === 'VIDEO' ? '🎬' : '🖼️'}</ThumbIcon>
+                      )}
+                    </ThumbLink>
+                    <SelectionToggleControl
+                      selected={isSelected(item.id)}
+                      onToggle={() => {
+                        toggleSelectAt(item.id, index);
+                      }}
                     />
-                  ) : (
-                    <ThumbIcon aria-hidden>{item.kind === 'VIDEO' ? '🎬' : '🖼️'}</ThumbIcon>
-                  )}
-                  {item.status === 'PENDING' ? <StatusPill>Processing</StatusPill> : null}
-                  {item.status === 'FAILED' ? <StatusPill $fail>Failed</StatusPill> : null}
-                </MediaThumb>
-                <MediaInfo>
-                  <MediaTitle>{item.title?.trim() || kindLabel(item.kind)}</MediaTitle>
-                  <MediaMeta>
-                    {formatCreatedAt(item.createdAt)}
-                    {item.width && item.height ? ` · ${item.width}×${item.height}` : ''}
-                  </MediaMeta>
-                </MediaInfo>
-              </MediaGridItem>
-            ))}
+                    {item.status === 'PENDING' ? <StatusPill>Processing</StatusPill> : null}
+                    {item.status === 'FAILED' ? <StatusPill $fail>Failed</StatusPill> : null}
+                  </MediaThumb>
+                  <CaptionLink
+                    to={mediaItemDetailPath(item.id)}
+                    state={itemLinkState}
+                    onClickCapture={(e) => {
+                      handleModifierClick(e, item.id, index);
+                    }}
+                  >
+                    <MediaInfo>
+                      <MediaTitle>{item.title?.trim() || kindLabel(item.kind)}</MediaTitle>
+                      <MediaMeta>
+                        {formatCreatedAt(item.createdAt)}
+                        {item.width && item.height ? ` · ${item.width}×${item.height}` : ''}
+                      </MediaMeta>
+                    </MediaInfo>
+                  </CaptionLink>
+                </MediaGridItem>
+              );
+            })}
           </MediaGrid>
         ) : (
           <EmptyState>
@@ -232,22 +281,33 @@ const MediaGrid = styled.div`
   }
 `;
 
-const MediaGridItem = styled(Link)`
+const MediaGridItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(1)};
-  cursor: pointer;
   transition: transform 0.2s ease;
-  text-align: left;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
 
   &:hover {
     transform: translateY(-2px);
   }
+`;
+
+const ThumbLink = styled(Link)`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  text-decoration: none;
+`;
+
+const CaptionLink = styled(Link)`
+  display: block;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 `;
 
 const MediaThumb = styled.div`

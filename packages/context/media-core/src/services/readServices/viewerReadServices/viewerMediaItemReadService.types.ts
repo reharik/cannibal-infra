@@ -39,7 +39,6 @@ export type MediaItemRow = {
 };
 
 export type MediaItemProjection = MediaItemRow & {
-  assets?: MediaAssetProjection[];
   tags: string[];
 };
 

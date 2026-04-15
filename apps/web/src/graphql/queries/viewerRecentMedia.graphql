@@ -10,16 +10,18 @@ query ViewerRecentMedia {
         id
         kind
         status
-        asset(kind: THUMBNAIL) {
-          kind
-          url
-          status
+        derivedUrls {
+          thumbnail
+          display
         }
         mimeType
         title
-        createdAt
+        description
+        originalFileName
+        takenAt
         width
         height
+        createdAt
       }
       pageInfo {
         limit

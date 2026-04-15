@@ -642,11 +642,7 @@ export const iocManifest = {
         default: true,
         discoveredBy: 'naming',
         configOverridesApplied: ['lifetime'],
-        dependencyContractNames: [
-          'MediaAssetReadRepository',
-          'MediaItemReadRepository',
-          'MediaStorage',
-        ],
+        dependencyContractNames: ['MediaItemReadRepository', 'MediaStorage'],
       },
     },
   },

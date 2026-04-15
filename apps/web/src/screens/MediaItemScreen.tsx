@@ -1,10 +1,17 @@
-import { useQuery } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { DateTime } from 'luxon';
-import type { ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
-import styled from 'styled-components';
-import { ViewerMediaItemDetailDocument } from '../graphql/generated/types';
-import { MediaViewer } from '../shared/components/media/MediaViewer';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import styled, { css } from 'styled-components';
+import type { MediaItemLocationState } from '../app/mediaItemNavigationState';
+import { mediaItemDetailPath } from '../app/paths';
+import {
+  UpdateMediaItemDetailsDocument,
+  ViewerMediaItemDetailDocument,
+} from '../graphql/generated/types';
+import { useMediaViewerKeyboard } from '../hooks/useMediaViewerKeyboard';
+import { MediaViewer, ViewerCloseButton } from '../shared/components/media/MediaViewer';
+import type { NavigateDirection } from '../shared/components/media/mediaViewerTypes';
 
 const kindLabel = (kind: string): string => {
   if (kind === 'VIDEO') {
@@ -16,7 +23,7 @@ const kindLabel = (kind: string): string => {
   return 'Media';
 };
 
-const formatCreatedAt = (value: unknown): string => {
+const formatDateOnly = (value: unknown): string => {
   if (typeof value === 'string') {
     const dt = DateTime.fromISO(value);
     if (dt.isValid) {
@@ -26,43 +33,147 @@ const formatCreatedAt = (value: unknown): string => {
   return '—';
 };
 
+const formatTakenDisplay = (value: unknown): string => {
+  if (typeof value === 'string') {
+    const dt = DateTime.fromISO(value);
+    if (dt.isValid) {
+      return dt.toLocaleString(DateTime.DATETIME_MED);
+    }
+  }
+  return '—';
+};
+
+const toDatetimeLocalValue = (value: unknown): string => {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return '';
+  }
+  const dt = DateTime.fromISO(value);
+  if (!dt.isValid) {
+    return '';
+  }
+  return dt.toLocal().toFormat("yyyy-MM-dd'T'HH:mm");
+};
+
+const fromDatetimeLocalToIso = (value: string): string | null => {
+  const t = value.trim();
+  if (t.length === 0) {
+    return null;
+  }
+  const dt = DateTime.fromFormat(t, "yyyy-MM-dd'T'HH:mm");
+  if (!dt.isValid) {
+    return null;
+  }
+  return dt.toISO();
+};
+
 const isNonEmptyDisplayUrl = (url: string | undefined): url is string => {
   return typeof url === 'string' && url.trim().length > 0;
 };
 
-const displayNameForPanel = (input: {
-  title?: string | null;
-  originalFileName?: string | null;
-}): string => {
-  const t = input.title?.trim();
-  if (t) {
-    return t;
-  }
-  const f = input.originalFileName?.trim();
-  if (f) {
-    return f;
-  }
-  return 'Untitled';
-};
-
 export const MediaItemScreen = () => {
   const { mediaId } = useParams<{ mediaId: string }>();
-  const { data, loading, error } = useQuery(ViewerMediaItemDetailDocument, {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const galleryIds = (location.state as MediaItemLocationState | undefined)?.mediaGalleryIds;
+
+  const { data, loading, error, refetch } = useQuery(ViewerMediaItemDetailDocument, {
     variables: { mediaItemId: mediaId ?? '' },
     skip: !mediaId,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
+  const [updateMediaItemDetails, { loading: saveLoading }] = useMutation(
+    UpdateMediaItemDetailsDocument,
+  );
+
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftDescription, setDraftDescription] = useState('');
+  const [draftTakenLocal, setDraftTakenLocal] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleMediaNavigate = useCallback(
+    (direction: NavigateDirection) => {
+      if (isEditingDetails || mediaId == null || mediaId === '' || galleryIds == null) {
+        return;
+      }
+      if (galleryIds.length === 0 || galleryIds.length <= 1) {
+        return;
+      }
+      const idx = galleryIds.indexOf(mediaId);
+      if (idx === -1) {
+        return;
+      }
+      const nextIdx =
+        direction === 'next'
+          ? (idx + 1) % galleryIds.length
+          : (idx - 1 + galleryIds.length) % galleryIds.length;
+      const nextId = galleryIds[nextIdx];
+      if (nextId === undefined) {
+        return;
+      }
+      void navigate(mediaItemDetailPath(nextId), {
+        replace: true,
+        state: { mediaGalleryIds: galleryIds },
+      });
+    },
+    [galleryIds, isEditingDetails, mediaId, navigate],
+  );
+
+  const { canNavigatePrevious, canNavigateNext } = useMemo(() => {
+    const none = { canNavigatePrevious: false, canNavigateNext: false };
+    if (galleryIds == null || mediaId == null || mediaId === '') {
+      return none;
+    }
+    if (galleryIds.length <= 1) {
+      return none;
+    }
+    if (!galleryIds.includes(mediaId)) {
+      return none;
+    }
+    return { canNavigatePrevious: true, canNavigateNext: true };
+  }, [galleryIds, mediaId]);
+
   const mediaItem = data?.viewer?.mediaItem ?? null;
-  const displayAsset = mediaItem?.displayAsset ?? null;
-  const originalAsset = mediaItem?.originalAsset ?? null;
 
+  const displayUrlRaw = mediaItem != null ? mediaItem.derivedUrls.display : undefined;
   const displayUrl =
-    displayAsset != null && isNonEmptyDisplayUrl(displayAsset.url) ? displayAsset.url.trim() : null;
+    displayUrlRaw != null && isNonEmptyDisplayUrl(displayUrlRaw) ? displayUrlRaw.trim() : null;
 
-  const mimeForViewer =
-    originalAsset?.mimeType != null && originalAsset.mimeType.trim().length > 0
-      ? originalAsset.mimeType.trim()
-      : (mediaItem?.mimeType ?? '');
+  const mimeForViewer = (mediaItem?.mimeType ?? '').trim();
+
+  const canShowMediaViewer =
+    mediaId != null &&
+    mediaId !== '' &&
+    !loading &&
+    error == null &&
+    mediaItem != null &&
+    displayUrl != null;
+
+  const cancelEditDetails = useCallback((): void => {
+    setIsEditingDetails(false);
+    setSaveError(null);
+  }, []);
+
+  const handleClose = useCallback((): void => {
+    if (isEditingDetails) {
+      cancelEditDetails();
+      return;
+    }
+    void navigate(-1);
+  }, [cancelEditDetails, isEditingDetails, navigate]);
+
+  const openEditDetails = (): void => {
+    if (mediaItem == null) {
+      return;
+    }
+    setDraftTitle(mediaItem.title?.trim() ?? '');
+    setDraftDescription(mediaItem.description?.trim() ?? '');
+    setDraftTakenLocal(toDatetimeLocalValue(mediaItem.takenAt));
+    setSaveError(null);
+    setIsEditingDetails(true);
+  };
 
   const viewerChrome = (children: ReactNode) => (
     <ViewerShell>
@@ -87,7 +198,7 @@ export const MediaItemScreen = () => {
         <StateText>This media was not found or you do not have access.</StateText>,
       );
     }
-    if (displayAsset === null || displayUrl === null) {
+    if (displayUrl === null) {
       return viewerChrome(
         <>
           <PlaceholderIcon aria-hidden>🖼️</PlaceholderIcon>
@@ -104,73 +215,204 @@ export const MediaItemScreen = () => {
         imageAlt={
           mediaItem.title?.trim() || mediaItem.originalFileName?.trim() || kindLabel(mediaItem.kind)
         }
+        onClose={handleClose}
+        onNavigate={handleMediaNavigate}
+        canNavigatePrevious={canNavigatePrevious}
+        canNavigateNext={canNavigateNext}
       />
     );
   })();
 
-  const sizeLabel =
-    originalAsset?.fileSizeBytes != null ? `${originalAsset.fileSizeBytes} bytes` : '—';
-  const dimensionsLabel =
-    originalAsset?.width != null && originalAsset?.height != null
-      ? `${originalAsset.width} × ${originalAsset.height}`
-      : '—';
+  useMediaViewerKeyboard({
+    enabled: Boolean(mediaId),
+    onEscape: handleClose,
+    onNavigate: handleMediaNavigate,
+  });
+
+  const detailsUnchanged = (): boolean => {
+    if (mediaItem == null) {
+      return true;
+    }
+    return (
+      draftTitle.trim() === (mediaItem.title?.trim() ?? '') &&
+      draftDescription.trim() === (mediaItem.description?.trim() ?? '') &&
+      draftTakenLocal === toDatetimeLocalValue(mediaItem.takenAt)
+    );
+  };
+
+  const saveEditDetails = async (): Promise<void> => {
+    if (mediaId == null || mediaId === '') {
+      return;
+    }
+    setSaveError(null);
+    const takenIso = draftTakenLocal.trim() === '' ? null : fromDatetimeLocalToIso(draftTakenLocal);
+    if (draftTakenLocal.trim() !== '' && takenIso == null) {
+      setSaveError('Taken date is not valid.');
+      return;
+    }
+    try {
+      const result = await updateMediaItemDetails({
+        variables: {
+          input: {
+            mediaItemId: mediaId,
+            title: draftTitle.trim() === '' ? undefined : draftTitle.trim(),
+            description: draftDescription.trim() === '' ? undefined : draftDescription.trim(),
+            takenAt: takenIso ?? undefined,
+          },
+        },
+      });
+      const envelope = result.data?.updateMediaItemDetails;
+      const contractErrors = envelope?.errors;
+      if (contractErrors != null && contractErrors.length > 0) {
+        setSaveError(contractErrors[0]?.message ?? 'Could not save changes.');
+        return;
+      }
+      setIsEditingDetails(false);
+      await refetch({ mediaItemId: mediaId });
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Could not save changes.');
+    }
+  };
 
   return (
     <Container>
-      <CloseButton type="button" onClick={() => window.history.back()} aria-label="Close">
-        ✕
-      </CloseButton>
+      {!canShowMediaViewer ? (
+        <ViewerCloseButton type="button" onClick={handleClose} aria-label="Close">
+          ✕
+        </ViewerCloseButton>
+      ) : null}
 
-      {viewerPane}
+      <LayoutInner>
+        <ViewerColumn>{viewerPane}</ViewerColumn>
 
-      <MetadataPanel>
-        <MetadataSection>
-          <SectionTitle>Details</SectionTitle>
-          <MetadataItem>
-            <MetadataLabel>Name</MetadataLabel>
-            <MetadataValue>
-              {mediaItem != null
-                ? displayNameForPanel({
-                    title: mediaItem.title,
-                    originalFileName: mediaItem.originalFileName,
-                  })
-                : '—'}
-            </MetadataValue>
-          </MetadataItem>
-          {mediaItem?.description?.trim() ? (
+        <MetadataPanel>
+          <MetadataSection>
+            <SectionTitle>Details</SectionTitle>
             <MetadataItem>
-              <MetadataLabel>Description</MetadataLabel>
-              <MetadataValue>{mediaItem.description.trim()}</MetadataValue>
+              <MetadataLabel>File name</MetadataLabel>
+              <MetadataValue>
+                {mediaItem != null ? mediaItem.originalFileName?.trim() || '—' : '—'}
+              </MetadataValue>
             </MetadataItem>
-          ) : null}
-          <MetadataItem>
-            <MetadataLabel>Date</MetadataLabel>
-            <MetadataValue>{formatCreatedAt(mediaItem?.createdAt)}</MetadataValue>
-          </MetadataItem>
-          <MetadataItem>
-            <MetadataLabel>Taken</MetadataLabel>
-            <MetadataValue>{formatCreatedAt(mediaItem?.takenAt)}</MetadataValue>
-          </MetadataItem>
-          <MetadataItem>
-            <MetadataLabel>Size</MetadataLabel>
-            <MetadataValue>{sizeLabel}</MetadataValue>
-          </MetadataItem>
-          <MetadataItem>
-            <MetadataLabel>Dimensions</MetadataLabel>
-            <MetadataValue>{dimensionsLabel}</MetadataValue>
-          </MetadataItem>
-        </MetadataSection>
-      </MetadataPanel>
+
+            {isEditingDetails ? (
+              <EditFormCard>
+                <FormField>
+                  <MetadataLabel htmlFor="media-detail-title">Title</MetadataLabel>
+                  <FormTextInput
+                    id="media-detail-title"
+                    value={draftTitle}
+                    onChange={(e) => {
+                      setDraftTitle(e.target.value);
+                    }}
+                    autoComplete="off"
+                  />
+                </FormField>
+                <FormField>
+                  <MetadataLabel htmlFor="media-detail-description">Description</MetadataLabel>
+                  <FormTextarea
+                    id="media-detail-description"
+                    rows={4}
+                    value={draftDescription}
+                    onChange={(e) => {
+                      setDraftDescription(e.target.value);
+                    }}
+                  />
+                </FormField>
+                <FormField>
+                  <MetadataLabel htmlFor="media-detail-taken">Taken</MetadataLabel>
+                  <FormDatetime
+                    id="media-detail-taken"
+                    type="datetime-local"
+                    step={60}
+                    value={draftTakenLocal}
+                    onChange={(e) => {
+                      setDraftTakenLocal(e.target.value);
+                    }}
+                  />
+                  <FormHint>Optional. Uses your local timezone.</FormHint>
+                </FormField>
+                <FormActions>
+                  <SecondaryButton type="button" onClick={cancelEditDetails}>
+                    Cancel
+                  </SecondaryButton>
+                  <PrimaryButton
+                    type="button"
+                    disabled={detailsUnchanged() || saveLoading}
+                    onClick={() => {
+                      void saveEditDetails();
+                    }}
+                  >
+                    {saveLoading ? 'Saving…' : 'Save'}
+                  </PrimaryButton>
+                </FormActions>
+                {saveError != null ? <FormError role="alert">{saveError}</FormError> : null}
+              </EditFormCard>
+            ) : (
+              <>
+                <EditableRowButton type="button" onClick={openEditDetails}>
+                  <MetadataLabel>Title</MetadataLabel>
+                  <EditableRowValueRow>
+                    <EditableValueText $muted={!(mediaItem != null && mediaItem.title?.trim())}>
+                      {mediaItem != null && mediaItem.title?.trim()
+                        ? mediaItem.title.trim()
+                        : 'Not set'}
+                    </EditableValueText>
+                    <EditCue aria-hidden>✎</EditCue>
+                  </EditableRowValueRow>
+                </EditableRowButton>
+                <EditableRowButton type="button" onClick={openEditDetails}>
+                  <MetadataLabel>Description</MetadataLabel>
+                  <EditableRowValueRow>
+                    <EditableValueText
+                      $multiline
+                      $muted={!(mediaItem != null && mediaItem.description?.trim())}
+                    >
+                      {mediaItem != null && mediaItem.description?.trim()
+                        ? mediaItem.description.trim()
+                        : 'Not set'}
+                    </EditableValueText>
+                    <EditCue aria-hidden>✎</EditCue>
+                  </EditableRowValueRow>
+                </EditableRowButton>
+                <EditableRowButton type="button" onClick={openEditDetails}>
+                  <MetadataLabel>Taken</MetadataLabel>
+                  <EditableRowValueRow>
+                    <EditableValueText
+                      $muted={
+                        mediaItem == null ||
+                        typeof mediaItem.takenAt !== 'string' ||
+                        mediaItem.takenAt.trim() === '' ||
+                        !DateTime.fromISO(mediaItem.takenAt).isValid
+                      }
+                    >
+                      {mediaItem != null ? formatTakenDisplay(mediaItem.takenAt) : '—'}
+                    </EditableValueText>
+                    <EditCue aria-hidden>✎</EditCue>
+                  </EditableRowValueRow>
+                </EditableRowButton>
+              </>
+            )}
+
+            <MetadataItem>
+              <MetadataLabel>Date added</MetadataLabel>
+              <MetadataValue>{formatDateOnly(mediaItem?.createdAt)}</MetadataValue>
+            </MetadataItem>
+          </MetadataSection>
+        </MetadataPanel>
+      </LayoutInner>
     </Container>
   );
 };
 
 const ViewerShell = styled.div`
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: ${({ theme }) => theme.spacing(4)};
+  overflow: auto;
 `;
 
 const ViewerCard = styled.div`
@@ -211,35 +453,56 @@ const Container = styled.div`
   inset: 0;
   background: ${({ theme }) => theme.colors.bg};
   display: flex;
+  flex-direction: row;
+  min-height: 0;
   z-index: 100;
+
+  @media (max-width: 968px) {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-items: stretch;
+    -webkit-overflow-scrolling: touch;
+  }
 `;
 
-const CloseButton = styled.button`
-  position: absolute;
-  top: ${({ theme }) => theme.spacing(2)};
-  right: ${({ theme }) => theme.spacing(2)};
-  width: 40px;
-  height: 40px;
-  background: ${({ theme }) => theme.colors.panel};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.subtext};
-  border-radius: ${({ theme }) => theme.radius.md};
-  font-size: 20px;
+/** Fills the viewport on small screens and grows with content so the page background stays solid while scrolling. */
+const LayoutInner = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: all 0.2s ease;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  background: ${({ theme }) => theme.colors.bg};
 
-  &:hover {
-    background: ${({ theme }) => theme.colors.bg};
-    border-color: ${({ theme }) => theme.colors.accent};
-    color: ${({ theme }) => theme.colors.text};
+  @media (max-width: 968px) {
+    flex-direction: column;
+    flex: 1 0 auto;
+    min-height: 100dvh;
+  }
+`;
+
+/** Wraps the viewer so the media + metadata stack and scroll on narrow viewports. */
+const ViewerColumn = styled.div`
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 968px) {
+    flex: 0 0 auto;
+    min-height: min(320px, 45svh);
+    max-height: min(480px, 55svh);
+    overflow: hidden;
+    width: 100%;
   }
 `;
 
 const MetadataPanel = styled.aside`
   width: 320px;
+  flex-shrink: 0;
   background: ${({ theme }) => theme.colors.panel};
   border-left: 1px solid ${({ theme }) => theme.colors.border};
   padding: ${({ theme }) => theme.spacing(4)};
@@ -249,7 +512,16 @@ const MetadataPanel = styled.aside`
   gap: ${({ theme }) => theme.spacing(4)};
 
   @media (max-width: 968px) {
-    display: none;
+    /* Match {@link MediaViewer} ViewerCard: max 600px, inset by ViewerShell padding (spacing 4 × 2). */
+    width: min(600px, calc(100% - ${({ theme }) => theme.spacing(8)}));
+    max-width: 600px;
+    margin-inline: auto;
+    border-left: none;
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radius.xl};
+    flex: 0 0 auto;
+    overflow: hidden;
+    padding-bottom: max(${({ theme }) => theme.spacing(6)}, env(safe-area-inset-bottom, 0px));
   }
 `;
 
@@ -275,7 +547,7 @@ const MetadataItem = styled.div`
   padding: ${({ theme }) => theme.spacing(1)} 0;
 `;
 
-const MetadataLabel = styled.div`
+const MetadataLabel = styled.label`
   font-size: 12px;
   color: ${({ theme }) => theme.colors.subtext};
   text-transform: uppercase;
@@ -285,4 +557,157 @@ const MetadataLabel = styled.div`
 const MetadataValue = styled.div`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.text};
+`;
+
+const EditableRowValueRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(1)};
+  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(1.5)};
+  border: 1px dashed ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+`;
+
+const EditableRowButton = styled.button`
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(0.5)};
+  padding: ${({ theme }) => theme.spacing(1)} 0;
+  cursor: pointer;
+  border-radius: ${({ theme }) => theme.radius.sm};
+  box-sizing: border-box;
+  width: 100%;
+
+  &:focus-visible {
+    outline: 2px solid ${({ theme }) => theme.colors.accent};
+    outline-offset: 2px;
+  }
+
+  &:hover ${EditableRowValueRow} {
+    border-color: ${({ theme }) => theme.colors.border};
+    background: ${({ theme }) => theme.colors.bg};
+  }
+`;
+
+const EditableValueText = styled.div<{ $multiline?: boolean; $muted?: boolean }>`
+  font-size: 14px;
+  color: ${({ theme, $muted }) => ($muted ? theme.colors.subtext : theme.colors.text)};
+  flex: 1;
+  text-align: left;
+  white-space: ${({ $multiline }) => ($multiline ? 'pre-wrap' : 'normal')};
+  font-style: ${({ $muted }) => ($muted ? 'italic' : 'normal')};
+`;
+
+const EditCue = styled.span`
+  flex-shrink: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.45;
+  color: ${({ theme }) => theme.colors.subtext};
+`;
+
+const EditFormCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(2)};
+  padding: ${({ theme }) => theme.spacing(2)};
+  background: ${({ theme }) => theme.colors.bg};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.md};
+`;
+
+const FormField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(0.5)};
+`;
+
+const formFieldControlCss = css`
+  font-size: 14px;
+  color: inherit;
+  font-family: inherit;
+  padding: ${({ theme }) => theme.spacing(1.25)};
+  border-radius: ${({ theme }) => theme.radius.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.panel};
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.accent};
+  }
+`;
+
+const FormTextInput = styled.input`
+  ${formFieldControlCss}
+`;
+
+const FormTextarea = styled.textarea`
+  ${formFieldControlCss}
+  resize: vertical;
+  min-height: 88px;
+`;
+
+const FormDatetime = styled.input`
+  ${formFieldControlCss}
+`;
+
+const FormHint = styled.div`
+  font-size: 11px;
+  color: ${({ theme }) => theme.colors.subtext};
+`;
+
+const FormActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: ${({ theme }) => theme.spacing(1.5)};
+  margin-top: ${({ theme }) => theme.spacing(0.5)};
+`;
+
+const SecondaryButton = styled.button`
+  font-size: 13px;
+  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(2)};
+  border-radius: ${({ theme }) => theme.radius.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.panel};
+  }
+`;
+
+const PrimaryButton = styled.button`
+  font-size: 13px;
+  padding: ${({ theme }) => theme.spacing(1)} ${({ theme }) => theme.spacing(2)};
+  border-radius: ${({ theme }) => theme.radius.md};
+  border: 1px solid ${({ theme }) => theme.colors.accent};
+  background: ${({ theme }) => theme.colors.accent};
+  color: ${({ theme }) => theme.colors.bg};
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    filter: brightness(1.05);
+  }
+`;
+
+const FormError = styled.div`
+  font-size: 13px;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.panel};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radius.sm};
+  padding: ${({ theme }) => theme.spacing(1)};
 `;

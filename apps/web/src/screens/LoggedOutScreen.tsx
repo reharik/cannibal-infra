@@ -22,15 +22,10 @@ export const LoggedOutScreen = () => {
     setIsLoading(true);
 
     try {
-      let success: boolean;
-      if (isSignup) {
-        success = await signup(email, password, name, role);
-      } else {
-        success = await login(email, password);
-      }
+      const result = isSignup ? await signup(email, password, name) : await login(email, password);
 
-      if (!success) {
-        setError('Authentication failed. Please check your credentials and try again.');
+      if (!result.ok) {
+        setError(result.message);
         return;
       }
 
@@ -104,11 +99,12 @@ export const LoggedOutScreen = () => {
                 autoComplete="email"
               />
               <FormInput
-                label="Password"
+                label={isSignup ? 'Password (at least 8 characters)' : 'Password'}
                 type="password"
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 required
+                minLength={isSignup ? 8 : undefined}
                 autoComplete={isSignup ? 'new-password' : 'current-password'}
               />
               {isSignup && (

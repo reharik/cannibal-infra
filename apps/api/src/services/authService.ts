@@ -18,7 +18,13 @@ export interface AuthService {
   comparePassword: (password: string, hash: string) => Promise<boolean>;
 }
 
-const sanitizeUser = (user: User & { passwordHash?: string }): SanitizedUser => {
+type UserRow = User & {
+  passwordHash?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
+const sanitizeUser = (user: UserRow): SanitizedUser => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...sanitized } = user;
   return sanitized as SanitizedUser;
@@ -61,7 +67,6 @@ export const buildAuthService = ({
       {
         userId: user.id,
         email: user.email,
-        role: user.role,
       },
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions,
@@ -70,10 +75,9 @@ export const buildAuthService = ({
     logger.info('User logged in successfully', {
       userId: user.id,
       email: user.email,
-      role: user.role,
     });
 
-    return { user: sanitizeUser(user), token };
+    return { user: sanitizeUser(user as UserRow), token };
   },
 
   signup: async (credentials: SignupInput) => {
@@ -92,11 +96,14 @@ export const buildAuthService = ({
     // Create user
     const [user] = await database('user')
       .insert({
-        id: database.raw('gen_random_uuid()'),
+        id,
         email,
+        firstName,
+        lastName,
         passwordHash,
-        name,
-        isActive: true,
+        emailVerified: false,
+        createdBy: id,
+        updatedBy: id,
       })
       .returning('*');
 
@@ -105,7 +112,6 @@ export const buildAuthService = ({
       {
         userId: user.id,
         email: user.email,
-        role: user.role,
       },
       config.jwtSecret,
       { expiresIn: config.jwtExpiresIn } as jwt.SignOptions,
@@ -114,10 +120,9 @@ export const buildAuthService = ({
     logger.info('User signed up successfully', {
       userId: user.id,
       email: user.email,
-      role: user.role,
     });
 
-    return { user: sanitizeUser(user), token };
+    return { user: sanitizeUser(user as UserRow), token };
   },
 
   verifyToken: async (token: string) => {
@@ -125,7 +130,6 @@ export const buildAuthService = ({
       const decoded = jwt.verify(token, config.jwtSecret) as {
         userId: string;
         email: string;
-        role: string;
       };
 
       const user = await database('user').where({ id: decoded.userId }).first();

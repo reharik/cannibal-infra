@@ -11,10 +11,9 @@ query ViewerAlbumDetail($albumId: ID!) {
         kind
         status
         title
-        asset(kind: THUMBNAIL) {
-          kind
-          url
-          status
+        derivedUrls {
+          thumbnail
+          display
         }
       }
       items(
@@ -28,15 +27,16 @@ query ViewerAlbumDetail($albumId: ID!) {
             id
             kind
             status
-            asset(kind: THUMBNAIL) {
-              kind
-              url
-              status
+            mimeType
+            derivedUrls {
+              thumbnail
+              display
             }
             title
+            description
+            originalFileName
+            takenAt
             createdAt
-            width
-            height
           }
         }
         pageInfo {

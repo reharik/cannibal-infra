@@ -1,8 +1,9 @@
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { DateTime } from 'luxon';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import type { MediaItemLocationState } from '../app/mediaItemNavigationState';
 import { mediaItemDetailPath } from '../app/paths';
 import type { AppError } from '../application/errors/types';
 import { executeMutation } from '../application/graphql/executeMutation';
@@ -12,6 +13,10 @@ import {
   ViewerMediaPickerDocument,
   type AddMediaItemToAlbumMutation,
 } from '../graphql/generated/types';
+import { useMultiSelectIds } from '../hooks/useMultiSelectIds';
+import { GallerySelectionBar } from '../shared/components/gallery/GallerySelectionBar';
+import { SelectionThumbOverlay } from '../shared/components/gallery/SelectionCornerCheck';
+import { SelectionToggleControl } from '../shared/components/gallery/SelectionToggleControl';
 
 export const AlbumScreen = () => {
   const { albumId } = useParams<{ albumId: string }>();
@@ -23,6 +28,8 @@ export const AlbumScreen = () => {
   const { data, loading, error, refetch } = useQuery(ViewerAlbumDetailDocument, {
     variables: { albumId: albumId ?? '' },
     skip: !albumId,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
   });
 
   const { data: pickerData, loading: pickerLoading } = useQuery(ViewerMediaPickerDocument, {
@@ -31,7 +38,15 @@ export const AlbumScreen = () => {
   });
 
   const album = data?.viewer?.album;
-  const itemNodes = album?.items.nodes ?? [];
+  const itemNodes = useMemo(() => album?.items.nodes ?? [], [album]);
+
+  const orderedMediaIds = useMemo(() => itemNodes.map((n) => n.mediaItem.id), [itemNodes]);
+  const { selectionCount, isSelected, handleModifierClick, toggleSelectAt, clearSelection } =
+    useMultiSelectIds(orderedMediaIds);
+
+  useEffect(() => {
+    clearSelection();
+  }, [albumId, clearSelection]);
 
   const formatCreatedAt = (value: unknown): string => {
     if (typeof value === 'string') {
@@ -98,13 +113,19 @@ export const AlbumScreen = () => {
   return (
     <Container>
       <Header>
-        <BackLink to="/albums">← Albums</BackLink>
-        <Title>{loading ? 'Album' : (album?.title ?? 'Album')}</Title>
-        <HeaderActions>
-          <PrimaryButton type="button" onClick={() => setAddItemOpen(true)} disabled={!album}>
-            Add album item
-          </PrimaryButton>
-        </HeaderActions>
+        {selectionCount > 0 ? (
+          <GallerySelectionBar count={selectionCount} onClear={clearSelection} />
+        ) : (
+          <>
+            <BackLink to="/albums">← Albums</BackLink>
+            <Title>{loading ? 'Album' : (album?.title ?? 'Album')}</Title>
+            <HeaderActions>
+              <PrimaryButton type="button" onClick={() => setAddItemOpen(true)} disabled={!album}>
+                Add album item
+              </PrimaryButton>
+            </HeaderActions>
+          </>
+        )}
       </Header>
 
       {appErrors.length > 0
@@ -130,13 +151,16 @@ export const AlbumScreen = () => {
             <AlbumMeta>
               <AlbumCover>
                 {album.coverMedia ? (
-                  album.coverMedia.asset?.url ? (
-                    <CoverImage src={album.coverMedia.asset.url} alt={album.title} />
-                  ) : (
-                    <CoverIcon aria-hidden>
-                      {album.coverMedia.kind === 'VIDEO' ? '🎬' : '🖼️'}
-                    </CoverIcon>
-                  )
+                  (() => {
+                    const coverThumb = album.coverMedia.derivedUrls.thumbnail;
+                    return coverThumb != null && coverThumb !== '' ? (
+                      <CoverImage src={coverThumb} alt={album.title} />
+                    ) : (
+                      <CoverIcon aria-hidden>
+                        {album.coverMedia.kind === 'VIDEO' ? '🎬' : '🖼️'}
+                      </CoverIcon>
+                    );
+                  })()
                 ) : (
                   <CoverPlaceholder aria-hidden>📷</CoverPlaceholder>
                 )}
@@ -152,34 +176,63 @@ export const AlbumScreen = () => {
 
             {itemNodes.length > 0 ? (
               <PhotoGrid>
-                {itemNodes.map((node) => (
-                  <PhotoItem key={node.id}>
-                    <PhotoButton to={mediaItemDetailPath(node.mediaItem.id)}>
-                      <PhotoThumb>
-                        {node.mediaItem.asset?.url ? (
-                          <ThumbImage
-                            src={node.mediaItem.asset.url}
-                            alt={node.mediaItem.title?.trim() || kindLabel(node.mediaItem.kind)}
+                {itemNodes.map((node, index) => {
+                  const thumbUrl = node.mediaItem.derivedUrls.thumbnail;
+                  const itemLinkState = {
+                    mediaGalleryIds: itemNodes.map((n) => n.mediaItem.id),
+                  } satisfies MediaItemLocationState;
+                  return (
+                    <PhotoItem key={node.id}>
+                      <PhotoCardColumn>
+                        <PhotoThumb data-selectable-thumb="">
+                          <AlbumThumbLink
+                            to={mediaItemDetailPath(node.mediaItem.id)}
+                            state={itemLinkState}
+                            onClickCapture={(e) => {
+                              handleModifierClick(e, node.mediaItem.id, index);
+                            }}
+                          >
+                            <SelectionThumbOverlay visible={isSelected(node.mediaItem.id)} />
+                            {thumbUrl != null && thumbUrl !== '' ? (
+                              <ThumbImage
+                                src={thumbUrl}
+                                alt={node.mediaItem.title?.trim() || kindLabel(node.mediaItem.kind)}
+                              />
+                            ) : (
+                              <ThumbIcon aria-hidden>
+                                {node.mediaItem.kind === 'VIDEO' ? '🎬' : '🖼️'}
+                              </ThumbIcon>
+                            )}
+                          </AlbumThumbLink>
+                          <SelectionToggleControl
+                            selected={isSelected(node.mediaItem.id)}
+                            onToggle={() => {
+                              toggleSelectAt(node.mediaItem.id, index);
+                            }}
                           />
-                        ) : (
-                          <ThumbIcon aria-hidden>
-                            {node.mediaItem.kind === 'VIDEO' ? '🎬' : '🖼️'}
-                          </ThumbIcon>
-                        )}
-                        {node.mediaItem.status === 'PENDING' ? (
-                          <StatusPill>Processing</StatusPill>
-                        ) : null}
-                        {node.mediaItem.status === 'FAILED' ? (
-                          <StatusPill $fail>Failed</StatusPill>
-                        ) : null}
-                      </PhotoThumb>
-                      <PhotoCaption>
-                        {node.mediaItem.title?.trim() || kindLabel(node.mediaItem.kind)}
-                      </PhotoCaption>
-                      <PhotoMeta>{formatCreatedAt(node.mediaItem.createdAt)}</PhotoMeta>
-                    </PhotoButton>
-                  </PhotoItem>
-                ))}
+                          {node.mediaItem.status === 'PENDING' ? (
+                            <StatusPill>Processing</StatusPill>
+                          ) : null}
+                          {node.mediaItem.status === 'FAILED' ? (
+                            <StatusPill $fail>Failed</StatusPill>
+                          ) : null}
+                        </PhotoThumb>
+                        <AlbumCaptionLink
+                          to={mediaItemDetailPath(node.mediaItem.id)}
+                          state={itemLinkState}
+                          onClickCapture={(e) => {
+                            handleModifierClick(e, node.mediaItem.id, index);
+                          }}
+                        >
+                          <PhotoCaption>
+                            {node.mediaItem.title?.trim() || kindLabel(node.mediaItem.kind)}
+                          </PhotoCaption>
+                          <PhotoMeta>{formatCreatedAt(node.mediaItem.createdAt)}</PhotoMeta>
+                        </AlbumCaptionLink>
+                      </PhotoCardColumn>
+                    </PhotoItem>
+                  );
+                })}
               </PhotoGrid>
             ) : (
               <EmptyAlbum>
@@ -442,23 +495,36 @@ const PhotoGrid = styled.div`
 
 const PhotoItem = styled.div``;
 
-const PhotoButton = styled(Link)`
+const PhotoCardColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(1)};
   width: 100%;
-  cursor: pointer;
   transition: transform 0.2s ease;
-  text-align: left;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
 
   &:hover {
     transform: translateY(-2px);
   }
+`;
+
+const AlbumThumbLink = styled(Link)`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  text-decoration: none;
+`;
+
+const AlbumCaptionLink = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(0.5)};
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 `;
 
 const PhotoThumb = styled.div`

@@ -51,14 +51,17 @@ export const buildAuthController = ({
   },
 
   signup: async (ctx: Context): Promise<Context> => {
-    const { email, password, name } = ctx.request.body as {
-      email: string;
-      password: string;
-      name: string;
-      role?: 'adult' | 'kid';
+    const body = ctx.request.body as {
+      email?: unknown;
+      password?: unknown;
+      name?: unknown;
     };
 
-    if (!email || !password || !name) {
+    const email = typeof body.email === 'string' ? body.email.trim() : '';
+    const password = typeof body.password === 'string' ? body.password : '';
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+
+    if (email.length === 0 || password.length === 0 || name.length === 0) {
       ctx.status = 400;
       ctx.body = { error: 'Email, password, and name are required' };
       return ctx;
