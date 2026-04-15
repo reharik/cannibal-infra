@@ -6,6 +6,7 @@ import {
 } from '@packages/contracts';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'node:crypto';
 import { IocGeneratedCradle } from '../di/generated/ioc-registry.types';
 
 export type SanitizedUser = Omit<User, 'passwordHash'>;
@@ -28,6 +29,20 @@ const sanitizeUser = (user: UserRow): SanitizedUser => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { passwordHash, ...sanitized } = user;
   return sanitized as SanitizedUser;
+};
+
+const splitDisplayName = (fullName: string): { firstName: string; lastName: string } => {
+  const trimmed = fullName.trim();
+  if (trimmed.length === 0) {
+    return { firstName: '-', lastName: '-' };
+  }
+  const spaceIdx = trimmed.indexOf(' ');
+  if (spaceIdx === -1) {
+    return { firstName: trimmed, lastName: '-' };
+  }
+  const firstName = trimmed.slice(0, spaceIdx);
+  const lastName = trimmed.slice(spaceIdx + 1).trim() || '-';
+  return { firstName, lastName };
 };
 
 export const buildAuthService = ({
@@ -89,6 +104,9 @@ export const buildAuthService = ({
       logger.warn('Signup attempt failed: user already exists', { email });
       return undefined;
     }
+
+    const id = randomUUID();
+    const { firstName, lastName } = splitDisplayName(name);
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12);
