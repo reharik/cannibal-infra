@@ -19,7 +19,7 @@
     "dev": "nodemon",
     "fu": "tsc --noEmit",
     "gen:container": "tsx src/di/gen-ioc-manifest.ts",
-    "gen:graphql": "graphql-codegen",
+    "gen:graphql": "graphql-codegen && npx prettier --write src/graphql/generated/schema.graphql src/graphql/generated/types.generated.ts",
     "ioc:bundles": "ioc bundles",
     "ioc:inspect": "ioc inspect",
     "ioc:inspect:discovery": "ioc inspect --discovery",

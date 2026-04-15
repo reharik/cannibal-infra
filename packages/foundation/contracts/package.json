@@ -14,7 +14,7 @@
   "scripts": {
     "build": "rimraf dist && nx build contracts",
     "dev": "tsc -w -p tsconfig.json",
-    "gen:graphql:enums": "graphql-codegen --config codegen.yml"
+    "gen:graphql:enums": "graphql-codegen --config codegen.yml && npx prettier --write src/enums/graphqlSmartEnums.ts"
   },
   "dependencies": {
     "@reharik/smart-enum": "^0.3.1",

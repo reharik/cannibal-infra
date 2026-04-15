@@ -21,7 +21,7 @@
     "dev:web": "nx run web:serve",
     "eslint": "npm run lint",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --list-different .",
     "gen:all": "npm run gen:ioc; npm run gen:gql; npm run gen:enums",
     "gen:container": "npm run gen:all",
     "gen:enums": "npm run gen:graphql:enums --workspace=@packages/contracts",

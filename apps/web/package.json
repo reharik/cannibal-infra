@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nx build web",
-    "codegen": "graphql-codegen --config codegen.yml",
+    "codegen": "graphql-codegen --config codegen.yml && npx prettier --write src/graphql/generated/types.ts",
     "dev": "nx serve",
     "lint": "nx eslint:lint",
     "preview": "nx preview web",
