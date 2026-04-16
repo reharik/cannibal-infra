@@ -1,25 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${AWS_REGION:?AWS_REGION required}"
+: "${S3_BUCKET:?S3_BUCKET required}"
+
+SHARED_CADDY_S3_URI="s3://${S3_BUCKET}/deployments/shared/Caddyfile"
+TARGET_CADDYFILE="/opt/shared/Caddyfile"
+
 needs_reload=0
 
 tmp="$(mktemp /tmp/shared-caddy.XXXXXX)"
-trap 'rm -f "$tmp"' EXIT
+trap 'rm -f -- "$tmp"' EXIT
 
-# write the candidate config into "$tmp"
-# example:
-# aws s3 cp "$S3_URI" "$tmp"
-# or:
-# cat >"$tmp" <<'EOF'
-# ...
-# EOF
+aws s3 cp "${SHARED_CADDY_S3_URI}" "$tmp" --region "${AWS_REGION}"
 
-if [[ ! -f "$tmp" ]]; then
-  echo "candidate Caddyfile missing: ${tmp}" >&2
+if [[ -z "${tmp}" || ! -f "$tmp" ]]; then
+  echo "error: candidate Caddyfile missing (tmp is empty or not a file)" >&2
   exit 1
 fi
 
-# ... compute old_hash/new_hash ...
+if [[ ! -s "$tmp" ]]; then
+  echo "error: candidate Caddyfile is empty" >&2
+  exit 1
+fi
+
+if [[ -f "$TARGET_CADDYFILE" ]]; then
+  old_hash="$(sha256sum "$TARGET_CADDYFILE" | awk '{print $1}')"
+else
+  old_hash=""
+fi
+new_hash="$(sha256sum "$tmp" | awk '{print $1}')"
 
 if [[ -z "$old_hash" || "$old_hash" != "$new_hash" ]]; then
-  sudo install -m 0644 "$tmp" /opt/shared/Caddyfile
+  sudo install -m 0644 "$tmp" "$TARGET_CADDYFILE"
   needs_reload=1
 else
   echo "Caddyfile unchanged; will not reload."

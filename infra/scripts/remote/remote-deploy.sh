@@ -35,6 +35,7 @@ echo "Remote deploy starting"
 echo "  APP_NAME=${APP_NAME}"
 echo "  ENV=${ENV}"
 echo "  SHA=${SHA}"
+echo "  API_IMAGE=${API_IMAGE:-<unset; compose uses default image tag>}"
 echo "  APP_ROOT=${APP_ROOT}"
 echo "  S3=${S3_URI}"
 echo "  DEPLOY_BACKEND=${DEPLOY_BACKEND}"
@@ -201,9 +202,9 @@ if [[ ${#ENV_ARGS[@]} -gt 0 ]]; then
 fi
 
 if docker compose version >/dev/null 2>&1; then
-  sudo -E docker compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d
+  sudo -E docker compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d --force-recreate
 else
-  sudo -E docker-compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d
+  sudo -E docker-compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d --force-recreate
 fi
 
 echo "Remote deploy complete"

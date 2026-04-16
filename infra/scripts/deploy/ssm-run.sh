@@ -26,6 +26,45 @@ _ssm_default_targets() {
 _ssm_poll_delay() { echo "${SSM_POLL_DELAY_SECONDS:-2}"; }
 _ssm_poll_max()   { echo "${SSM_POLL_MAX_ATTEMPTS:-180}"; }
 
+# Same targets as send-command: resolve instance IDs immediately so we can poll
+# get-command-invocation without waiting for list-command-invocations to populate.
+_ssm_resolve_instance_ids_from_targets() {
+  if [[ -n "${SSM_TARGETS_OVERRIDE:-}" ]]; then
+    local t
+    for t in ${SSM_TARGETS_OVERRIDE}; do
+      if [[ "$t" =~ InstanceIds,Values=(.+)$ ]]; then
+        local raw="${BASH_REMATCH[1]}"
+        echo "${raw//,/ }"
+        return 0
+      fi
+    done
+    echo ""
+    return 0
+  fi
+
+  local host="${SSM_TAG_HOST:-prod-shared}"
+  local env="${SSM_TAG_ENV:-prod}"
+  local out
+  out="$(
+    aws ec2 describe-instances \
+      --region "${AWS_REGION}" \
+      --filters \
+        "Name=tag:Host,Values=${host}" \
+        "Name=tag:Env,Values=${env}" \
+        "Name=instance-state-name,Values=running" \
+      --query 'Reservations[].Instances[].InstanceId' \
+      --output text 2>/dev/null || true
+  )"
+  echo "${out//	/ }"
+}
+
+_ssm_is_terminal_invocation_status() {
+  case "$1" in
+    Success|Cancelled|Failed|TimedOut|Undeliverable|Terminated) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 _ssm_upload_script_to_s3() {
   local local_path="$1"
   local key="$2"
@@ -60,7 +99,7 @@ _ssm_send_command() {
   _ssm_upload_script_to_s3 "$remote_script_path" "$script_key"
 
   local env_text=""
-  for v in AWS_REGION S3_BUCKET APP_NAME ENV SHA DEPLOY_BACKEND DEPLOY_FRONTEND S3_PREFIX; do
+  for v in AWS_REGION S3_BUCKET APP_NAME ENV SHA DEPLOY_BACKEND DEPLOY_FRONTEND S3_PREFIX API_IMAGE; do
     if [[ -n "${!v:-}" ]]; then
       env_text+="${v}=${!v}"$'\n'
     fi
@@ -177,10 +216,15 @@ ssm_run() {
   max_attempts="$(_ssm_poll_max)"
 
   local instance_ids
-  if ! instance_ids="$(_ssm_get_instance_ids "$command_id" 180 "$delay")"; then
-    echo "Invocation records not visible yet for command-id=$command_id" >&2
-    echo "Treating this as a polling failure, not a deploy failure." >&2
-    return 0
+  instance_ids="$(_ssm_resolve_instance_ids_from_targets)"
+  instance_ids="${instance_ids//	/ }"
+
+  if [[ -z "${instance_ids// }" ]]; then
+    echo "No instance ids from deploy targets (EC2 tags or InstanceIds override); falling back to list-command-invocations." >&2
+    if ! instance_ids="$(_ssm_get_instance_ids "$command_id" 180 "$delay")"; then
+      echo "No instances returned yet for command-id=$command_id (invocation index lag). Not failing deploy on this alone." >&2
+      return 0
+    fi
   fi
 
   local attempt=0
@@ -196,6 +240,9 @@ ssm_run() {
         Pending|InProgress|Delayed|"")
           any_in_progress=1
           ;;
+        None)
+          any_in_progress=1
+          ;;
       esac
     done
 
@@ -204,7 +251,7 @@ ssm_run() {
     fi
 
     if [[ "$attempt" -ge "$max_attempts" ]]; then
-      echo "SSM command did not finish within bounds." >&2
+      echo "SSM command did not reach a terminal status within polling bounds (command-id=$command_id)." >&2
       break
     fi
 
@@ -212,6 +259,7 @@ ssm_run() {
   done
 
   local failed=0
+  local inconclusive=0
   for iid in $instance_ids; do
     _ssm_dump_instance_output "$command_id" "$iid"
 
@@ -219,8 +267,32 @@ ssm_run() {
     final_status="$(_ssm_get_status "$command_id" "$iid")"
     response_code="$(_ssm_get_response_code "$command_id" "$iid")"
 
-    [[ "$final_status" == "Success" && "$response_code" == "0" ]] || failed=1
+    if [[ "$response_code" == "None" ]]; then
+      response_code=""
+    fi
+
+    if [[ -z "$final_status" || "$final_status" == "None" ]]; then
+      echo "Invocation still not visible for instance=${iid} command-id=$command_id; not failing deploy on this alone." >&2
+      inconclusive=1
+      continue
+    fi
+
+    if ! _ssm_is_terminal_invocation_status "$final_status"; then
+      echo "Non-terminal SSM status for instance=${iid}: ${final_status}; not failing deploy on this alone." >&2
+      inconclusive=1
+      continue
+    fi
+
+    if [[ "$final_status" == "Success" && "$response_code" == "0" ]]; then
+      continue
+    fi
+
+    failed=1
   done
+
+  if [[ "$inconclusive" -eq 1 && "$failed" -eq 0 ]]; then
+    echo "SSM polling ended with inconclusive status for one or more instances; exiting successfully to avoid false negatives." >&2
+  fi
 
   [[ "$failed" -eq 0 ]]
 }

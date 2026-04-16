@@ -204,7 +204,6 @@ jobs:
           mkdir -p artifacts
           IMAGES=(
             "${APP_NAME}-api:${GITHUB_SHA}"
-            "${APP_NAME}-api:latest"
           )
           if [[ -f artifacts/extra-image-tags.txt ]]; then
             while IFS= read -r line || [[ -n "$line" ]]; do

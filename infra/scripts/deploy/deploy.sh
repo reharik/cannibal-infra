@@ -108,8 +108,11 @@ if [[ ! -f "${REMOTE_SCRIPT_LOCAL}" ]]; then
   exit 2
 fi
 
+# Pin API image tag to this deploy SHA so compose pulls the loaded image (not a stale :latest).
+export API_IMAGE="${APP_NAME}-api:${SHA}"
+
 # Export vars so ssm-run.sh writes them into remote.env on S3
-export APP_NAME ENV SHA AWS_REGION S3_BUCKET DEPLOY_BACKEND DEPLOY_FRONTEND S3_PREFIX
+export APP_NAME ENV SHA AWS_REGION S3_BUCKET DEPLOY_BACKEND DEPLOY_FRONTEND S3_PREFIX API_IMAGE
 
 # Source ssm-run.sh to get ssm_run()
 # shellcheck disable=SC1090
