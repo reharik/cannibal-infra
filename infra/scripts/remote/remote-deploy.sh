@@ -170,6 +170,16 @@ if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
   else
     echo "No backend artifact (${BACKEND_TAR}) found; skipping backend load"
   fi
+
+  if download_if_exists "${WORKERS_TAR}" "${WORK_DIR}/${WORKERS_TAR}"; then
+    echo "Loading worker images from ${WORKERS_TAR}"
+    WORKERS_IMAGE_TAR="${WORK_DIR}/workers.tar"
+    gunzip -c "${WORK_DIR}/${WORKERS_TAR}" > "${WORKERS_IMAGE_TAR}"
+    sudo docker load -i "${WORKERS_IMAGE_TAR}"
+    rm -f "${WORKERS_IMAGE_TAR}" "${WORK_DIR}/${WORKERS_TAR}"
+  else
+    echo "No worker images artifact (${WORKERS_TAR}) found; skipping"
+  fi
 fi
 
 # ------------------------------------------------------------------------------

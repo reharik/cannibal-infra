@@ -87,6 +87,7 @@ upload_dir_if_exists() {
 if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
   upload_if_exists "${ARTIFACT_DIR}/${BACKEND_TAR}" "${BACKEND_TAR}" \
     || echo "No backend artifact found at ${ARTIFACT_DIR}/${BACKEND_TAR} (skipping upload)"
+  upload_if_exists "${ARTIFACT_DIR}/${WORKERS_TAR}" "${WORKERS_TAR}" || true
 fi
 
 if [[ "${DEPLOY_FRONTEND}" == "true" ]]; then

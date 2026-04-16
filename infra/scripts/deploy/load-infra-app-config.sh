@@ -52,5 +52,7 @@ echo "$MERGED" | jq -r '
   "SSM_POLL_MAX_ATTEMPTS=\(.ssmPoll.maxAttempts)",
   "DOCKER_NODE_VERSION=\(.docker.nodeVersion)",
   "DOCKER_APP_WORKSPACE_PATH=\(.docker.appWorkspacePath // .docker.apiWorkspacePath)",
-  "DOCKER_NODE_ENTRYPOINT=\(.docker.nodeEntrypoint)"
+  "DOCKER_NODE_ENTRYPOINT=\(.docker.nodeEntrypoint)",
+  "DOCKER_WORKERS_JSON=\(.docker.workers // [] | @json)",
+  "DOCKER_EXTRA_BACKEND_PATHS=\(.docker.workers // [] | map(.workspacePath) | join(" "))"
 '

@@ -45,16 +45,54 @@ jobs:
     outputs:
       backend_changed: ${{ steps.decide.outputs.backend_changed }}
       frontend_changed: ${{ steps.decide.outputs.frontend_changed }}
+      has_workers: ${{ steps.workers-check.outputs.has_workers }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Full history needed so path filter can diff base..ref (e.g. when caller passes base_sha)
           fetch-depth: 0
 
       - name: Load infra app config
         shell: bash
         run: ./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"
+
+      - name: Check for workers
+        id: workers-check
+        shell: bash
+        run: |
+          if echo "${DOCKER_WORKERS_JSON:-[]}" | jq -e 'length > 0' > /dev/null 2>&1; then
+            echo "has_workers=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_workers=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate path filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "backend:"
+            echo "  - 'apps/api/**'"
+            echo "  - 'ops/deploy/**'"
+            echo "  - 'infra/docker/**'"
+            echo "  - 'infra/config/docker-compose/**'"
+            echo "  - 'infra/scripts/remote/**'"
+            echo "  - 'infra/scripts/deploy/**'"
+            echo "  - 'apps/api/Dockerfile'"
+            for path in ${DOCKER_EXTRA_BACKEND_PATHS:-}; do
+              echo "  - '${path}/**'"
+            done
+            echo "frontend:"
+            echo "  - 'apps/web/**'"
+            echo "  - 'infra/scripts/remote/**'"
+            echo "  - 'infra/scripts/deploy/**'"
+            echo "  - 'apps/web/Dockerfile'"
+            echo "  - 'Caddyfile'"
+            echo "shared_force_both:"
+            echo "  - '.github/workflows/deploy-ec2.yml'"
+            echo "  - '.github/workflows/**'"
+            echo "  - 'infra/**'"
+          } > .paths-filter.yml
 
       # 1) Path-based change detection (push, or workflow_call when caller passes base_sha)
       - name: Path filter
@@ -64,25 +102,7 @@ jobs:
         with:
           base: ${{ github.event_name == 'push' && github.event.before || inputs.base_sha }}
           ref: ${{ github.event_name == 'push' && github.sha || (inputs.head_sha || github.sha) }}
-          filters: |
-            backend:
-              - 'apps/api/**'
-              - 'ops/deploy/**'
-              - 'infra/docker/**'
-              - 'infra/config/docker-compose/**'
-              - 'infra/scripts/remote/**'
-              - 'infra/scripts/deploy/**'
-              - 'apps/api/Dockerfile'
-            frontend:
-              - 'apps/web/**'
-              - 'infra/scripts/remote/**'
-              - 'infra/scripts/deploy/**'
-              - 'apps/web/Dockerfile'
-              - 'Caddyfile'
-            shared_force_both:
-              - '.github/workflows/deploy-ec2.yml'
-              - '.github/workflows/**'
-              - 'infra/**'
+          filters: .paths-filter.yml
 
       # 2) Previous-run failure forcing (when we're doing path-based detection)
       - name: Force both if previous run failed
@@ -99,7 +119,6 @@ jobs:
             | jq -r --arg rid "${{ github.run_id }}" '
                 map(select((.databaseId|tostring) != $rid)) | .[0].conclusion // ""
               ')"
-          # If you truly want per-job (FE vs BE), you'll need a different approach (see note below).
           if [[ "$prev" == "failure" || "$prev" == "cancelled" ]]; then
             echo "force=true" >> "$GITHUB_OUTPUT"
           else
@@ -153,25 +172,24 @@ jobs:
           echo "backend_changed=$backend" >> "$GITHUB_OUTPUT"
           echo "frontend_changed=$frontend" >> "$GITHUB_OUTPUT"
           echo "Decision: backend=$backend frontend=$frontend"
-  deploy-backend:
-    name: Deploy backend
+
+  build-primary-image:
+    name: Build primary image
     runs-on: ubuntu-latest
     needs: [detect-changes]
     if: needs.detect-changes.outputs.backend_changed == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Load infra app config
         shell: bash
-        run: |
-          set -euo pipefail
-          # ./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"
-          ./infra/scripts/deploy/load-infra-app-config.sh | tee -a "$GITHUB_ENV"
-          echo "DEBUG: APP_NAME from GITHUB_ENV is: $(grep '^APP_NAME=' "$GITHUB_ENV" | tail -n1)"
+        run: ./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image for ARM64
+      - name: Build primary Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -189,29 +207,107 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
 
-      - name: Build extra container images (optional)
-        if: hashFiles('ops/deploy/build-extra-images.sh') != ''
-        shell: bash
-        run: |
-          set -euo pipefail
-          chmod +x ops/deploy/build-extra-images.sh
-          ./ops/deploy/build-extra-images.sh
-
-      - name: Save Docker images to artifacts/backend.tar.gz
+      - name: Save primary image
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          IMAGES=(
-            "${APP_NAME}-api:${GITHUB_SHA}"
-          )
-          if [[ -f artifacts/extra-image-tags.txt ]]; then
-            while IFS= read -r line || [[ -n "$line" ]]; do
-              [[ -z "${line// }" ]] && continue
-              IMAGES+=("$line")
-            done < artifacts/extra-image-tags.txt
-          fi
-          docker save "${IMAGES[@]}" | gzip > artifacts/backend.tar.gz
+          docker save "${APP_NAME}-api:${GITHUB_SHA}" | gzip > artifacts/backend.tar.gz
+
+      - name: Upload primary image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: primary-image
+          path: artifacts/backend.tar.gz
+          retention-days: 1
+
+  build-worker-images:
+    name: Build worker images
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.backend_changed == 'true' && needs.detect-changes.outputs.has_workers == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load infra app config
+        shell: bash
+        run: ./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build worker images
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$DOCKER_WORKERS_JSON" | jq -c '.[]' | while IFS= read -r worker; do
+            name=$(echo "$worker" | jq -r '.name')
+            path=$(echo "$worker" | jq -r '.workspacePath')
+            echo "Building worker: $name ($path)"
+            docker buildx build \
+              --load \
+              --platform linux/arm64 \
+              -f infra/docker/api/Dockerfile \
+              --target production \
+              --build-arg "NODE_VERSION=${DOCKER_NODE_VERSION}" \
+              --build-arg "APP_WORKSPACE_PATH=${path}" \
+              --cache-from type=gha \
+              --cache-to type=gha,mode=max \
+              --provenance=false \
+              -t "${APP_NAME}-${name}:${GITHUB_SHA}" \
+              -t "${APP_NAME}-${name}:latest" \
+              .
+          done
+
+      - name: Save worker images
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          IMAGES=()
+          while IFS= read -r worker; do
+            name=$(echo "$worker" | jq -r '.name')
+            IMAGES+=("${APP_NAME}-${name}:${GITHUB_SHA}")
+          done < <(echo "$DOCKER_WORKERS_JSON" | jq -c '.[]')
+          docker save "${IMAGES[@]}" | gzip > artifacts/workers.tar.gz
+
+      - name: Upload worker images artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: worker-images
+          path: artifacts/workers.tar.gz
+          retention-days: 1
+
+  deploy-backend:
+    name: Deploy backend
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-primary-image, build-worker-images]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.backend_changed == 'true' &&
+      needs.build-primary-image.result == 'success' &&
+      (needs.build-worker-images.result == 'success' || needs.build-worker-images.result == 'skipped')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load infra app config
+        shell: bash
+        run: ./infra/scripts/deploy/load-infra-app-config.sh >> "$GITHUB_ENV"
+
+      - name: Download primary image
+        uses: actions/download-artifact@v4
+        with:
+          name: primary-image
+          path: artifacts/
+
+      - name: Download worker images
+        if: needs.detect-changes.outputs.has_workers == 'true' && needs.build-worker-images.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: worker-images
+          path: artifacts/
 
       - name: Package compose files for EC2
         shell: bash
@@ -229,6 +325,7 @@ jobs:
       - name: Debug role arn presence
         run: |
           test -n "${{ secrets.AWS_ROLE_ARN }}" && echo "AWS_ROLE_ARN is set" || (echo "AWS_ROLE_ARN missing" && exit 1)
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -239,19 +336,7 @@ jobs:
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
-      # - name: Check if backend already uploaded for this SHA
-      #   id: check_backend
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     KEY="deployments/${APP_NAME}/${GITHUB_SHA}/backend.tar.gz"
-      #     if aws s3 ls "s3://${S3_BUCKET}/${KEY}" --region "${AWS_REGION}" >/dev/null 2>&1; then
-      #       echo "skip=true" >> "$GITHUB_OUTPUT"
-      #     else
-      #       echo "skip=false" >> "$GITHUB_OUTPUT"
-      #     fi
       - name: Deploy backend (upload + SSM remote deploy)
-        # if: steps.check_backend.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail

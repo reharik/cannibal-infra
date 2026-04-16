@@ -10,7 +10,8 @@
   "docker": {
     "nodeVersion": 22,
     "appWorkspacePath": "apps/api",
-    "nodeEntrypoint": "apps/api/dist/index.js"
+    "nodeEntrypoint": "apps/api/dist/index.js",
+    "workers": []
   },
 
   "paths": {
