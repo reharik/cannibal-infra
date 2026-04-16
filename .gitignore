@@ -26,7 +26,6 @@ vitest.config.*.timestamp*
 # Deployment artifacts
 *.tar.gz
 backups/
-deploy/
 
 # Docker volumes (if running locally)
 pgdata/
