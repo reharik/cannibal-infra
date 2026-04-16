@@ -34,15 +34,15 @@
         "gen:container"
       ],
       "options": {
-        "command": "vite build --config vite.config.mjs && mkdir -p dist/db && npx tsc -p tsconfig.db.json",
+        "command": "vite build --config vite.config.mjs && mkdir -p dist/graphql && cp -R src/graphql/schema dist/graphql/ && mkdir -p dist/db && npx tsc -p tsconfig.db.json",
         "cwd": "{projectRoot}"
       },
       "configurations": {
         "development": {
-          "command": "vite build --config vite.config.mjs --mode development && mkdir -p dist/db && npx tsc -p tsconfig.db.json"
+          "command": "vite build --config vite.config.mjs --mode development && mkdir -p dist/graphql && cp -R src/graphql/schema dist/graphql/ && mkdir -p dist/db && npx tsc -p tsconfig.db.json"
         },
         "production": {
-          "command": "vite build --config vite.config.mjs --mode production && mkdir -p dist/db && npx tsc -p tsconfig.db.json"
+          "command": "vite build --config vite.config.mjs --mode production && mkdir -p dist/graphql && cp -R src/graphql/schema dist/graphql/ && mkdir -p dist/db && npx tsc -p tsconfig.db.json"
         }
       }
     },
