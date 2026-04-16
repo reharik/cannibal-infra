@@ -17,6 +17,11 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' nx test media-worker"
   },
   "dependencies": {
+    "@graphql-codegen/typescript": "^5.0.9",
+    "@graphql-codegen/typescript-resolvers": "^5.0.1",
+    "@graphql-tools/load-files": "^7.0.1",
+    "@graphql-tools/merge": "^9.1.7",
+    "@graphql-tools/schema": "^10.0.31",
     "@packages/contracts": "*",
     "@packages/infrastructure": "*",
     "@packages/media-core": "*",
