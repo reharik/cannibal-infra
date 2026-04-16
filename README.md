@@ -1,159 +1,34 @@
-# Photo App
+# cannibal-infra (extract staging)
 
-A full-stack application scaffolding (API + web, auth, shared contracts).
+This directory is a **staging extract** of shared infrastructure, tooling, and config from the network app repo. It is intended to be moved into a separate repository called **cannibal-infra**, which consuming app repos will pull in via **git subtree** at path `/infra`.
 
-## Project Structure
+## Purpose
 
-This is a monorepo using npm workspaces and Nx for build orchestration:
+- **Do not delete or move** the original files in the app repo yet; this is extraction/staging only.
+- When cannibal-infra is created, app repos will add it as a subtree: `git subtree add --prefix=infra <cannibal-infra-repo-url> main`
+- App-owned config (e.g. `infra.app.config.json`) and wiring will be added later; this extract only contains infra-owned assets.
 
-- `api/` - Backend API (Koa + TypeScript)
-- `web/` - Frontend web application (React + TypeScript)
-- `contracts/` - Shared types and validation schemas (Typia)
+## Layout (maps to `/infra` in app repos)
 
-## Prerequisites
+| Path in this extract     | Purpose |
+|--------------------------|--------|
+| `README.md`              | This file |
+| `docs/subtree.md`        | How to add/update the subtree in app repos |
+| `docs/deploy.md`         | Generic deploy flow (EC2, SSM, S3, Caddy) |
+| `scripts/deploy/`        | Deploy entrypoints and helpers (e.g. deploy-ec2.sh, ssm-run.sh) |
+| `scripts/ci/`            | CI helper scripts (if any) |
+| `scripts/local/`         | Local/dev scripts (e.g. verify-dns-and-frontend) |
+| `github/workflows/`      | Reusable or template GitHub Actions workflows |
+| `config/tsconfig/`       | Base tsconfig for TypeScript |
+| `config/eslint/`         | Shared ESLint base config |
+| `config/prettier/`       | Prettier config and ignore |
+| `config/jest/`           | Shared Jest preset (Nx); app projects extend it |
+| `config/nx/`             | Optional Nx base config (see manifest) |
+| `templates/app/`         | App-agnostic templates (e.g. shared Caddyfile, Dockerfile, docker-compose, .dockerignore) |
+| `manifest.json`          | Inventory: what was copied, what stayed in app, TODOs, risks |
 
-- Node.js 18+
-- npm 9+
-- PostgreSQL (or SQLite for development)
+## Usage after subtree
 
-## Getting Started
-
-### Installation
-
-```bash
-npm install
-```
-
-### Database Setup
-
-```bash
-# Run migrations
-npm run db:migrate
-
-# Seed database (optional)
-npm run db:seed
-```
-
-### Development
-
-Run both API and web in development mode:
-
-```bash
-# Terminal 1 - API
-npm run dev:api
-
-# Terminal 2 - Web
-npm run dev:web
-```
-
-Or run them individually:
-
-```bash
-npm run dev:api   # API only
-npm run dev:web   # Web only
-```
-
-### Building
-
-```bash
-# Build all packages
-npm run build
-
-# Build for production
-npm run build:web:production
-```
-
-### Testing
-
-```bash
-# Run all tests
-npm run test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests in CI mode
-npm run test:ci
-```
-
-### Linting & Formatting
-
-```bash
-# Lint all projects
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Format code
-npm run format
-
-# Check formatting
-npm run format:check
-```
-
-### Database Commands
-
-```bash
-# Run migrations
-npm run db:migrate
-
-# Run migrations in production
-npm run db:migrate:prod
-
-# Seed database
-npm run db:seed
-```
-
-## Scripts
-
-- `npm run dance` - Run format, build, lint, and test (full check)
-- `npm run nuke` - Clean install and rebuild everything
-- `npm run nuke:lite` - Clean build without reinstalling dependencies
-- `npm run graph` - View project dependency graph
-
-## Environment Variables
-
-Copy `.env` to configure your local environment. Key variables:
-
-- `DATABASE_URL` - Database connection string
-- `API_PORT` - API server port (default: 3000)
-- `JWT_SECRET` - Secret key for JWT tokens
-- `CORS_ORIGIN` - Allowed CORS origin for web app
-
-## Architecture
-
-### API (`api/`)
-
-- **Framework**: Koa
-- **Database**: Knex.js with PostgreSQL/SQLite
-- **Validation**: Typia
-- **Auth**: JWT-based authentication
-
-### Web (`web/`)
-
-- **Framework**: React 19
-- **Build Tool**: Vite
-- **State Management**: React Query
-- **Styling**: Styled Components
-- **Routing**: React Router
-
-### Contracts (`contracts/`)
-
-- **Purpose**: Shared TypeScript types and validation
-- **Validation**: Typia for runtime type validation
-- **Usage**: Imported by both API and web
-
-## Development Workflow
-
-1. Make changes to code
-2. Run `npm run format` to format code
-3. Run `npm run lint` to check for issues
-4. Run `npm run test` to ensure tests pass
-5. Run `npm run build` to verify build works
-
-Or simply run `npm run dance` to do all of the above!
-
-## License
-
-ISC
+- App CI/deploy workflows will reference `/infra/scripts/...`, `/infra/github/workflows/...`, etc.
+- Shared configs (ESLint, Prettier, tsconfig base) will be extended from `/infra/config/...`.
+- See `manifest.json` for parameterization TODOs (e.g. APP_NAME, S3 keys, path filters).

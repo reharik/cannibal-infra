@@ -1,7 +1,5 @@
 node_modules
 .env
-.env.local
-.env.production
 .history
 .vscode
 dist
@@ -14,22 +12,9 @@ dist
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
-# GraphQL codegen output
-*.generated.*
-
 # Private keys and certificates
 *.pem
 *.key
 *.p12
 *.pfx
-
-# Deployment artifacts
-*.tar.gz
-backups/
-
-# Docker volumes (if running locally)
-pgdata/
-caddy_data/
-caddy_config/
-
-schema.graphql
+.history
