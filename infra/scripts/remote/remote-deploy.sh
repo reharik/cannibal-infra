@@ -187,24 +187,35 @@ if [[ "${DEPLOY_FRONTEND}" == "true" ]]; then
 fi
 
 # ------------------------------------------------------------------------------
-# Compose up
+# Compose up (backend deploy only)
 # ------------------------------------------------------------------------------
-ENV_ARGS=()
-if [[ -f "${ENV_FILE}" ]]; then
-  ENV_ARGS+=( --env-file "${ENV_FILE}" )
-fi
+# Frontend-only runs should not call compose: this deploy path does not load
+# backend.tar.gz, so pinning api to ${APP_NAME}-api:${SHA} would make Docker try to
+# pull from a registry. Also, full-stack CI runs backend + frontend jobs in parallel;
+# frontend must not race the backend worker that loads images on EC2.
+#
+# Caddy / reverse-proxy reload is handled separately (e.g. deploy-shared-caddyfile.sh in CI),
+# not by this compose project.
+if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
+  ENV_ARGS=()
+  if [[ -f "${ENV_FILE}" ]]; then
+    ENV_ARGS+=( --env-file "${ENV_FILE}" )
+  fi
 
-echo "docker compose up"
-echo "  project=${COMPOSE_PROJECT_NAME}"
-echo "  files=${COMPOSE_FILES[*]}"
-if [[ ${#ENV_ARGS[@]} -gt 0 ]]; then
-  echo "  env_args=${ENV_ARGS[*]}"
-fi
+  echo "docker compose up"
+  echo "  project=${COMPOSE_PROJECT_NAME}"
+  echo "  files=${COMPOSE_FILES[*]}"
+  if [[ ${#ENV_ARGS[@]} -gt 0 ]]; then
+    echo "  env_args=${ENV_ARGS[*]}"
+  fi
 
-if docker compose version >/dev/null 2>&1; then
-  sudo -E docker compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d --force-recreate
+  if docker compose version >/dev/null 2>&1; then
+    sudo -E docker compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d --force-recreate
+  else
+    sudo -E docker-compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d --force-recreate
+  fi
 else
-  sudo -E docker-compose -p "${COMPOSE_PROJECT_NAME}" "${COMPOSE_FILES[@]}" "${ENV_ARGS[@]}" up -d --force-recreate
+  echo "Skipping docker compose (DEPLOY_BACKEND=false): static/artifact deploy only; no container recreate."
 fi
 
 echo "Remote deploy complete"

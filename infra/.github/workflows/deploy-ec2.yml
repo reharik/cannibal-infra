@@ -267,8 +267,13 @@ jobs:
   deploy-frontend:
     name: Deploy frontend
     runs-on: ubuntu-latest
-    needs: [detect-changes]
-    if: needs.detect-changes.outputs.frontend_changed == 'true'
+    # Run after backend when both deploy in the same workflow so EC2 has loaded images / stable
+    # ordering; when only the frontend changed, deploy-backend is skipped and this still runs.
+    needs: [detect-changes, deploy-backend]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.frontend_changed == 'true' &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
