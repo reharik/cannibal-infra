@@ -10,7 +10,8 @@
   "docker": {
     "nodeVersion": 22,
     "appWorkspacePath": "apps/api",
-    "nodeEntrypoint": "apps/api/dist/index.js"
+    "nodeEntrypoint": "apps/api/dist/index.js",
+    "workers": []
   },
 
   "paths": {
@@ -19,15 +20,7 @@
 
   "requiredSecrets": {
     "$comment": "Names only; never put values here.",
-    "backendDeploy": [
-      "AWS_ROLE_ARN",
-      "POSTGRES_USER",
-      "POSTGRES_PASSWORD",
-      "POSTGRES_DB"
-    ],
-    "frontendBuild": [
-      "VITE_DEFAULT_INTERVAL_DAYS",
-      "VITE_DEFAULT_CONTACT_MESSAGE"
-    ]
+    "backendDeploy": ["AWS_ROLE_ARN", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB"],
+    "frontendBuild": ["VITE_DEFAULT_INTERVAL_DAYS", "VITE_DEFAULT_CONTACT_MESSAGE"]
   }
 }

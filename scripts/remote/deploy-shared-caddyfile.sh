@@ -7,7 +7,7 @@ set -euo pipefail
 SHARED_CADDY_S3_URI="s3://${S3_BUCKET}/deployments/shared/Caddyfile"
 TARGET_CADDYFILE="/opt/shared/Caddyfile"
 
-needs_reload=0
+file_changed=0
 
 tmp="$(mktemp /tmp/shared-caddy.XXXXXX)"
 trap 'rm -f -- "$tmp"' EXIT
@@ -33,9 +33,15 @@ new_hash="$(sha256sum "$tmp" | awk '{print $1}')"
 
 if [[ -z "$old_hash" || "$old_hash" != "$new_hash" ]]; then
   sudo install -m 0644 "$tmp" "$TARGET_CADDYFILE"
-  needs_reload=1
+  file_changed=1
 else
-  echo "Caddyfile unchanged; will not reload."
+  echo "Caddyfile unchanged; will not recreate shared-proxy."
+fi
+
+if [[ "$file_changed" -eq 1 ]] && docker ps -a --format '{{.Names}}' | grep -q '^shared-proxy$'; then
+  echo "Caddyfile changed; recreating shared-proxy container"
+  docker stop shared-proxy
+  docker rm shared-proxy
 fi
 
 # ALWAYS ensure container exists/running
@@ -53,8 +59,4 @@ else
     -v caddy_data_shared:/data \
     -v caddy_config_shared:/config \
     caddy:2-alpine
-fi
-
-if [[ "$needs_reload" -eq 1 ]]; then
-  docker exec shared-proxy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 fi

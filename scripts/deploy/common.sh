@@ -33,6 +33,7 @@ S3_PREFIX="${S3_PREFIX:-deployments/${APP_NAME}/${SHA}}"
 
 # Artifact names in S3
 BACKEND_TAR="${BACKEND_TAR:-backend.tar.gz}"
+WORKERS_TAR="${WORKERS_TAR:-workers.tar.gz}"
 FRONTEND_TAR="${FRONTEND_TAR:-frontend.tar.gz}"
 
 # Remote artifact locations after download/extract (conventions)

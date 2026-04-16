@@ -87,6 +87,7 @@ upload_dir_if_exists() {
 if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
   upload_if_exists "${ARTIFACT_DIR}/${BACKEND_TAR}" "${BACKEND_TAR}" \
     || echo "No backend artifact found at ${ARTIFACT_DIR}/${BACKEND_TAR} (skipping upload)"
+  upload_if_exists "${ARTIFACT_DIR}/${WORKERS_TAR}" "${WORKERS_TAR}" || true
 fi
 
 if [[ "${DEPLOY_FRONTEND}" == "true" ]]; then
@@ -108,11 +109,15 @@ if [[ ! -f "${REMOTE_SCRIPT_LOCAL}" ]]; then
   exit 2
 fi
 
-# Pin API image tag to this deploy SHA so compose pulls the loaded image (not a stale :latest).
-export API_IMAGE="${APP_NAME}-api:${SHA}"
+# Pin API image to this SHA only when we deploy backend artifacts. Frontend-only deploy does not
+# load backend.tar.gz, so ${APP_NAME}-api:${SHA} is not present locally; Docker would try to pull
+# from a registry and fail.
+if [[ "${DEPLOY_BACKEND}" == "true" ]]; then
+  export API_IMAGE="${APP_NAME}-api:${SHA}"
+fi
 
-# Export vars so ssm-run.sh writes them into remote.env on S3
-export APP_NAME ENV SHA AWS_REGION S3_BUCKET DEPLOY_BACKEND DEPLOY_FRONTEND S3_PREFIX API_IMAGE
+# Export vars so ssm-run.sh writes them into remote.env on S3 (API_IMAGE only when set above).
+export APP_NAME ENV SHA AWS_REGION S3_BUCKET DEPLOY_BACKEND DEPLOY_FRONTEND S3_PREFIX
 
 # Source ssm-run.sh to get ssm_run()
 # shellcheck disable=SC1090
