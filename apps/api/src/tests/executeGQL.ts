@@ -1,5 +1,9 @@
+import type { Config } from '../config';
 import type { YogaApp } from '../graphql/server/createGraphQLServer';
 import { createMockGraphQLContext } from './createMockGraphQLContext';
+
+const graphqlHttpUrl = (config: Config): string =>
+  new URL(config.graphqlHttpPath, config.serverUrl).href;
 
 interface GraphQLError {
   message: string;
@@ -16,10 +20,11 @@ export interface GraphQLResponse<T = any> {
 
 interface ExecuteGraphQLDeps {
   yogaApp: YogaApp;
+  config: Config;
 }
 
 // Using any for test helper flexibility - tests will add their own type assertions
-export const createExecuteGraphQL = ({ yogaApp }: ExecuteGraphQLDeps) => {
+export const createExecuteGraphQL = ({ yogaApp, config }: ExecuteGraphQLDeps) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async <T = any>({
     query,
@@ -31,7 +36,7 @@ export const createExecuteGraphQL = ({ yogaApp }: ExecuteGraphQLDeps) => {
     context?: Record<string, unknown>;
   }): Promise<{ response: Response; json: GraphQLResponse<T> }> => {
     const response = await yogaApp.fetch(
-      'http://localhost/graphql',
+      graphqlHttpUrl(config),
       {
         method: 'POST',
         headers: {

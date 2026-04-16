@@ -39,9 +39,10 @@ export const setupGraphqlIntegrationTests = async (): Promise<{
   registerTestKnexForGlobalTeardown(container);
   await ensureTestViewerUsers(container.resolve('database'));
   const yogaApp = container.resolve('yogaApp');
+  const config = container.resolve('config');
   return {
     container,
-    executeGraphQL: createExecuteGraphQL({ yogaApp }),
+    executeGraphQL: createExecuteGraphQL({ yogaApp, config }),
     integrationTestMediaStorage,
   };
 };

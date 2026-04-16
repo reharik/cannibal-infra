@@ -843,7 +843,7 @@ export const iocManifest = {
         moduleIndex: 27,
         default: true,
         discoveredBy: 'naming',
-        dependencyContractNames: ['GraphQLContextFactory'],
+        dependencyContractNames: ['Config', 'GraphQLContextFactory'],
       },
     },
   },

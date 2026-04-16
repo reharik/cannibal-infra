@@ -22,6 +22,8 @@ export type Config = {
   jwtSecret: string;
   jwtExpiresIn: string;
   corsOrigins: string[];
+  /** Pathname for GraphQL over HTTP (must match web Apollo `${apiBaseUrl}/graphql`). */
+  graphqlHttpPath: string;
   serverUrl: string;
   serverPort: number;
   logLevel: 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug';
@@ -78,6 +80,7 @@ const createConfigFromEnv = (): Config => {
       .split(',')
       .map((o) => o.trim())
       .filter(Boolean),
+    graphqlHttpPath: process.env.GRAPHQL_HTTP_PATH || '/api/graphql',
     serverPort: Number(process.env.API_PORT || 3001),
     serverUrl: process.env.SERVER_URL || `http://localhost:${process.env.API_PORT || 3001}`,
     logLevel:

@@ -8,7 +8,7 @@ type AuthActionResult = { ok: true } | { ok: false; message: string };
 
 interface AuthContextType {
   user: User | undefined;
-  /** True when an auth token is present (session may still be loading). */
+  /** True when an auth token is stored (session may still be loading). */
   hasToken: boolean;
   login: (email: string, password: string) => Promise<AuthActionResult>;
   signup: (email: string, password: string, name: string) => Promise<AuthActionResult>;
@@ -35,7 +35,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading: viewerLoading,
     error: viewerError,
   } = useQuery(ViewerDocument, {
-    skip: !hasToken,
     errorPolicy: 'all',
   });
 
@@ -46,12 +45,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         firstName: viewerData.viewer.firstName,
         lastName: viewerData.viewer.lastName,
       } as User);
-    } else if (!viewerLoading && !viewerData?.viewer && hasToken) {
+    } else if (!viewerLoading && !viewerData?.viewer) {
       setUser(undefined);
-      localStorage.removeItem('authToken');
-      setHasToken(false);
     }
-  }, [viewerData, viewerLoading, hasToken]);
+  }, [viewerData, viewerLoading]);
 
   useEffect(() => {
     if (viewerError) {

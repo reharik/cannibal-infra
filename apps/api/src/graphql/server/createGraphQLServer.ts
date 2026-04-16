@@ -23,9 +23,10 @@ interface GraphQLServerDeps {
   yogaApp: YogaApp;
 }
 
-export const buildYogaApp = ({ graphQLContextFactory }: IocGeneratedCradle): YogaApp => {
+export const buildYogaApp = ({ graphQLContextFactory, config }: IocGeneratedCradle): YogaApp => {
   return createYoga<Koa.ParameterizedContext>({
     schema,
+    graphqlEndpoint: config.graphqlHttpPath,
     context: graphQLContextFactory,
   }) as YogaApp;
 };
