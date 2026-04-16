@@ -31,12 +31,13 @@ else
 fi
 
 # Validate required keys exist after merge (fail fast; no silent fallbacks)
+# docker.appWorkspacePath preferred; docker.apiWorkspacePath supported for older consumer configs
 echo "$MERGED" | jq -e '
   .appName and .env and .awsRegion and
   .ssm.tagHost and .ssm.tagEnv and
   .ssmPoll.delaySeconds and .ssmPoll.maxAttempts and
-  .docker.nodeVersion and .docker.apiWorkspacePath and
-  .docker.nxProject and .docker.devWorkspaceName and .docker.nodeEntrypoint
+  .docker.nodeVersion and (.docker.appWorkspacePath // .docker.apiWorkspacePath) and
+  .docker.nodeEntrypoint
 ' >/dev/null
 
 # Emit env vars (no defaults here; defaults live only in defaults.json)
@@ -50,8 +51,6 @@ echo "$MERGED" | jq -r '
   "SSM_POLL_DELAY_SECONDS=\(.ssmPoll.delaySeconds)",
   "SSM_POLL_MAX_ATTEMPTS=\(.ssmPoll.maxAttempts)",
   "DOCKER_NODE_VERSION=\(.docker.nodeVersion)",
-  "DOCKER_API_WORKSPACE_PATH=\(.docker.apiWorkspacePath)",
-  "DOCKER_NX_PROJECT=\(.docker.nxProject)",
-  "DOCKER_DEV_WORKSPACE=\(.docker.devWorkspaceName)",
+  "DOCKER_APP_WORKSPACE_PATH=\(.docker.appWorkspacePath // .docker.apiWorkspacePath)",
   "DOCKER_NODE_ENTRYPOINT=\(.docker.nodeEntrypoint)"
 '

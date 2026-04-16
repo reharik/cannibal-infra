@@ -14,11 +14,11 @@ on:
       base_sha:
         type: string
         required: false
-        default: ''
+        default: ""
       head_sha:
         type: string
         required: false
-        default: ''
+        default: ""
     secrets:
       AWS_ROLE_ARN:
         required: true
@@ -67,6 +67,7 @@ jobs:
           filters: |
             backend:
               - 'apps/api/**'
+              - 'ops/deploy/**'
               - 'infra/docker/**'
               - 'infra/config/docker-compose/**'
               - 'infra/scripts/remote/**'
@@ -179,10 +180,7 @@ jobs:
           platforms: linux/arm64
           build-args: |
             NODE_VERSION=${{ env.DOCKER_NODE_VERSION }}
-            API_WORKSPACE_PATH=${{ env.DOCKER_API_WORKSPACE_PATH }}
-            NX_PROJECT=${{ env.DOCKER_NX_PROJECT }}
-            DEV_WORKSPACE=${{ env.DOCKER_DEV_WORKSPACE }}
-            NODE_ENTRYPOINT=${{ env.DOCKER_NODE_ENTRYPOINT }}
+            APP_WORKSPACE_PATH=${{ env.DOCKER_APP_WORKSPACE_PATH }}
           tags: |
             ${{ format('{0}-api:{1}', env.APP_NAME, github.sha) }}
             ${{ format('{0}-api:latest', env.APP_NAME) }}
@@ -191,12 +189,29 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
 
-      - name: Save Docker image to artifacts/backend.tar.gz
+      - name: Build extra container images (optional)
+        if: hashFiles('ops/deploy/build-extra-images.sh') != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ops/deploy/build-extra-images.sh
+          ./ops/deploy/build-extra-images.sh
+
+      - name: Save Docker images to artifacts/backend.tar.gz
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          docker save "${APP_NAME}-api:${GITHUB_SHA}" "${APP_NAME}-api:latest" | gzip > artifacts/backend.tar.gz
+          IMAGES=(
+            "${APP_NAME}-api:${GITHUB_SHA}"
+          )
+          if [[ -f artifacts/extra-image-tags.txt ]]; then
+            while IFS= read -r line || [[ -n "$line" ]]; do
+              [[ -z "${line// }" ]] && continue
+              IMAGES+=("$line")
+            done < artifacts/extra-image-tags.txt
+          fi
+          docker save "${IMAGES[@]}" | gzip > artifacts/backend.tar.gz
 
       - name: Package compose files for EC2
         shell: bash
@@ -205,6 +220,11 @@ jobs:
           mkdir -p artifacts/compose
           cp infra/config/docker-compose/base.yml artifacts/compose/base.yml
           cp infra/config/docker-compose/prod.yml artifacts/compose/prod.yml
+          if [[ -f ops/deploy/prod.compose.extend.yml ]]; then
+            cp ops/deploy/prod.compose.extend.yml artifacts/compose/prod.extend.yml
+          elif [[ -f infra/config/docker-compose/prod.extend.yml ]]; then
+            cp infra/config/docker-compose/prod.extend.yml artifacts/compose/prod.extend.yml
+          fi
 
       - name: Debug role arn presence
         run: |

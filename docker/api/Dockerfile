@@ -1,6 +1,8 @@
 ARG NODE_VERSION=22
-ARG API_WORKSPACE_PATH=apps/api
-ARG API_WORKSPACE_NAME=@app/api
+# Monorepo path under repo root (e.g. apps/api). Nx project and npm --workspace are derived:
+# basename(APP_WORKSPACE_PATH) → nx run <leaf>; npm --workspace=@app/<leaf>.
+
+ARG APP_WORKSPACE_PATH=apps/api
 
 # =============================================================================
 # BASE IMAGE SETUP
@@ -15,17 +17,17 @@ RUN corepack enable || true
 # =============================================================================
 
 FROM base AS deps-dev-staging
-ARG API_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_PATH=apps/api
 COPY package.json package-lock.json ./
-COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
+COPY ${APP_WORKSPACE_PATH}/package.json ${APP_WORKSPACE_PATH}/package.json
 # Copy other workspaces (e.g. packages/*) so npm sees them; otherwise "No workspaces found!"
 COPY packages/ packages/
 RUN npm ci --workspaces --include-workspace-root --ignore-scripts
 
 FROM base AS deps-prod
-ARG API_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_PATH=apps/api
 COPY package.json package-lock.json ./
-COPY ${API_WORKSPACE_PATH}/package.json ${API_WORKSPACE_PATH}/package.json
+COPY ${APP_WORKSPACE_PATH}/package.json ${APP_WORKSPACE_PATH}/package.json
 COPY packages/ packages/
 RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 
@@ -34,8 +36,7 @@ RUN npm ci --workspaces --include-workspace-root --omit=dev --ignore-scripts
 # =============================================================================
 
 FROM base AS build
-ARG API_WORKSPACE_PATH=apps/api
-ARG API_WORKSPACE_NAME=@app/api
+ARG APP_WORKSPACE_PATH=apps/api
 WORKDIR /repo
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
@@ -43,46 +44,49 @@ ENV NX_DAEMON=false
 RUN npx nx reset || true
 
 # Generate container types (run from repo root so npm finds package.json)
-RUN npm run gen:container --workspace=${API_WORKSPACE_NAME}
+RUN npm run gen:container --workspace=@app/$(basename "${APP_WORKSPACE_PATH}")
 
 # Verify the file was generated
-RUN test -f ${API_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts || \
+RUN test -f ${APP_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts || \
   (echo "ERROR: awilix.autoload.d.ts was not generated" && exit 1)
 
-RUN npx nx build api --configuration=production
+RUN npx nx build "$(basename "${APP_WORKSPACE_PATH}")" --configuration=production
 
 # =============================================================================
 # RUNTIME STAGES
 # =============================================================================
 
 FROM node:${NODE_VERSION}-slim AS dev
+ARG APP_WORKSPACE_PATH=apps/api
+ENV APP_WORKSPACE_PATH=${APP_WORKSPACE_PATH}
 ENV NODE_ENV=development
 WORKDIR /app
-RUN apt-get update && apt-get install -y git vim
+RUN apt-get update && apt-get install -y git vim && rm -rf /var/lib/apt/lists/*
 COPY --from=deps-dev-staging /repo/node_modules ./node_modules
 COPY . .
 RUN npm install -g nodemon
 EXPOSE 3000
-CMD ["npm", "run", "dev", "--workspace=@app/api"]
+CMD ["sh", "-c", "npm run dev --workspace=@app/$(basename \"$APP_WORKSPACE_PATH\")"]
 
 FROM node:${NODE_VERSION}-slim AS production
-ARG API_WORKSPACE_PATH=apps/api
+ARG APP_WORKSPACE_PATH=apps/api
+ENV APP_WORKSPACE_PATH=${APP_WORKSPACE_PATH}
 ENV NODE_ENV=production
 WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /repo/${API_WORKSPACE_PATH}/dist ./${API_WORKSPACE_PATH}/dist
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/dist ./${APP_WORKSPACE_PATH}/dist
 
 # Copy generated Awilix container types to dist
-RUN mkdir -p ${API_WORKSPACE_PATH}/dist/di
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts ./${API_WORKSPACE_PATH}/dist/di/awilix.autoload.d.ts
-RUN test -f ${API_WORKSPACE_PATH}/dist/di/awilix.autoload.d.ts || \
+RUN mkdir -p ${APP_WORKSPACE_PATH}/dist/di
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/src/di/awilix.autoload.d.ts ./${APP_WORKSPACE_PATH}/dist/di/awilix.autoload.d.ts
+RUN test -f ${APP_WORKSPACE_PATH}/dist/di/awilix.autoload.d.ts || \
   (echo "ERROR: awilix.autoload.d.ts was not copied to dist" && exit 1)
 
 # Copy server startup script (copy from build stage where source files are)
-RUN mkdir -p ${API_WORKSPACE_PATH}/dist/scripts
-COPY --from=build /repo/${API_WORKSPACE_PATH}/src/scripts/serverStartUpProd.sh ./${API_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
-RUN chmod +x ${API_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
+RUN mkdir -p ${APP_WORKSPACE_PATH}/dist/scripts
+COPY --from=build /repo/${APP_WORKSPACE_PATH}/src/scripts/serverStartUpProd.sh ./${APP_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
+RUN chmod +x ${APP_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh
 
 COPY --from=deps-prod /repo/node_modules ./node_modules
 
@@ -92,7 +96,7 @@ RUN (test -d node_modules/dotenv || \
     echo "✓ dotenv verified in node_modules"
 
 EXPOSE 3000
-CMD ["sh", "apps/api/dist/scripts/serverStartUpProd.sh"]
+CMD ["sh", "-c", "exec sh ${APP_WORKSPACE_PATH}/dist/scripts/serverStartUpProd.sh"]
 
 FROM production AS staging
 ENV NODE_ENV=staging
