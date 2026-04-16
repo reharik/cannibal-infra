@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client/react';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import type { User } from '@packages/contracts';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { ViewerDocument } from '../graphql/generated/types';
@@ -8,6 +8,8 @@ type AuthActionResult = { ok: true } | { ok: false; message: string };
 
 interface AuthContextType {
   user: User | undefined;
+  /** True when an auth token is present (session may still be loading). */
+  hasToken: boolean;
   login: (email: string, password: string) => Promise<AuthActionResult>;
   signup: (email: string, password: string, name: string) => Promise<AuthActionResult>;
 
@@ -26,12 +28,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | undefined>(undefined);
   const [hasToken, setHasToken] = useState(!!localStorage.getItem('authToken'));
   const { apiFetch } = useApiFetchBase();
+  const apolloClient = useApolloClient();
 
   const {
     data: viewerData,
     loading: viewerLoading,
     error: viewerError,
-    refetch: refetchViewer,
   } = useQuery(ViewerDocument, {
     skip: !hasToken,
     errorPolicy: 'all',
@@ -70,7 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data.success) {
         localStorage.setItem('authToken', data.data.token);
         setHasToken(true);
-        await refetchViewer();
+        // Bypass useQuery `skip` timing (refetch can run before re-render flips skip) and refresh cache.
+        await apolloClient.query({
+          query: ViewerDocument,
+          fetchPolicy: 'network-only',
+        });
         return { ok: true };
       }
       return { ok: false, message: data.error };
@@ -94,7 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data.success) {
         localStorage.setItem('authToken', data.data.token);
         setHasToken(true);
-        await refetchViewer();
+        await apolloClient.query({
+          query: ViewerDocument,
+          fetchPolicy: 'network-only',
+        });
         return { ok: true };
       }
       return { ok: false, message: data.error };
@@ -112,6 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
+    hasToken,
     login,
     signup,
     logout,
